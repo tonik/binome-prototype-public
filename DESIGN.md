@@ -201,3 +201,8 @@ Binome wordmark, 11px tall, top-left of the sidebar.
 ## 8. Prototype and application handover
 
 See [HANDOVER.md](HANDOVER.md) for how to explain prototype changes and apply them to your current application.
+
+- **Mira app (side nav, Apps group): empty placeholder.** `designs/mira-app.html` lists a "Mira"
+  item (id `mira-app`, `sparkles` icon) between HR and Agriculture. It is clickable and
+  highlights like Pricing and HR, but the content panel is intentionally blank: there is no
+  render branch for it yet. Not to be confused with the Ask Mira chat (id `mira`).
