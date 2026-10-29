@@ -2526,12 +2526,6 @@ const NAV = [
   { type:'group', id:'apps', label:'Apps', items:[
     { id:'pricing', label:'Pricing', icon:'pricing' },
     { id:'hr',      label:'HR',      icon:'hr' },
-    // ADDED (2026-10-29): a "Mira" app in the Apps group. It is deliberately EMPTY for now: there is no
-    // renderContent branch for 'mira-app', so the final `else` in renderContent() gives a blank panel
-    // (same as the Admin Panel tabs while HIDE_MODE_CONTENT is on). Add an `else if(activeId === 'mira-app')`
-    // branch there when the screen is designed. The id is 'mira-app', NOT 'mira': 'mira' is already the
-    // Ask Mira chat screen. The 'sparkles' icon already exists in ICONS (no new icon was invented).
-    { id:'mira-app', label:'Mira',   icon:'sparkles' },
     { id:'agriculture', label:'Agriculture', icon:'agriculture', mock:true },   // not available yet: not clickable
   ]},
 ];
