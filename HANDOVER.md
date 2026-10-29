@@ -1,6 +1,6 @@
 # Working between the prototype and the application
 
-We update the HTML in this repository as the design evolves. Point your agent at [this repository](https://github.com/tonik/binome-design) and ask it to check what changed, then apply relevant updates in your application.
+We update the HTML in this repository as the design evolves. Point your agent at [this repository](https://github.com/tonik/binome-prototype-public) and ask it to check what changed, then apply relevant updates in your application.
 
 ## Updating the prototype
 
@@ -23,7 +23,7 @@ Tell the agent which area to update and point it at this repository.
 ~~~text
 Task: [screens or changes you want]
 
-Check https://github.com/tonik/binome-design for the latest HTML designs and recent changes. Read its README.md, AGENTS.md, HANDOVER.md, and relevant DESIGN.md guidance.
+Check https://github.com/tonik/binome-prototype-public for the latest HTML designs and recent changes. Read its README.md, AGENTS.md, HANDOVER.md, and relevant DESIGN.md guidance.
 
 Work in my application repository and follow its instructions. Start from my chosen branch and current code. Do not assume which PRs were merged or what remains to implement. Compare the requested prototype screens and interactions directly with the current application, then briefly identify relevant differences before editing.
 
