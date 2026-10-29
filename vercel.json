@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/Designs/mira-admin-onboarding.html" },
+    { "source": "/mira-app.html", "destination": "/Designs/mira-app.html" },
+    { "source": "/mira-admin-onboarding.html", "destination": "/Designs/mira-admin-onboarding.html" }
+  ]
+}
