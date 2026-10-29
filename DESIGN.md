@@ -1,7 +1,7 @@
 # Binome / Mira — Design Guide
 
 Handoff notes for developers. There is no Figma file: the single source of truth
-for the visuals is the working prototype `Designs/mira-app.html` (single file, vanilla JS,
+for the visuals is the working prototype `designs/mira-app.html` (single file, vanilla JS,
 no build step). Where this document and the prototype disagree, the prototype's
 CSS wins — update this file.
 
@@ -22,7 +22,7 @@ CSS wins — update this file.
 
 ## 2. Colour tokens
 
-Defined in `:root` at the top of `Designs/mira-app.html`.
+Defined in `:root` at the top of `designs/mira-app.html`.
 
 ### Neutrals
 
