@@ -206,7 +206,7 @@ Binome wordmark, 11px tall, top-left of the sidebar.
 
 ## 8. Admin Panel: People (2026-10-30)
 
-Built from the People wireframes (`Inputs/Wireframes/Main.dc.html`, `Member.dc.html`), then reworked. Only their content is
+Built from the People wireframes (the list and the person drawer), then reworked. Only their content is
 used; the wireframes' side nav and tabs are the app's own. In the prototype this is the one Admin Panel tab that shows content
 (`HIDE_MODE_CONTENT` still blanks the other Admin Panel tabs and Settings). The old floating "Panel | Architecture" switch and its
 sitemap were removed as out of date.
@@ -238,7 +238,7 @@ sitemap were removed as out of date.
   routines and tasks keep their author). The dialog asks who takes over their routines and tasks (pre-selected: the head of one of their
   teams, else an admin) and is skipped when they own nothing. Removing a head leaves their teams without one. Removed people stay in the
   list with a Removed status and can be restored (row menu or drawer). No hard delete in the UI (deletion requests go through support).
-- **Person drawer** (the existing right side panel, 400px), built from the wireframe `Inputs/Wireframes/People:user.png`. Header: name with
+- **Person drawer** (the existing right side panel, 400px), built from the People user wireframe. Header: name with
   the status tag next to it, email, since-date. Sections: **Role in organization** (full-width dropdown, options Admin or Member), **Teams** (one
   row per team with the person's role in it, a Head / Member dropdown, and a remove x; "+ Add to team" is a link at the right of the label and
   is not shown for an admin, who sits above all teams), **Security** (Reset two-factor authentication with its Reset 2FA button), and a single

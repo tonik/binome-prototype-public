@@ -3335,8 +3335,7 @@ function admHead(title){
 }
 
 /* --- People ---
-   REWRITTEN (2026-10-30) from the new People wireframes (Inputs/Wireframes/Main.dc.html = the list and
-   Member.dc.html = the person drawer). Only their CONTENT is used: the wireframes' side nav and tab bar are
+   REWRITTEN (2026-10-30) from the new People wireframes (the list and the person drawer). Only their CONTENT is used: the wireframes' side nav and tab bar are
    the app's own (MODES.advanced.nav).
    MODEL (MVP, flat): there is NO "Department". A Team is the only grouping: name, optional head, members, tool pool.
    - A person can belong to several teams (no single "home" team). Admins sit above all teams.
@@ -3875,7 +3874,7 @@ function admMemberPanelHTML(m){
   const removed = m.status === 'Removed', invited = m.status === 'Invited';
   const first = admFirst(m.name);
   const sec = admDrawerSec;
-  // REWORKED (2026-10-30) from the wireframe Inputs/Wireframes/People:user.png. It replaces the "Admin access" toggle, the read-only role
+  // REWORKED (2026-10-30) from the People user wireframe. It replaces the "Admin access" toggle, the read-only role
   // line and the read-only Head badges of the previous version.
   const isAdmin = m.role === 'Admin';
   // "Role in organization": ONLY Admin or Member. Head is never an option here: it is derived (a person who leads a team is shown as
