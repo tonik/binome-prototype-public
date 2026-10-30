@@ -1949,7 +1949,6 @@ button.home-addmenu__item:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){
 .dc-page .home-top{padding:24px 16px 16px}
 .dc-page .dc-banner{margin:24px 0 0}
 .dc__tools{display:flex;align-items:center;gap:6px;flex:0 0 auto}
-.dc-open{padding:5px 12px}
 .dc-more{position:relative;display:inline-flex}
 .dc-more__btn{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border:none;background:transparent;color:var(--slate-icon)}
 .dc-more__btn svg{width:18px;height:18px;display:block}
@@ -6059,7 +6058,7 @@ const IN_INSIGHTS = (() => {
     'key-numbers':      Object.assign({ id:'key-numbers', title:'Key numbers', prompt:'Show me the headline sales numbers.',
                           src:'Dynamics · invoices, orders, quotes',
                           about:'Net revenue = posted sales invoices minus credit notes, in SAR, by invoice date. Backlog excludes stale orders. Refreshes daily at 06:40.',
-                          view:{ type:'kpis', items:[
+                          view:{ type:'kpis', open:{ label:'Open in Salesforce' }, items:[
                             { label:'Net revenue',    value:'7.91M',  sub:'▼ 46.6% vs last year', bad:true },
                             { label:'August so far', value:'476K',   sub:'Q3 1.81M' },
                             { label:'Bookings',       value:'33.49M', sub:'orders created' },
@@ -6070,20 +6069,20 @@ const IN_INSIGHTS = (() => {
     'revenue-by-month': Object.assign({ id:'revenue-by-month', title:'Invoiced revenue by month', prompt:'Invoiced revenue by month, split by division.',
                           src:'Dynamics · invoices · SAR, net of VAT',
                           about:'Posted sales invoices by month, stacked by division. The last bar is the month still running.',
-                          view:sp.breakdowns[0] }, sales),
+                          view:Object.assign({ open:{ label:'Open in Salesforce' } }, sp.breakdowns[0]) }, sales),
     'revenue-by-division': Object.assign({ id:'revenue-by-division', title:'Revenue by division', prompt:'How is revenue split across divisions?',
                           src:'Dynamics · invoices',
                           about:'Share of net revenue per division, this year to date.',
-                          view:sp.breakdowns[1] }, sales),
+                          view:Object.assign({ open:{ label:'Open in Salesforce' } }, sp.breakdowns[1]) }, sales),
     'top-customers':    Object.assign({ id:'top-customers', title:'Top customers', prompt:'Who are my top customers this year?',
                           src:'Dynamics · invoices',
                           about:'Customers ranked by net revenue this year to date. Top 5 = 38.5% of revenue.',
-                          view:Object.assign({ type:'table' }, sp.table) }, sales),
+                          view:Object.assign({ type:'table', open:{ label:'Open in Salesforce' } }, sp.table) }, sales),
     'quotes-by-status': Object.assign({ id:'quotes-by-status', title:'Quotes by status', prompt:'How are my quotes doing by status?',
                           src:'Dynamics · quotes', updated:'3 days ago',
                           about:'Quotes grouped by their status in the ERP. Data is from the last successful refresh.',
                           stale:'Couldn’t refresh. Showing data from 3 days ago.',
-                          view:{ type:'bars', items:[ { label:'Draft', v:62 }, { label:'Sent', v:38 }, { label:'Expired', v:100 }, { label:'Converted', v:24 } ] } }, sales),
+                          view:{ type:'bars', open:{ label:'Open in Salesforce' }, items:[ { label:'Draft', v:62 }, { label:'Sent', v:38 }, { label:'Expired', v:100 }, { label:'Converted', v:24 } ] } }, sales),
     /* ---- Filters (MVP): two insights whose numbers react to filters (see "Filters" block below IN_DASHBOARDS) ----
        `build(ctx)` returns the card's `view` for the filter + switch values in `ctx` ({ f:{ filterId:[values] }, s:{ switchId:option } }).
        `view` (the default look) is just build({}), kept so code that reads ins.view (card header, Home, copies) keeps working.
@@ -6124,16 +6123,16 @@ const IN_INSIGHTS = (() => {
                           build:ctx => insBuildEmail(ctx) },
     'quotes-waiting':   { id:'quotes-waiting', title:'Quotes I’m waiting on', prompt:'Which quotes I sent have no reply yet?',
                           src:'Gmail · quotes you sent', sources:'Gmail', cadence:'Daily · 07:00', updated:'Today 07:00', owner:'You', madeWith:'Mira',
-                          view:{ type:'list', items:[ { name:'Rakaez Construction', meta:'sent 12 days ago' },
+                          view:{ type:'list', open:{ label:'Open in Gmail' }, items:[ { name:'Rakaez Construction', meta:'sent 12 days ago' },
                                  { name:'Al Ufuq Modern Contracting', meta:'sent 9 days ago' }, { name:'Riyadh Holding', meta:'sent 4 days ago' } ] } },
     'sales-this-month': { id:'sales-this-month', title:'Sales this month', prompt:'How did sales go this month?',
                           src:'Dynamics · invoices · as of 07:00', sources:'Dynamics (ERP) · invoices', cadence:'Daily · 07:00', updated:'Today 07:00', owner:'You', madeWith:'Mira',
                           about:'Posted sales invoices this month so far, in SAR, compared with last month.',
-                          view:{ type:'kpis', items:[ { label:'Invoiced so far', value:'476K', sub:'▼ 12% vs last month', bad:true },
+                          view:{ type:'kpis', open:{ label:'Open in Salesforce' }, items:[ { label:'Invoiced so far', value:'476K', sub:'▼ 12% vs last month', bad:true },
                                  { label:'Projected month end', value:'1.62M' } ] } },
     'weekly-sales':     { id:'weekly-sales', title:'Weekly sales', prompt:'Show sales per week.',
                           src:'Dynamics · invoices · as of 07:00', sources:'Dynamics (ERP) · invoices', cadence:'Daily · 07:00', updated:'Today 07:00', owner:'You', madeWith:'Mira',
-                          view:{ type:'timeseries', title:'Invoiced per week · last 60 days', values:weekly, shareA:1, partialLabel:'Partial week',
+                          view:{ type:'timeseries', open:{ label:'Open in Salesforce' }, title:'Invoiced per week · last 60 days', values:weekly, shareA:1, partialLabel:'Partial week',
                                  unit:'K', xstep:2, xlabels:['26 May','9 Jun','23 Jun','7 Jul','24 Jul'], caption:'' } },
     // One simple piece: a single block on a dashboard of its own. Mock data, generic field names.
     'fields-by-stage':  { id:'fields-by-stage', title:'Fields by stage', prompt:'How many fields are at each stage?',
@@ -6148,7 +6147,7 @@ const IN_INSIGHTS = (() => {
     'daily-sales':      { id:'daily-sales', title:'Daily sales', prompt:'Send me daily sales every morning.',
                           src:'Dynamics · invoices · as of 07:00',
                           sources:'Dynamics (ERP) · invoices', cadence:'Daily · 07:00', updated:'Today 07:00', owner:'You', madeWith:'Mira',
-                          view:{ type:'timeseries', title:'Invoiced per day · last 60 days', values:daily, shareA:1, partialLabel:'Partial day',
+                          view:{ type:'timeseries', open:{ label:'Open in Salesforce' }, title:'Invoiced per day · last 60 days', values:daily, shareA:1, partialLabel:'Partial day',
                                  unit:'K', xstep:14, xlabels:['26 May','9 Jun','23 Jun','7 Jul','24 Jul'],
                                  caption:'SAR 362.4K month to date · about 29% of July with 7 days left' } },
   };
@@ -6346,7 +6345,7 @@ function insBuildRevenueSplit(ctx){
     const pct = Math.round(sums[k] / total * 100);
     return { key:k, label:k, pct, text: s.unit === '%' ? pct+'%' : insFmtK(sums[k]) };   // the bar is always the share; the number follows the unit switch
   });
-  return { type:'ranked', parts:true, items };
+  return { type:'ranked', parts:true, items, open:{ label:'Open in Salesforce' } };
 }
 const COVER_ROWS = [
   { name:'Hydraulic hose ½"',      d:9 },  { name:'Piping flange DN100',   d:18 }, { name:'Ball valve 2"',         d:27 },
@@ -6354,7 +6353,7 @@ const COVER_ROWS = [
 ];
 function insBuildFreshness(ctx){
   const lim = { '≤ 30 d':30, '≤ 60 d':60 }[((ctx.f || {}).cover || ['All'])[0]] || Infinity;
-  return { type:'list', items:COVER_ROWS.filter(r => r.d <= lim).map(r => ({ name:r.name, meta:r.d+' d of cover' })) };
+  return { type:'list', open:{ label:'Open in Salesforce' }, items:COVER_ROWS.filter(r => r.d <= lim).map(r => ({ name:r.name, meta:r.d+' d of cover' })) };
 }
 /* ---- Email: replied vs waiting on you, per time bucket ----
    Mock data, deterministic. Each bucket is [replied, waiting on you]; null = has not happened yet (empty slot).
@@ -7511,7 +7510,8 @@ function insSwitchesHTML(dash, ins){
 /* InsightCard: one pinned insight on a dashboard (content = dcBody; the shell supplies frame + header). */
 function dcCard(p, dash, extraCls = ''){
   const ins = p.insight, v = ins.view;
-  const open = v.open ? '<button type="button" class="in-ask dc-open" data-dc-open="'+(v.open.to || '')+'">'+v.open.label+' →</button>' : '';
+  // Icon-only "open in the source app" (external-link arrow, same button as the ···); the label shows as the dark tooltip on hover.
+  const open = v.open ? '<button type="button" class="dc-more__btn dc-open has-tip" data-dc-open="'+(v.open.to || '')+'" data-tip="'+rtEsc(v.open.label)+'" aria-label="'+rtEsc(v.open.label)+'">'+svg('external',2)+'</button>' : '';
   // ··· menu = the dashboard header menu: icon + label rows, groups split by dividers. What it offers depends on the
   // dashboard's role (not on who made it): viewOnly can't edit or remove a block.
   const role = dash.role || 'owner', viewOnly = role === 'viewOnly';

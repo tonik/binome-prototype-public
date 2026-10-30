@@ -192,6 +192,12 @@ Binome wordmark, 11px tall, top-left of the sidebar.
 - Suggestion pills only fill the input; sending and the in-conversation screen
   are not built yet.
 - Legacy alias tokens can be removed once all rules use `--c-*`.
+- **Insight cards drill down to where the data lives, not to a side panel.** Every card
+  that reads from an app has an icon-only button in its header (external-link arrow, next to the
+  ···) whose label shows as a tooltip on hover (Open in Tasks, HR, Harvest, Gmail, Salesforce). Only Tasks is a real destination in the prototype; the
+  others do nothing on click (simulated). In the app they should open the source app
+  scrolled to the matching section. Not added: "Mira noticed" (a summary across sources)
+  and cards the viewer has no access to (they show "Request access" instead).
 - **Personal sources (mail, calendar) are not handled separately in v1.** Blocks that read
   from a personal source (Gmail, calendar) behave like any other block: the insight runs on
   its owner's access and everyone the dashboard is shared with sees its data. A later version
