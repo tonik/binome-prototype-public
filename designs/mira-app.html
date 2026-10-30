@@ -604,7 +604,7 @@ body.nav-e .account-menu__ws + .account-menu__sep{display:none}
 .wl-pill{
   display:inline-flex;align-items:center;gap:6px;
   padding:6px 12px;border:1px solid var(--c-border);background:#fff;border-radius:999px;
-  font-family:inherit;font-size:13px;font-weight:var(--fw-medium);color:var(--slate);
+  font-family:inherit;font-size:13px;font-weight:var(--fw-medium);color:var(--ink);   /* CHANGE (2026-10-30): black label, was grey (--slate). One rule for every toggle pill: People status, Tasks (Needs you...), Routines. */
   cursor:pointer;transition:background .12s ease,color .12s ease,border-color .12s ease;
 }
 .wl-pill:hover{background:var(--c-bg);color:var(--ink)}
@@ -620,7 +620,7 @@ body.nav-e .account-menu__ws + .account-menu__sep{display:none}
   display:inline-flex;align-items:center;justify-content:center;
   min-width:18px;height:18px;padding:0 5px;margin-left:1px;
   background:var(--c-border);border-radius:999px;
-  font-size:11px;font-weight:var(--fw-semibold);line-height:1;color:var(--slate);
+  font-size:11px;font-weight:var(--fw-semibold);line-height:1;color:var(--ink);   /* count follows the label: black */
 }
 .wl-pill.is-active .wl-pill__count{background:#fff;color:var(--ink)}
 /* Pill clusters (the scope dropdowns, and the filter pills) — tight 4px gap. */
@@ -980,6 +980,13 @@ body.nav-e .account-menu__ws + .account-menu__sep{display:none}
 .rtl-build__txt{display:flex;flex-direction:column;gap:2px}
 .rtl-build__title{font-size:14px;font-weight:var(--fw-medium);color:var(--c-text)}
 /* Mira's panel for a bundle: checklist of what will be added. */
+/* CHANGE (2026-10-30), revised: drawer headers have EQUAL space above and below their content (16px each). The first version copied the
+   Mira chat header's 15px / 19.5px, which looked uneven. The chat header itself is left as it was: its 6px top offset lines the title up
+   with the workspace name in the sidebar. This applies to every header with a two-line title ("From library" panels, the person drawer)
+   and to the Admin Panel drawers (.adm-head). The People drawers also share one content height (38px row) so the person and team
+   headers come out the same size. */
+.rt-panel__head:has(.rt-panel__titles),.rt-panel__head.adm-head{height:auto;min-height:0;padding-top:16px;padding-bottom:16px}
+.rt-panel__head.adm-head .rt-panel__who{min-height:38px}
 .rt-panel__titles{display:flex;flex-direction:column;min-width:0}
 .rt-panel__sub{font-size:12px;color:var(--c-copy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rtl-body{display:flex;flex-direction:column;gap:14px}
@@ -1683,25 +1690,8 @@ button.home-addmenu__item:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){
    Only LAYOUT helpers live here (grids, gaps). Every visual piece reuses an existing
    component: .wl__head, .wl-view (segmented), .wl-ddpill, .wl-search, .wl-newtask,
    .in-table, .home-badge, .home-card, .rt-toggle, .rt-logo, .wl-pill, .home-link, .rt-empty. */
-/* ---- Admin Panel: floating "Panel | Architecture" switch + full-screen sitemap ----
-   The sitemap is an HTML re-draw (in Binome styling) of the Admin Panel ↔ User Settings sitemap.
-   Both live on <body> (see admSyncFloat) so they sit above the whole app, sidebar included. The switch reuses .wl-view. */
-.adm-float{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:80;box-shadow:0 4px 16px rgba(136,85,210,.18);background:#fff;border:1px solid var(--c-border);border-radius:12px;padding:4px}
-.adm-float .wl-view{margin:0;background:transparent}
-.adm-arch{position:fixed;inset:0;z-index:70;overflow:auto;background:var(--c-bg);padding:48px 56px 96px}
-.adm-arch__inner{max-width:1180px;margin:0 auto}
-.adm-arch__title{margin:0 0 28px;font-size:28px;font-weight:var(--fw-semibold);letter-spacing:-.01em;color:var(--c-text)}
-.adm-arch__grid{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1fr);row-gap:12px;align-items:stretch}
-.adm-arch__head{padding:14px 18px;border-radius:10px;background:var(--c-border);color:var(--c-text)}
-.adm-arch__head b{display:block;font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;font-weight:var(--fw-medium);text-transform:uppercase;letter-spacing:.06em}
-.adm-arch__head span,.adm-arch__box span{display:block;margin-top:4px;font-size:13px;line-height:1.45;color:var(--c-copy)}
-.adm-arch__box{padding:14px 18px;border-radius:10px;background:#fff;border:1px solid var(--c-border-strong);box-shadow:var(--card-shadow,0 1px 2px rgba(136,85,210,.04))}
-.adm-arch__box b{font-size:15px;font-weight:var(--fw-medium);color:var(--c-text)}
-.adm-arch__box b i{font-style:normal;font-weight:var(--fw-regular);color:var(--c-muted)}
-.adm-arch__box--dashed{border-style:dashed;background:transparent;box-shadow:none}
-.adm-arch__arrow{display:flex;align-items:center;justify-content:center;color:var(--c-brand-purple)}
-.adm-arch__arrow svg{width:18px;height:18px;display:block}
-@media (max-width:900px){.adm-arch{padding:32px 20px 96px}.adm-arch__grid{grid-template-columns:1fr}.adm-arch__arrow{display:none}}
+/* REMOVED (2026-10-30): the floating "Panel | Architecture" switch and the full-screen sitemap (.adm-float, .adm-arch*) were
+   deleted because the sitemap was out of date. Recoverable from git history. */
 .adm-toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px}
 .adm-toolbar__end{margin-left:auto}
 .adm-toolbar__group{display:flex;align-items:center;gap:10px}
@@ -1728,6 +1718,54 @@ button.home-addmenu__item:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){
 .adm-person{display:flex;align-items:center;gap:12px}
 .adm-person .avatar{flex:0 0 auto}
 .adm-note{margin:16px 0 0;font-size:13px;color:var(--c-copy)}
+/* People (2026-10-30). Only layout glue: colours, type and components are the existing ones. */
+.adm .dc-banner{margin:0 0 6px}                                   /* setup-gap banners stack with 6px between them... */
+.adm .dc-banner:has(+ :not(.dc-banner)){margin-bottom:12px}       /* ...and the last one keeps 12px before the tabs */
+.in-table tbody tr.is-selected{background:var(--c-hover)}         /* the row whose drawer is open */
+.in-table tbody tr:focus-visible{outline:2px solid var(--c-brand-purple);outline-offset:-2px}
+.in-table th .adm-info{vertical-align:middle;margin-left:2px}
+.adm-info__pop{width:300px;padding:12px 14px;white-space:normal;text-align:left;text-transform:none;letter-spacing:0;font-size:13px;font-weight:var(--fw-regular);color:var(--c-copy);cursor:default}
+.adm-info__role + .adm-info__role{margin-top:10px}
+.adm-info__link{margin-top:12px}
+/* Person drawer sections: hairline between them, label (.adm-label) on the left, an optional note or link on the right. */
+.adm-drawer{display:flex;flex-direction:column}
+.adm-drawer__name{display:flex;align-items:center;gap:8px;min-width:0}   /* name + status tag in the person drawer header */
+.adm-drawer__sec{display:flex;flex-direction:column;gap:10px;padding:16px 0;border-bottom:1px solid var(--c-border)}
+.adm-drawer__sec:first-child{padding-top:0}                           /* the first section starts right at the panel's own top padding (it used to add 16px more) */
+.adm-drawer__sec:last-child{border-bottom:0;padding-bottom:0}
+.rt-panel__body:has(> .adm-drawer){padding-top:20px}
+.adm-drawer__head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.adm-drawer__head .adm-label{margin:0}
+.adm-drawer__pickers{display:flex;gap:8px;flex-wrap:wrap}
+.adm-drawer__line{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.adm-drawer__line > .home-btn,.adm-drawer__line > .home-link{flex:0 0 auto;white-space:nowrap}
+.adm-drawer__card{padding:12px;border:1px solid var(--c-border);border-radius:12px}
+.adm-drawer__head .wl-ddpill{white-space:nowrap}   /* "Add people" in the Members header */
+.adm-drawer__head .wl-ddpill > svg{width:14px;height:14px;display:block;flex:0 0 14px}
+.adm-drawer__members{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.adm-drawer__member{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.adm-drawer__full .wl-dd{display:flex;width:100%}                      /* "Role in organization": the picker spans the drawer */
+.adm-drawer__full .wl-ddpill{width:100%;justify-content:space-between;padding:10px 14px}
+.adm-drawer__full .wl-ddmenu{left:0;right:0}
+.adm-drawer__teamlist{gap:0}                                         /* team rows are separated by hairlines instead of a gap */
+.adm-drawer__teamlist .adm-drawer__member{padding:10px 0;border-bottom:1px solid var(--c-border)}
+.adm-drawer__teamlist .adm-drawer__member:last-child{border-bottom:0}
+.adm-drawer__exit{padding-top:16px;border-top:1px solid var(--c-border)}   /* the Remove button sits under a hairline, full width */
+.adm-drawer__wide{width:100%;height:40px}
+.adm-drawer__teamctl{display:flex;align-items:center;gap:4px}   /* role picker + remove x on a team row */
+.adm-addpeople .share-list{position:static;margin-top:12px;max-height:320px;border:0;box-shadow:none;padding:0}   /* Add people: the list sits under the field instead of dropping down */
+.adm-addpeople .share-opt{padding:8px}
+.adm-pick__menu{min-width:260px;max-height:280px;overflow-y:auto}   /* Add people / Move to... menus */
+.adm-pick__empty{padding:8px 10px}
+.adm-drawer__tools{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.adm-drawer__tools li{display:flex;align-items:center;gap:10px}
+/* Remove / Assign head dialog: let the person picker's menu overhang the panel (same as the Share modal). */
+.adm-dialog .home-modal__panel{overflow:visible}
+.adm-dialog .home-modal__label{margin-top:16px}
+.adm-dialog--plain .wl-dd{display:flex;width:100%;margin-top:14px}                       /* Assign head: picker spans the dialog */
+.adm-dialog--plain .wl-ddpill{width:100%;justify-content:space-between;padding:10px 14px}
+.adm-dialog--plain .wl-ddmenu{left:0;right:0}
+.adm-dialog__note{margin-top:8px;font-size:13px}
 .adm-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
 @media (max-width:900px){.adm-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .adm-stat__label{font-size:13px;color:var(--c-copy)}
@@ -1754,6 +1792,12 @@ button.home-addmenu__item:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){
 .in-table tbody tr{transition:background .12s ease}
 .in-table tbody tr:hover{background:var(--c-hover)}
 .in-table tbody tr.is-clickable{cursor:pointer}
+/* "Open" button (2026-10-30): on a table row that opens something (a person, a team, an insight) a small button appears next to the
+   first column's content while the row is hovered or focused. It is only a visual affordance: a click on it bubbles to the row, which
+   does the opening, so no extra handler is needed. Not reachable by Tab (the focusable row already does the same on Enter). */
+.in-firstcell{display:flex;align-items:center;gap:12px;min-width:0}
+.in-open{height:26px;padding:0 10px;font-size:12px;opacity:0;pointer-events:none;transition:opacity .12s ease,background .12s ease,border-color .12s ease}
+.in-table tbody tr.is-clickable:hover .in-open,.in-table tbody tr.is-clickable:focus-visible .in-open{opacity:1;pointer-events:auto}
 .in-name{font-weight:var(--fw-medium);color:var(--c-text);white-space:normal}   /* row title: 500 */
 /* "Made with" chip: neutral outline, same family as the other chips (label = 500) */
 .in-chip{
@@ -2066,6 +2110,13 @@ button.home-addmenu__item:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){
 .dc-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:14px 18px;border-radius:12px;background:var(--c-brand-purple);color:#fff}
 .dc-banner__title{font-size:14px;font-weight:var(--fw-medium)}
 .dc-banner__text{margin-top:2px;font-size:13px;font-weight:var(--fw-regular);color:rgba(255,255,255,.85)}
+/* Warning variant (2026-10-30): the same banner in the app's warning tint (the colours of .home-badge--warn). Used by the People setup gaps. */
+.dc-banner--warn{background:#f6e7c4;color:#8a6a24}
+.dc-banner--warn .dc-banner__text{color:#8a6a24}
+.dc-banner--warn .dc-banner__btn{border-color:#8a6a24;color:#8a6a24}
+.dc-banner--warn .dc-banner__btn:hover{background:rgba(138,106,36,.12)}
+.dc-banner--warn .dc-banner__btn--on{background:#8a6a24;border-color:#8a6a24;color:#fff}
+.dc-banner--warn .dc-banner__btn--on:hover{background:#8a6a24;opacity:.9}
 .dc-banner__btns{display:flex;gap:8px;flex-wrap:wrap}
 .dc-banner__btn{height:32px;padding:0 14px;border:1px solid rgba(255,255,255,.5);background:transparent;font-size:13px;font-weight:var(--fw-medium);color:#fff;white-space:nowrap}
 .dc-banner__btn:hover{background:rgba(255,255,255,.12)}
@@ -2943,14 +2994,15 @@ function renderChatMenu(){
 const HIDE_MODE_CONTENT = true;   // see renderContent: hides the right-hand content of Admin Panel + Settings
 function renderContent(){
   const c = document.getElementById('content');
-  admSyncFloat();   // Admin Panel: floating Panel | Architecture switch + sitemap overlay (removed outside the mode)
   // The Home "Add widgets" dropdown lives on <body>; drop any left over from a previous render/page.
   document.querySelectorAll('.home-addmenu').forEach(m => m.remove());
   // TEMPORARY (2026-10-29): while HIDE_MODE_CONTENT is true, the Admin Panel and Settings keep their sidebar tabs
   // but the content on the right is blank. Nothing is deleted: every renderer (renderAdmPeople, renderAdmTools,
   // renderAdmMonitoring, renderMiraSettings, ...) and its render branch below is untouched. Set the flag to
-  // false to bring all those screens back. (The floating Panel | Architecture switch is separate and stays.)
-  if(activeMode && HIDE_MODE_CONTENT){ c.className = 'content'; c.innerHTML = ''; return; }
+  // false to bring all those screens back.
+  // CHANGE (2026-10-30): People is the one Admin Panel screen exempt from the flag, because it was rebuilt from the
+  // new People wireframes. The other Admin Panel tabs and all of Settings stay blank until their turn.
+  if(activeMode && HIDE_MODE_CONTENT && activeId !== 'adv-people'){ c.className = 'content'; c.innerHTML = ''; return; }
   if(activeId === 'home'){
     c.className = 'content';
     c.innerHTML = renderHome();
@@ -3282,59 +3334,608 @@ function admHead(title){
   return '<header class="wl__head"><h1 class="wl__title">'+title+'</h1></header>';
 }
 
-/* --- People --- */
-let admPeopleView = 'members';   // 'members' | 'teams' (segmented switch)
-const ADM_MEMBERS = [
-  { name:'Emily Carter',     mail:'emily@company.com',   team:'All teams',        role:'Org admin', tools:'5 tools',  status:'Active' },
-  { name:'Michael Brooks',   mail:'michael@company.com',   team:'Sales',            role:'Team lead', tools:'4 tools',  status:'Active' },
-  { name:'Jessica Miller',   mail:'jessica@company.com',     team:'Sales',            role:'Member',    tools:'3 tools',  status:'Active' },
-  { name:'David Thompson',   mail:'david@company.com',   team:'Customer success', role:'Team lead', tools:'2 tools',  status:'Active' },
-  { name:'Ashley Davis',     mail:'ashley@company.com',   team:'Customer success', role:'Member',    tools:'None yet', status:'Invited' },
+/* --- People ---
+   REWRITTEN (2026-10-30) from the new People wireframes (Inputs/Wireframes/Main.dc.html = the list and
+   Member.dc.html = the person drawer). Only their CONTENT is used: the wireframes' side nav and tab bar are
+   the app's own (MODES.advanced.nav).
+   MODEL (MVP, flat): there is NO "Department". A Team is the only grouping: name, optional head, members, tool pool.
+   - A person can belong to several teams (no single "home" team). Admins sit above all teams.
+   - No reporting lines. Each team has an optional head. A team routine is approved by the head of the team the routine
+     belongs to (not by the creator's head); a team without a head sends approvals to the admins.
+   - `parentId` is kept on every team (always null) so reporting lines and escalations can be added later.
+   - Roles (2026-10-30): only Admin is set by hand (the "Admin access" toggle in the person drawer). Everything else is derived and shown
+     as Admin / Head / Member: Admin if admin access is on; else Head if they lead at least one team; else Member. Head is assigned ONLY
+     in the Team drawer (its Head picker); one head per team, and picking a new one replaces the old. An admin who leads a team stays
+     Admin and the team shows the Head marker on their row.
+   Other decisions: Archive does not exist; there is ONE way out, "Remove from <company>" (history stays, restorable, no hard
+   delete in the UI). Clicking a person or a team opens a drawer (the existing right side panel, see updateRtPanel). The setup
+   gaps are rendered with the existing .dc-banner. All data is placeholder and lives in memory only (a reload resets it). */
+// Name used in "Remove from <company>". Placeholder: the real organisation name comes from the account.
+const ADM_COMPANY = 'Organization';
+let admPeopleView = 'members';   // 'members' | 'teams' (tabs)
+// Every filter is multi-select: a Set of the ticked values, empty = the filter is off.
+let admStatus = new Set();       // status pills: any of 'Active' | 'Invited' | 'Removed'
+let admTeamF = new Set(), admRoleF = new Set();   // Team / Role dropdowns (same multi dropdown as the Routines "Show:" pill)
+let admQuery = '';               // search text
+let admReopen = null;           // key of the multi dropdown to reopen after a re-render, so several options can be ticked in a row
+let admMemberOpen = null;        // id of the person whose drawer is open (read by updateRtPanel)
+let admTeamOpen = null;          // name of the team whose drawer is open (Teams tab). Only one of the two drawers is open at a time.
+let admMemberVer = 0;            // bumped on every change so updateRtPanel rebuilds the open drawer
+
+// The roles shown in the Role filter. Head is derived (see above).
+const ADM_ROLES = [
+  { name:'Admin',  text:'Everything, org-wide: pool, permission ceiling, rules, costs.' },
+  { name:'Head',   text:'Their teams only: members, routine approvals, runs & costs.' },
+  { name:'Member', text:'Connects own accounts to the company tools; own and team routines within the ceiling.' },
 ];
+// Teams: head = a person's name (null = no head yet, which raises a banner and sends approvals to the admins), parentId = reserved
+// for future reporting lines (null for all), tools = the tool pool (RT_TOOLS ids). Slack is not listed: it is a communication
+// channel, not a tool. NOTE: nothing in People shows `tools` any more (the Company tools section left the person drawer); data only.
 const ADM_TEAMS = [
-  { name:'Sales',            lead:'Michael Brooks',  people:3, tools:'4 tools' },
-  { name:'Customer success', lead:'David Thompson', people:2, tools:'2 tools' },
+  { name:'Sales',             head:null,        parentId:null, tools:['gmail','gcal','hubspot'] },
+  { name:'Operations',        head:'Tom Reyes', parentId:null, tools:['gmail','gcal','notion'] },
+  { name:'Finance',           head:'Lena Berg', parentId:null, tools:['gmail','gcal','notion'] },
+  { name:'Customer projects', head:'Tom Reyes', parentId:null, tools:['gmail','gcal','notion'] },
 ];
-// Status -> existing badge colour: Active = green, Invited = info blue. (The Archived status was removed on request.)
-const ADM_STATUS_BADGE = { Active:'home-badge--ok', Invited:'home-badge--info' };
+// role: 'Admin' | 'Member' (Head is derived). teams: names of the teams the person is in (an admin may be in none and still sits above all).
+// status: Active | Invited | Removed. invitedDays = how long an invitation has waited (Invited only).
+// routines / tasks = what they own, which is what the Remove dialog offers to reassign.
+const ADM_MEMBERS = [
+  { id:'anna',   name:'Anna Novak',   mail:'anna@company.com',   role:'Admin',  teams:[],                                    status:'Active',  since:'Oct 2026', routines:2, tasks:5 },
+  { id:'tom',    name:'Tom Reyes',    mail:'tom@company.com',    role:'Member', teams:['Operations','Customer projects'],    status:'Active',  since:'Oct 2026', routines:3, tasks:7 },
+  { id:'maya',   name:'Maya Klein',   mail:'maya@company.com',   role:'Member', teams:['Sales','Customer projects'],         status:'Active',  since:'Oct 2026', routines:4, tasks:9 },
+  { id:'jonas',  name:'Jonas Okafor', mail:'jonas@company.com',  role:'Member', teams:['Sales'],                             status:'Active',  since:'Oct 2026', routines:1, tasks:3 },
+  { id:'lena',   name:'Lena Berg',    mail:'lena@company.com',   role:'Member', teams:['Finance'],                           status:'Active',  since:'Oct 2026', routines:2, tasks:4 },
+  { id:'priya',  name:'Priya Shah',   mail:'priya@company.com',  role:'Member', teams:['Operations'],                        status:'Invited', invitedDays:9,  routines:0, tasks:0 },
+  { id:'noah',   name:'Noah Fischer', mail:'noah@company.com',   role:'Member', teams:['Operations'],                        status:'Invited', invitedDays:12, routines:0, tasks:0 },
+  { id:'daniel', name:'Daniel Wu',    mail:'daniel@company.com', role:'Member', teams:['Sales'],                             status:'Invited', invitedDays:2,  routines:0, tasks:0 },
+  { id:'eva',    name:'Eva Costa',    mail:'eva@company.com',    role:'Member', teams:['Finance'],                           status:'Removed', since:'Oct 2026', routines:0, tasks:0 },
+];
+// Status -> existing badge colour: Active = green, Invited = info blue, Removed = neutral grey.
+const ADM_STATUS_BADGE = { Active:'home-badge--ok', Invited:'home-badge--info', Removed:'home-badge--neutral' };
+
+// The hover "Open" button of a clickable table row (see .in-open). Shared by People, Teams and Insights.
+const inOpenBtn = () => '<button type="button" class="home-btn in-open" tabindex="-1">Open</button>';
+const admMember = id => ADM_MEMBERS.find(m => m.id === id);
+const admTeam = name => ADM_TEAMS.find(t => t.name === name);
+const admFirst = name => name.split(' ')[0];
+const admPlural = (n, one, many) => n+' '+(n === 1 ? one : (many || one+'s'));
+const admCount = status => ADM_MEMBERS.filter(m => m.status === status).length;
+// The people of a team (removed people are not "in" it for counts, but keep their membership so Restore access brings it back).
+const admTeamMembers = name => ADM_MEMBERS.filter(m => m.teams.indexOf(name) >= 0 && m.status !== 'Removed');
+// The role shown in the table and the Role filter: Admin, else Head when they head at least one team, else Member.
+const admRoleOf = m => m.role === 'Admin' ? 'Admin' : (ADM_TEAMS.some(t => t.head === m.name) ? 'Head' : 'Member');
+const admTeamsLabel = m => m.teams.length ? m.teams.join(', ') : (m.role === 'Admin' ? 'All teams' : 'No team');
+
+/* The open gaps shown as banners: a team without a head (its approvals go to the admins) and invitations waiting 7+ days.
+   Derived from the data, so fixing one makes its banner disappear. */
+function admGaps(){
+  const gaps = ADM_TEAMS.filter(t => !t.head).map(t => ({
+    kind:'head', team:t.name, title:t.name+' has no head',
+    text:'Until you assign one, approvals for '+t.name+' routines come to the admins.', btn:'Assign head' }));
+  const stale = ADM_MEMBERS.filter(m => m.status === 'Invited' && m.invitedDays >= 7);
+  if(stale.length) gaps.push({ kind:'invites', title:admPlural(stale.length, 'invitation')+' unanswered for 7+ days',
+    text:'Their team routines are waiting on them.', btn:'Resend all' });
+  return gaps;
+}
+// TEMPORARY (2026-10-30): the setup-gap banners are hidden for now. Set to true to bring them back; the gaps logic, the banner
+// markup, the "Assign head" and "Resend all" handlers and the .dc-banner--warn variant are all still in place.
+const ADM_SHOW_GAPS = false;
+function admGapsHTML(){
+  if(!ADM_SHOW_GAPS) return '';
+  return admGaps().map((g, i) =>
+    '<div class="dc-banner dc-banner--warn" role="status"><div><div class="dc-banner__title">'+g.title+'</div><div class="dc-banner__text">'+g.text+'</div></div>'+
+    '<div class="dc-banner__btns"><button type="button" class="dc-banner__btn dc-banner__btn--on" data-adm-gap="'+i+'">'+g.btn+'</button></div></div>').join('');
+}
+
+/* People who match the status pills, the Team / Role filters and the search box. A person matches the Team filter when they are in
+   ANY of the ticked teams. Removed people are part of the default list (grey tag); the Removed pill narrows to them. */
+function admVisible(){
+  const q = admQuery.trim().toLowerCase();
+  return ADM_MEMBERS.filter(m =>
+    (!admStatus.size || admStatus.has(m.status)) &&
+    (!admTeamF.size || m.teams.some(t => admTeamF.has(t))) &&
+    (!admRoleF.size || admRoleF.has(admRoleOf(m))) &&
+    (!q || (m.name+' '+m.mail).toLowerCase().includes(q)));
+}
+
+/* The ··· button + menu of a row. What it offers depends on the status: a removed person can only be restored, an invited one
+   can be re-invited. "Remove" is the only way out (no Archive). Text only, no icons. */
+function admMenuItem(act, label, cls){
+  return '<button type="button" class="wl-ddmenu__item'+(cls || '')+'" role="menuitem" data-adm-act="'+act+'">'+label+'</button>';
+}
+function admRowMenuHTML(m){
+  const sep = '<div class="wl-ddmenu__sep" role="separator"></div>';
+  const items = m.status === 'Removed'
+    ? admMenuItem('restore','Restore access')
+    // Change role and Edit teams only open the drawer, where the role picker and the Teams section are (simulated shortcut).
+    : admMenuItem('role','Change role')+admMenuItem('teams','Edit teams')+
+      (m.status === 'Invited' ? admMenuItem('resend','Resend invitation') : '')+   // Reset 2FA lives in the drawer only
+      sep+admMenuItem('remove','Remove',' wl-ddmenu__item--danger');
+  return '<span class="rt-more" data-adm-more="'+m.id+'">'+
+    '<button type="button" class="rt-more__btn" aria-haspopup="menu" aria-expanded="false" aria-label="More actions for '+m.name+'">'+svg('more',2.4)+'</button>'+
+    '<div class="wl-ddmenu" role="menu" hidden>'+items+'</div></span>';
+}
+
+/* ORPHANED (2026-10-30): the roles info popover (an info icon opening the three roles) has no trigger on screen any more; its
+   markup and wiring (admWireMenus) are kept in case a place for it is decided. */
+function admRolesInfoHTML(){
+  return '<span class="rt-more adm-info" data-adm-info>'+
+    '<button type="button" class="rt-more__btn" aria-haspopup="dialog" aria-expanded="false" aria-label="What each role can do">'+svg('info',2)+'</button>'+
+    '<div class="wl-ddmenu adm-info__pop" role="dialog" aria-label="Roles" hidden>'+
+      ADM_ROLES.map(r => '<div class="adm-info__role"><div class="adm-row__name">'+r.name+'</div><div class="adm-row__meta">'+r.text+'</div></div>').join('')+
+      '<button type="button" class="home-link adm-info__link">What each role can do &rarr; Rules</button>'+
+    '</div></span>';
+}
+
+/* The table rows of the People view (also the empty state). Rebuilt on its own while typing in the search box. */
+function admRowsHTML(){
+  const rows = admVisible();
+  if(!rows.length){
+    return '<tr><td colspan="5"><div class="rt-empty"><div class="rt-empty__title">No one matches</div>'+
+      '<p class="rt-empty__text">Try another search or clear the filters.</p>'+
+      '<div class="rt-empty__actions"><button type="button" class="rt-empty__btn" data-adm-clear>Clear filters</button></div></div></td></tr>';
+  }
+  return rows.map(m =>
+    '<tr class="is-clickable'+(m.id === admMemberOpen ? ' is-selected' : '')+'" tabindex="0" data-adm-open="'+m.id+'">'+
+      '<td><div class="in-firstcell"><span class="adm-person"><span class="avatar">'+shareInitials(m.name)+'</span><span><span class="in-name">'+m.name+'</span><br><span class="adm-row__meta">'+m.mail+'</span></span></span>'+inOpenBtn()+'</div></td>'+
+      '<td>'+admTeamsLabel(m)+'</td>'+
+      '<td><span class="in-chip">'+admRoleOf(m)+'</span></td>'+
+      '<td><span class="home-badge '+ADM_STATUS_BADGE[m.status]+'">'+m.status+'</span></td>'+
+      '<td>'+admRowMenuHTML(m)+'</td>'+
+    '</tr>').join('');
+}
+
+/* A multi-select filter pill, built like the Routines "Show:" pill: ticking an option does not close the menu,
+   nothing ticked says just the name ("Role"), otherwise "Role: Head" / "Role: 2 selected", and a Clear row appears. */
+function admMultiDdHTML(key, name, options, set){
+  const sel = options.filter(o => set.has(o));
+  const items = (options.map(o => ddItem(o, set.has(o))).join('')+(sel.length ? ddClearItem() : '')).replace(/menuitemradio/g, 'menuitemcheckbox');
+  return ddPillHTML(Object.assign({ key:key, itemsHTML:items, multi:true }, rtFilterPill(name, sel)));
+}
 function renderAdmPeople(){
-  const seg = (id, label) => '<button type="button" class="wl-view__item'+(admPeopleView===id?' is-active':'')+'" data-adm-view="'+id+'">'+label+'</button>';
+  // People | Teams = the same underline tabs as Tasks | Projects (.wl-tabsrow / .wl-tab with an icon).
+  const tab = (id, icon, label) => '<button type="button" class="wl-tab'+(admPeopleView===id?' is-active':'')+'" data-adm-view="'+id+'">'+
+    '<span class="wl-tab__icon">'+svg(icon)+'</span>'+label+'</button>';
   const members = admPeopleView === 'members';
-  const rows = members
-    ? ADM_MEMBERS.map(m =>
-        '<tr>'+
-          '<td><span class="adm-person"><span class="avatar">'+m.name[0]+'</span><span><span class="in-name">'+m.name+'</span><br><span class="adm-row__meta">'+m.mail+'</span></span></span></td>'+
-          '<td>'+m.team+'</td><td>'+m.role+'</td><td>'+m.tools+'</td>'+
-          '<td><span class="home-badge '+ADM_STATUS_BADGE[m.status]+'">'+m.status+'</span></td>'+
-          '<td><button type="button" class="wl-ddpill wl-ddpill--bare" aria-label="Member actions">'+svg('more',2)+'</button></td>'+
-        '</tr>').join('')
-    : ADM_TEAMS.map(t =>
-        '<tr><td><span class="in-name">'+t.name+'</span></td><td>'+t.lead+'</td><td>'+t.people+' people</td><td>'+t.tools+'</td><td></td><td></td></tr>').join('');
-  const head = members
-    ? '<th>Member</th><th>Team</th><th>Role</th><th>Connected tools</th><th>Status</th><th></th>'
-    : '<th>Team</th><th>Lead</th><th>People</th><th>Tools</th><th></th><th></th>';
-  const teamItems = ddItem('All', true)+ADM_TEAMS.map(t => ddItem(t.name,false)).join('');
-  const roleItems = ddItem('All', true)+['Org admin','Team lead','Member'].map(r => ddItem(r,false)).join('');
-  return '<div class="adm">'+admHead('People')+
-    '<div class="adm-toolbar">'+
-      '<div class="wl-view">'+seg('members','Members')+seg('teams','Teams')+'</div>'+
-      (members ? ddPillHTML({ key:'team', label:'Team:', value:'All', itemsHTML:teamItems })+
-        ddPillHTML({ key:'role', label:'Role:', value:'All', itemsHTML:roleItems }) : '')+
-      // CHANGE (2026-10-29): the search magnifier now sits right next to "Invite member", to its LEFT, at the
-      // far right of the toolbar (the filters stay on the left). In Teams view there is no search, so the
-      // button alone takes the right edge.
-      '<span class="adm-toolbar__end adm-toolbar__group">'+(members ? searchBoxHTML('Search members') : '')+
-      '<button type="button" class="wl-newtask"><span class="wl-newtask__icon">'+svg('plus',2)+'</span>'+(members ? 'Invite member' : 'New team')+'</button></span>'+
-    '</div>'+
-    '<div class="in-tablewrap"><table class="in-table"><thead><tr>'+head+'</tr></thead><tbody>'+rows+'</tbody></table></div>'+
+  let toolbarLeft = '', toolbarEnd, table;
+  if(members){
+    // Status filter = the toggle pills used on Tasks (a count, and an X while applied). None applied = every status.
+    const pill = s => '<button type="button" class="wl-pill'+(admStatus.has(s)?' is-active':'')+'" data-adm-status="'+s+'">'+s+
+      '<span class="wl-pill__count">'+admCount(s)+'</span><span class="wl-pill__x">'+svg('close',2.25)+'</span></button>';
+    // Same order as the Tasks toolbar: dropdown filters, a divider, then the toggle pills.
+    toolbarLeft = '<div class="wl-pillgroup">'+
+        admMultiDdHTML('admteam', 'Team', ADM_TEAMS.map(t => t.name), admTeamF)+
+        admMultiDdHTML('admrole', 'Role', ADM_ROLES.map(r => r.name), admRoleF)+
+      '</div>'+
+      '<span class="wl-divider" aria-hidden="true"></span>'+
+      '<div class="wl-pillgroup">'+pill('Active')+pill('Invited')+pill('Removed')+'</div>';
+    // Right cluster as on Tasks: collapsible search next to the primary action.
+    toolbarEnd = searchBoxHTML('Search people')+
+      '<button type="button" class="wl-newtask"><span class="wl-newtask__icon">'+svg('plus',2)+'</span>Invite people</button>';
+    table = '<div class="in-tablewrap"><table class="in-table"><thead><tr><th>Person</th><th>Teams</th><th>Role</th><th>Status</th><th></th></tr></thead>'+
+      '<tbody data-adm-body>'+admRowsHTML()+'</tbody></table></div>';
+  } else {
+    // Teams tab: name, head and size. There is no "Reports to" (flat structure in the MVP).
+    const rows = ADM_TEAMS.map(t => {
+      // A team without a head shows a dash (2026-10-30); assigning one is done in the banner or the team drawer.
+      const head = t.head ? t.head : '&ndash;';
+      return '<tr class="is-clickable'+(t.name === admTeamOpen ? ' is-selected' : '')+'" tabindex="0" data-adm-team-open="'+t.name+'"><td><div class="in-firstcell"><span class="in-name">'+t.name+'</span>'+inOpenBtn()+'</div></td><td>'+head+'</td><td>'+admPlural(admTeamMembers(t.name).length, 'person', 'people')+'</td></tr>';
+    }).join('');
+    toolbarEnd = '<button type="button" class="wl-newtask"><span class="wl-newtask__icon">'+svg('plus',2)+'</span>Add team</button>';
+    table = '<div class="in-tablewrap"><table class="in-table"><thead><tr><th>Team</th><th>Head</th><th>People</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+  }
+  return '<div class="adm">'+admHead('People')+admGapsHTML()+
+    '<div class="wl-tabsrow"><nav class="wl-tabs">'+tab('members','users','People')+tab('teams','projects','Teams')+'</nav></div>'+
+    '<div class="wl-toolbar"><div class="wl-toolbar__left">'+toolbarLeft+'</div>'+
+      '<div class="wl-toolbar__right">'+toolbarEnd+'</div></div>'+
+    table+
   '</div>';
 }
+
+/* ---- Floating menus (row menu, Roles popover) ----
+   The table sits in an overflow container, which would clip an absolutely positioned menu (the last rows would
+   push a scrollbar into it). So an open menu is switched to position:fixed and placed from the button's rectangle.
+   Only one is open at a time; an outside press, Escape or any scroll closes it. */
+let admMenuOff = null;
+function admCloseMenu(){ if(admMenuOff){ admMenuOff(); admMenuOff = null; } }
+function admOpenMenu(wrap, alignLeft){
+  admCloseMenu();
+  const btn = wrap.querySelector('.rt-more__btn,[data-adm-btn]'), menu = wrap.querySelector('.wl-ddmenu');
+  menu.hidden = false; wrap.classList.add('is-open'); btn.setAttribute('aria-expanded','true');
+  const r = btn.getBoundingClientRect(), w = menu.offsetWidth, h = menu.offsetHeight;
+  const left = alignLeft ? r.left : r.right - w + 6;                                  // row menu: right edges line up
+  menu.style.position = 'fixed'; menu.style.right = 'auto';
+  menu.style.left = Math.max(8, Math.min(left, window.innerWidth - w - 8))+'px';
+  menu.style.top = (r.bottom + 6 + h > window.innerHeight - 8 ? Math.max(8, r.top - h - 6) : r.bottom + 6)+'px';   // flips above near the bottom
+  const onDown = e => { if(!wrap.contains(e.target)) admCloseMenu(); };
+  const onKey = e => { if(e.key === 'Escape') admCloseMenu(); };
+  // Scrolling closes the menu only when it moves the button the menu is anchored to (the page or a scrolling
+  // ancestor). Scrolling something unrelated, such as the chat list, must not dismiss it.
+  const onScroll = e => { if(e.target === document || e.target.contains(wrap)) admCloseMenu(); };
+  const off = () => {
+    menu.hidden = true; menu.removeAttribute('style'); wrap.classList.remove('is-open'); btn.setAttribute('aria-expanded','false');
+    document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey);
+    window.removeEventListener('scroll', onScroll, true); window.removeEventListener('resize', admCloseMenu);
+  };
+  document.addEventListener('mousedown', onDown); document.addEventListener('keydown', onKey);
+  window.addEventListener('scroll', onScroll, true); window.addEventListener('resize', admCloseMenu);
+  admMenuOff = off;
+}
+/* Wires the menu buttons found by `sel` inside `root` ('[data-adm-more]' = row menus, '[data-adm-info]' = Roles
+   popovers). Row menus and the popovers are wired separately because the rows are rebuilt while searching. */
+function admWireMenus(root, sel){
+  root.querySelectorAll(sel).forEach(wrap => {
+    wrap.querySelector('.rt-more__btn,[data-adm-btn]').addEventListener('click', e => {
+      e.stopPropagation();   // inside a row: the click must not also open the drawer
+      const wasOpen = wrap.classList.contains('is-open');
+      admCloseMenu();
+      if(!wasOpen) admOpenMenu(wrap, wrap.hasAttribute('data-adm-info'));
+    });
+    wrap.querySelectorAll('[data-adm-act]').forEach(item => item.addEventListener('click', e => {
+      e.stopPropagation();
+      admCloseMenu();
+      admAct(wrap.dataset.admMore, item.dataset.admAct);
+    }));
+  });
+}
+
+/* Refresh everything that shows people: the table behind and (when open) the drawer. */
+function admRefresh(){ admMemberVer++; renderContent(); updateRtPanel(); }
+function admOpenMember(id){ admMemberOpen = id; admTeamOpen = null; admMemberVer++; renderContent(); updateRtPanel(); }
+function admOpenTeam(name){ admTeamOpen = name; admMemberOpen = null; admMemberVer++; renderContent(); updateRtPanel(); }
+
+/* One entry point for the row-menu actions and the drawer buttons. */
+function admAct(id, act){
+  const m = admMember(id); if(!m) return;
+  if(act === 'role' || act === 'teams') admOpenMember(id);   // simulated: the drawer holds the Role picker and the Teams section
+  else if(act === 'reset2fa') rtConfirm({ title:'Reset two-factor for '+m.name+'?',
+    text:'If '+admFirst(m.name)+' lost the device, a reset lets '+admFirst(m.name)+' set it up again at next sign-in.', confirm:'Reset 2FA' },
+    () => shareToast('Two-factor reset for '+m.name));
+  else if(act === 'signout') rtConfirm({ title:'Sign '+m.name+' out everywhere?',   // ORPHANED: the button is hidden for now
+    text:'All '+admFirst(m.name)+'’s sessions end. Signing in again works as usual.', confirm:'Sign out everywhere' },
+    () => shareToast(m.name+' signed out everywhere'));
+  else if(act === 'resend'){ m.invitedDays = 0; shareToast('Invitation resent to '+m.mail); admRefresh(); }
+  else if(act === 'remove') admRemoveDialog(m);
+  else if(act === 'restore'){ m.status = 'Active'; shareToast(m.name+' can sign in again'); admRefresh(); }
+}
+
+/* Team membership changes. Leaving a team you head clears its head (the team then raises the "has no head" banner). */
+function admJoinTeam(m, team){ if(m.teams.indexOf(team) < 0) m.teams.push(team); }
+function admLeaveTeam(m, team){
+  m.teams = m.teams.filter(t => t !== team);
+  const t = admTeam(team); if(t && t.head === m.name) t.head = null;
+}
+
+// Role in ONE team (person drawer): Head makes the person the team's head and replaces the previous head, who is then a plain member
+// again (same result as the Head picker in the team drawer); Member clears the headship when they held it.
+function admSetTeamRole(m, team, role){
+  const t = admTeam(team); if(!t) return;
+  if(role === 'Head') t.head = m.name; else if(t.head === m.name) t.head = null;
+}
+
+/* A dialog on the Remove / Assign head shell: title, text and (optionally) one person picker. The picker is the
+   existing dropdown pill; its menu overhangs the panel, so the panel is not clipped (.adm-dialog in the CSS).
+   Cancel, Escape and a click on the backdrop close it. Escape closes an open picker first, not the dialog. */
+function admDialog(o, onYes){
+  const m = document.createElement('div');
+  m.className = 'home-modal rt-confirm adm-dialog'+(o.plain ? ' adm-dialog--plain' : '');   // plain = title, full-width picker, buttons
+  let pick = o.options && o.options.length ? (o.options.find(x => x.id === o.def) || o.options[0]) : null;
+  m.innerHTML =
+    '<div class="home-modal__panel" role="alertdialog" aria-modal="true" aria-label="'+rtEsc(o.title)+'">'+
+      '<h3 class="home-modal__title">'+rtEsc(o.title)+'</h3>'+
+      (o.text ? '<div class="home-modal__text rt-confirm__text">'+o.text+'</div>' : '')+
+      (pick ? (o.label ? '<div class="home-modal__label">'+o.label+'</div>' : '')+
+        ddPillHTML({ key:'admpick', label:'', value:pick.name, itemsHTML:o.options.map(x => ddItem(x.name, x.id === pick.id)).join('') })+
+        (o.note ? '<div class="home-modal__text adm-dialog__note">'+o.note+'</div>' : '') : '')+
+      '<div class="rt-confirm__foot">'+
+        '<button type="button" class="home-btn" data-close>Cancel</button>'+
+        '<button type="button" class="home-btn '+(o.danger ? 'home-btn--danger' : 'home-btn--primary')+'" data-yes>'+o.confirm+'</button>'+
+      '</div>'+
+    '</div>';
+  const close = () => { m.remove(); document.removeEventListener('keydown', onKey); };
+  const onKey = e => { if(e.key === 'Escape' && !m.querySelector('.wl-dd.is-open')) close(); };
+  m.addEventListener('mousedown', e => { if(e.target === m) close(); });
+  m.querySelector('[data-close]').addEventListener('click', close);
+  m.querySelector('[data-yes]').addEventListener('click', () => { close(); onYes(pick); });
+  if(pick) wireDropdownPills(m, (key, val) => { pick = o.options.find(x => x.name === val); });
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(m);
+  m.querySelector('[data-close]').focus();
+}
+
+/* Remove from <company>. Access ends and the person cannot sign in; nothing is deleted. If they own routines or tasks, the dialog
+   asks who takes them over, pre-selecting the head of one of their teams and falling back to an admin when they head all of them
+   or have no team. Removing a head leaves their teams without one, so the "has no head" banners appear. */
+function admRemoveDialog(m){
+  const targets = ADM_MEMBERS.filter(x => x.status === 'Active' && x.id !== m.id);
+  const headTeam = m.teams.map(admTeam).find(t => t && t.head && t.head !== m.name && targets.some(x => x.name === t.head));
+  const head = headTeam ? targets.find(x => x.name === headTeam.head) : null;
+  const adm = targets.find(x => x.role === 'Admin');
+  const def = head || adm || targets[0];
+  const owns = m.routines + m.tasks > 0;
+  admDialog({
+    title:'Remove '+m.name+' from '+ADM_COMPANY+'?',
+    text: m.name+' loses access and can’t sign in. History stays: the run log, routines and tasks keep their author.',
+    label: owns ? 'Reassign their '+admPlural(m.routines, 'routine')+' and '+admPlural(m.tasks, 'task')+' to' : '',
+    options: owns ? targets : null, def: def && def.id,
+    // Say what the default really is: the head of one of their teams, else an admin, else simply the first person left.
+    note: owns && def ? (head ? 'Pre-selected: the head of '+headTeam.name+'.' : adm ? 'Pre-selected: an admin, as none of their teams has another head.' : 'Pre-selected: the first active person. There is no head or other admin to hand over to.') : '',
+    confirm:'Remove', danger:true
+  }, pick => {
+    const to = owns && pick ? admMember(pick.id) : null;
+    if(to){ to.routines += m.routines; to.tasks += m.tasks; }
+    ADM_TEAMS.forEach(t => { if(t.head === m.name) t.head = null; });
+    const moved = to ? ' Their '+admPlural(m.routines, 'routine')+' and '+admPlural(m.tasks, 'task')+' now belong to '+to.name+'.' : '';
+    m.status = 'Removed'; m.routines = 0; m.tasks = 0;
+    shareToast(m.name+' removed from '+ADM_COMPANY+'.'+moved);
+    admRefresh();   // the drawer (if open) stays and now offers Restore access
+  });
+}
+/* REMOVED (2026-10-30): the Assign head dialog. Head is assigned only in the team drawer; the banner button opens that drawer. */
+
 function wireAdmPeople(c){
+  admCloseMenu();   // a re-render replaces the buttons a menu was anchored to
   c.querySelectorAll('[data-adm-view]').forEach(b => b.addEventListener('click', () => {
-    admPeopleView = b.dataset.admView; renderContent();   // content only: the sidebar does not change
+    admPeopleView = b.dataset.admView; admMemberOpen = null; admTeamOpen = null; renderContent(); updateRtPanel();   // content only: the sidebar does not change
+  }));
+  // Banners: Assign head opens the picker, Resend all re-sends every old invitation.
+  c.querySelectorAll('[data-adm-gap]').forEach(b => b.addEventListener('click', () => {
+    const g = admGaps()[+b.dataset.admGap]; if(!g) return;
+    if(g.kind === 'head'){ admPeopleView = 'teams'; admOpenTeam(g.team); }   // Head is only assigned in the team drawer
+    else { ADM_MEMBERS.forEach(m => { if(m.status === 'Invited' && m.invitedDays >= 7) m.invitedDays = 0; }); shareToast('Invitations resent'); admRefresh(); }
+  }));
+  // Teams tab: a row opens the team drawer.
+  c.querySelectorAll('[data-adm-team-open]').forEach(tr => {
+    tr.addEventListener('click', () => admOpenTeam(tr.dataset.admTeamOpen));
+    tr.addEventListener('keydown', e => { if(e.key === 'Enter' && e.target === tr) admOpenTeam(tr.dataset.admTeamOpen); });
+  });
+  c.querySelectorAll('[data-adm-status]').forEach(b => b.addEventListener('click', () => {
+    const v = b.dataset.admStatus; admStatus.has(v) ? admStatus.delete(v) : admStatus.add(v); renderContent();   // pills toggle independently
   }));
   wireCollapsibleSearch(c);
-  wireDropdownPills(c);   // Team / Role filter pills are visual only in this sketch
+  const search = c.querySelector('[data-search]');
+  if(search){
+    const input = search.querySelector('.wl-search__input');
+    // A re-render rebuilds the toolbar: put the typed text (and the open state) back so the filter never looks off.
+    if(admQuery){ input.value = admQuery; search.classList.add('is-open','has-value'); search.querySelector('.wl-search__btn').setAttribute('aria-expanded','true'); input.removeAttribute('tabindex'); }
+    input.addEventListener('input', () => { admQuery = input.value; admUpdateRows(c); });   // rows only, so the box keeps focus
+  }
+  // Multi dropdowns: a pick toggles the value (or Clear empties the set) and re-renders so the pill text updates;
+  // the menu is reopened afterwards (admReopen) so several options can be ticked in a row.
+  [['admteam', admTeamF], ['admrole', admRoleF]].forEach(([key, set]) => {
+    const reopen = admReopen === key;
+    wireMultiDropdown(c, key, val => {
+      if(val === '__clear__') set.clear(); else set.has(val) ? set.delete(val) : set.add(val);
+      admReopen = key; renderContent();
+    }, reopen);
+  });
+  admReopen = null;
+  admWireMenus(c, '[data-adm-info]');
+  admWireRows(c);
+}
+function admUpdateRows(c){
+  const body = c.querySelector('[data-adm-body]'); if(!body) return;
+  body.innerHTML = admRowsHTML(); admWireRows(c);
+}
+function admWireRows(c){
+  c.querySelectorAll('[data-adm-open]').forEach(tr => {
+    tr.addEventListener('click', () => admOpenMember(tr.dataset.admOpen));
+    tr.addEventListener('keydown', e => { if(e.key === 'Enter' && e.target === tr) admOpenMember(tr.dataset.admOpen); });
+  });
+  const clear = c.querySelector('[data-adm-clear]');
+  if(clear) clear.addEventListener('click', () => { admStatus.clear(); admTeamF.clear(); admRoleF.clear(); admQuery = ''; renderContent(); });
+  // Row menus live in the rows, so wire them again whenever the rows are rebuilt.
+  admWireMenus(c, '[data-adm-more]');
+}
+
+/* A drawer section: mono label (and an optional note, link or button on the right) over its content. */
+function admDrawerSec(title, inner, extra){
+  return '<section class="adm-drawer__sec" aria-label="'+title+'">'+
+    '<div class="adm-drawer__head"><h2 class="adm-label">'+title+'</h2>'+(extra || '')+'</div>'+inner+'</section>';
+}
+
+/* ---- Add people modal (2026-10-30) ----
+   Built on the Share modal: the same shell (.home-modal.share-modal), the chip field (.field + .share-chip), the rows (.share-opt with
+   .share-ava) and the large primary button. Differences: the list is always visible under the field instead of dropping down, and it
+   starts full, so you can see at once who is already in the team. People already in it are greyed out and marked "In team" (and go
+   last, as in Share); typing in the field searches name and email. Pick several people (they become chips), then "Add". Adding does not
+   move anyone: a person can be in several teams. Admins are not offered: they sit above all teams. Removed people are not listed. */
+function admAddPeopleModal(t){
+  let picked = [];
+  const people = ADM_MEMBERS.filter(x => x.status !== 'Removed' && x.role !== 'Admin');
+  const inTeam = x => x.teams.indexOf(t.name) >= 0;
+  const m = document.createElement('div');
+  m.className = 'home-modal share-modal adm-addpeople';
+  m.innerHTML =
+    '<div class="home-modal__panel" role="dialog" aria-modal="true" aria-label="Add people to '+rtEsc(t.name)+'">'+
+      '<div class="home-modal__head"><h3 class="home-modal__title">Add people to '+rtEsc(t.name)+'</h3>'+
+        '<button type="button" class="home-ibtn home-modal__close" data-close aria-label="Close">'+svg('close',2)+'</button></div>'+
+      '<div class="share-combo">'+
+        '<div class="field" data-sf><span data-chips style="display:contents"></span>'+
+          '<input type="text" placeholder="Search people…" aria-label="Search people" autocomplete="off"></div>'+
+        '<button type="button" class="home-btn home-btn--primary home-btn--lg" data-go disabled>Add</button>'+
+      '</div>'+
+      '<div class="share-list" data-list></div>'+
+    '</div>';
+  const input = m.querySelector('input'), list = m.querySelector('[data-list]'), chips = m.querySelector('[data-chips]'), go = m.querySelector('[data-go]');
+  const drawChips = () => {
+    chips.innerHTML = picked.map(x =>
+      '<span class="share-chip"><span class="share-ava">'+shareInitials(x.name)+'</span>'+x.name+
+      '<button type="button" class="share-chip__x" data-rm="'+x.id+'" aria-label="Remove '+x.name+'">'+svg('close',2.4)+'</button></span>').join('');
+    go.disabled = !picked.length;
+  };
+  const drawList = () => {
+    const q = input.value.trim().toLowerCase();
+    const hits = people.filter(x => picked.indexOf(x) < 0 && (!q || (x.name+' '+x.mail).toLowerCase().includes(q)));
+    const rows = hits.filter(x => !inTeam(x)).concat(hits.filter(inTeam));   // people already in the team go last, greyed out
+    list.innerHTML = rows.map(x =>
+      '<button type="button" class="share-opt'+(inTeam(x) ? ' is-disabled' : '')+'" data-add="'+x.id+'"'+(inTeam(x) ? ' disabled' : '')+'>'+
+        '<span class="share-ava share-ava--lg">'+shareInitials(x.name)+'</span>'+
+        '<span class="share-perm__txt"><span>'+x.name+'</span><span class="share-perm__sub">'+x.mail+'</span></span>'+
+        (inTeam(x) ? '<span class="home-badge home-badge--neutral share-opt__sub">In team</span>' : '')+'</button>').join('') ||
+      '<div class="share-empty">No one matches “'+rtEsc(input.value.trim())+'”.</div>';
+  };
+  const close = () => { m.remove(); document.removeEventListener('keydown', onKey); };
+  const onKey = e => { if(e.key === 'Escape' && !document.querySelector('.rt-confirm')) close(); };
+  m.addEventListener('click', e => {
+    if(e.target === m || e.target.closest('[data-close]')) return close();
+    const add = e.target.closest('[data-add]');
+    if(add){ picked.push(admMember(add.dataset.add)); input.value = ''; drawChips(); drawList(); input.focus(); return; }
+    const rm = e.target.closest('[data-rm]');
+    if(rm){ picked = picked.filter(x => x.id !== rm.dataset.rm); drawChips(); drawList(); return; }
+    if(e.target.closest('[data-sf]')) input.focus();
+  });
+  input.addEventListener('input', drawList);
+  input.addEventListener('keydown', e => { if(e.key === 'Backspace' && !input.value && picked.length){ picked.pop(); drawChips(); drawList(); } });
+  go.addEventListener('click', () => {
+    if(!picked.length) return;
+    const names = picked.map(x => admFirst(x.name));
+    picked.forEach(x => admJoinTeam(x, t.name));
+    close();
+    shareToast((names.length < 2 ? names.join('') : names.slice(0, -1).join(', ')+' and '+names[names.length-1])+' added to '+t.name);
+    admRefresh();
+  });
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(m);
+  drawChips(); drawList();
+  input.focus();
+}
+
+/* ---- Team drawer ----
+   Opened by a row of the Teams tab, in the same right side panel as the person drawer. Sections: Head (picker), Members, Delete.
+   - There is no "Reports to" (flat structure in the MVP; `parentId` stays null in the data for later).
+   - A person can be in several teams, so a member row has a remove x (leaves THIS team only) and "Add people" lists everyone not yet
+     in the team (it adds; nobody is moved).
+   - Delete is only possible for a team with no people. Otherwise the button is disabled and the reason is written underneath
+     ("Remove its 4 people from the team first"). An empty team only asks for a simple confirmation. */
+function admDeleteTeam(t){
+  // Removed people keep their memberships so Restore access works; a deleted team is dropped from them too.
+  ADM_MEMBERS.forEach(m => { m.teams = m.teams.filter(x => x !== t.name); });
+  ADM_TEAMS.splice(ADM_TEAMS.indexOf(t), 1);
+}
+function admTeamPanelHTML(t){
+  const members = admTeamMembers(t.name);
+  const activeHere = members.filter(m => m.status === 'Active');
+  const headItems = ddItem('No head', !t.head)+activeHere.map(m => ddItem(m.name, m.name === t.head)).join('');
+  const rows = members.map(m =>
+    // CHANGE (2026-10-30): a member row is the sidebar profile element (avatar, .profile__name, .profile__sub) with the person's status tag
+    // next to the name, as in the People table. The line under the name is the derived role (Admin / Head / Member).
+    '<li class="adm-drawer__member"><span class="adm-person"><span class="avatar">'+shareInitials(m.name)+'</span>'+
+      '<span class="profile__meta"><span class="adm-drawer__name"><span class="profile__name">'+m.name+'</span>'+
+        '<span class="home-badge '+ADM_STATUS_BADGE[m.status]+'">'+m.status+'</span></span>'+
+        '<span class="profile__sub">'+admRoleOf(m)+'</span></span></span>'+
+      '<button type="button" class="rt-panel__close" data-adm-tleave="'+m.id+'" aria-label="Remove '+m.name+' from '+t.name+'">'+svg('close',2)+'</button></li>').join('');
+  // Admins are not offered: they sit above all teams (consistent with the person drawer, which has no "Add to team" for an admin).
+  // "Add people" opens a modal built on the Share modal (see admAddPeopleModal): search, and a mark for who is already in the team.
+  const add = '<button type="button" class="wl-ddpill" data-adm-addpeople>'+svg('plus',2)+'Add people</button>';
+  // Delete: only for an empty team; otherwise disabled with the reason.
+  const why = members.length ? 'Remove its '+admPlural(members.length, 'person', 'people')+' from the team first.' : '';
+  const del = admDrawerSec('Delete team',
+    '<div class="adm-drawer__line adm-drawer__card"><span><div class="adm-row__name">Delete '+t.name+'</div>'+
+      '<div class="adm-row__meta">'+(why || 'It is empty, so nothing is lost.')+'</div></span>'+
+      '<button type="button" class="home-btn home-btn--danger" data-adm-team-delete'+(why ? ' disabled' : '')+'>Delete</button></div>');
+  return '<div class="rt-panel__head adm-head">'+
+      // CHANGE (2026-10-30): no "Team · 3 people" subline in the header; the count sits next to "Members" instead.
+      '<span class="rt-panel__who"><span class="rt-panel__title">'+t.name+'</span></span>'+
+      '<span class="rt-panel__actions"><button type="button" class="rt-panel__close" data-rt-close aria-label="Close panel">'+svg('close',2)+'</button></span>'+
+    '</div>'+
+    '<div class="rt-panel__body"><div class="adm-drawer">'+
+      // CHANGE (2026-10-30): no explanatory line under the Head picker (it used to say what the head approves, or that approvals go to the admins).
+      admDrawerSec('Head', '<div class="adm-drawer__full">'+ddPillHTML({ key:'thead', label:'', value:t.head || 'No head', itemsHTML:headItems })+'</div>')+   // full width, like "Role in organization"
+      admDrawerSec('Members ('+members.length+')', members.length ? '<ul class="adm-drawer__members">'+rows+'</ul>' : '<div class="adm-row__meta">No one is in this team yet.</div>', add)+
+      del+
+    '</div></div>';
+}
+function wireAdmTeamPanel(host, t){
+  wireDropdownPills(host, (key, val) => {
+    if(key === 'thead') t.head = val === 'No head' ? null : val;
+    admRefresh();
+  });
+  const addBtn = host.querySelector('[data-adm-addpeople]');
+  if(addBtn) addBtn.addEventListener('click', () => admAddPeopleModal(t));
+  host.querySelectorAll('[data-adm-tleave]').forEach(b => b.addEventListener('click', () => {
+    const m = admMember(b.dataset.admTleave); admLeaveTeam(m, t.name);
+    shareToast(m.name+' removed from '+t.name); admRefresh();
+  }));
+  const del = host.querySelector('[data-adm-team-delete]');
+  if(del) del.addEventListener('click', () => rtConfirm({ title:'Delete '+t.name+'?', text:'It is empty. Nothing else changes.', confirm:'Delete', danger:true },
+    () => { admDeleteTeam(t); admTeamOpen = null; shareToast(t.name+' deleted'); admRefresh(); }));
+}
+
+/* ---- Person drawer (the existing right side panel, 400px; the wireframe's drawer was 480px) ----
+   Header: name with the status tag next to it, email and since-date. Sections: Role, Teams, Security, Leaving the organisation.
+   - Role: an "Admin access" toggle and, read-only below it, the derived role ("Role: Head · leads Sales" / "Role: Member"). No role select.
+   - Teams: the teams the person is in, each with a remove x; a team they lead shows a read-only Head badge. No per-team selects or
+     toggles: the head is chosen only in the team drawer.
+   - Not in the drawer on purpose: Company tools (they come from the teams, edited in Connections), Mira (the trust level is the
+     person's own setting), and "Sign out everywhere" (hidden).
+   - The single exit is "Remove from <company>" ("Restore access" once removed). A removed person shows only Role and Access. */
+function admMemberPanelHTML(m){
+  const removed = m.status === 'Removed', invited = m.status === 'Invited';
+  const first = admFirst(m.name);
+  const sec = admDrawerSec;
+  // REWORKED (2026-10-30) from the wireframe Inputs/Wireframes/People:user.png. It replaces the "Admin access" toggle, the read-only role
+  // line and the read-only Head badges of the previous version.
+  const isAdmin = m.role === 'Admin';
+  // "Role in organization": ONLY Admin or Member. Head is never an option here: it is derived (a person who leads a team is shown as
+  // Head in the table) and is set per team below or in the team drawer. The dropdown always shows the stored role.
+  const role = sec('Role in organization',
+    '<div class="adm-drawer__full">'+ddPillHTML({ key:'drole', label:'', value:m.role, itemsHTML:['Admin','Member'].map(r => ddItem(r, r === m.role)).join('') })+'</div>');
+  // Teams: one row per team with the person's role in it (Head or Member) and a remove x. "+ Add to team" is a link at the right of the
+  // label (hidden for an admin, who sits above all teams; existing memberships can still be removed). Setting Head here makes the
+  // person the team's head and replaces the previous one, exactly like the Head picker in the team drawer.
+  const teamRows = m.teams.map(name => {
+    const t = admTeam(name), isHead = t && t.head === m.name;
+    return '<li class="adm-drawer__member"><span class="adm-row__name">'+name+'</span><span class="adm-drawer__teamctl">'+
+      '<span class="rt-more" data-adm-pick="role:'+name+'">'+
+        '<button type="button" class="wl-ddpill" data-adm-btn aria-haspopup="menu" aria-expanded="false">'+(isHead ? 'Head' : 'Member')+'<span class="wl-ddpill__chev">'+svg('chevdown',2)+'</span></button>'+
+        '<div class="wl-ddmenu" role="menu" hidden>'+['Head','Member'].map(r => '<button type="button" class="wl-ddmenu__item" role="menuitem" data-adm-trole="'+r+'">'+r+'</button>').join('')+'</div></span>'+
+      '<button type="button" class="rt-panel__close" data-adm-leave="'+name+'" aria-label="Remove '+m.name+' from '+name+'">'+svg('close',2)+'</button></span></li>';
+  }).join('');
+  const free = ADM_TEAMS.filter(t => m.teams.indexOf(t.name) < 0);
+  const addTeam = '<span class="rt-more" data-adm-pick="addteam">'+
+    '<button type="button" class="home-link" data-adm-btn aria-haspopup="menu" aria-expanded="false">+ Add to team</button>'+
+    '<div class="wl-ddmenu adm-pick__menu" role="menu" hidden>'+(free.length ? free.map(t => '<button type="button" class="wl-ddmenu__item" role="menuitem" data-adm-addteam="'+t.name+'">'+t.name+'</button>').join('')
+      : '<div class="adm-row__meta adm-pick__empty">Already in every team.</div>')+'</div></span>';
+  const teams = sec('Teams', m.teams.length ? '<ul class="adm-drawer__members adm-drawer__teamlist">'+teamRows+'</ul>'
+    : '<div class="adm-row__meta">'+(isAdmin ? 'Admins sit above all teams.' : 'Not in any team yet.')+'</div>',
+    isAdmin ? '' : addTeam);
+  // Security: the wireframe has just the reset block (no "2FA: on" line, no last sign-in). An invited person has nothing to reset yet.
+  const security = invited
+    ? sec('Security', '<div class="adm-row__meta">'+first+' has not signed in yet. Two-factor is set up at first sign-in.</div>')
+    : sec('Security',
+      '<div class="adm-drawer__line"><span><div class="adm-row__name">Reset two-factor authentication</div><div class="adm-row__meta">Only if '+first+' lost access to the device. '+first+' will set it up again at next sign-in.</div></span>'+
+        '<button type="button" class="home-btn" data-adm-act="reset2fa">Reset 2FA</button></div>');
+  // The single exit: one full-width filled red button, no section heading and no card (as in the wireframe). Removed people get a
+  // short Access card with Restore access instead (the wireframe does not cover that state).
+  const leaving = removed
+    ? sec('Access', '<div class="adm-drawer__line adm-drawer__card"><span><div class="adm-row__name">Removed from '+ADM_COMPANY+'</div><div class="adm-row__meta">Can’t sign in. History is kept. Restoring brings the access back.</div></span>'+
+        '<button type="button" class="home-btn" data-adm-act="restore">Restore access</button></div>')
+    : '<div class="adm-drawer__exit"><button type="button" class="home-btn home-btn--danger adm-drawer__wide" data-adm-act="remove">Remove from '+ADM_COMPANY+'</button></div>';
+  return '<div class="rt-panel__head adm-head">'+
+      '<span class="rt-panel__who"><span class="avatar">'+shareInitials(m.name)+'</span>'+
+        '<span class="rt-panel__titles"><span class="adm-drawer__name"><span class="rt-panel__title">'+m.name+'</span>'+
+          '<span class="home-badge '+ADM_STATUS_BADGE[m.status]+'">'+m.status+'</span></span>'+
+        '<span class="rt-panel__sub">'+m.mail+(m.status === 'Active' ? ' · Active since '+m.since : '')+'</span></span></span>'+
+      '<span class="rt-panel__actions"><button type="button" class="rt-panel__close" data-rt-close aria-label="Close panel">'+svg('close',2)+'</button></span>'+
+    '</div>'+
+    '<div class="rt-panel__body"><div class="adm-drawer">'+
+      role+(removed ? '' : teams+security)+leaving+
+    '</div></div>';
+}
+function wireAdmMemberPanel(host, m){
+  // Role in organization: Admin or Member (no confirmation; the table follows at once).
+  wireDropdownPills(host, (key, val) => { if(key === 'drole') m.role = val; admRefresh(); });
+  admWireMenus(host, '[data-adm-pick]');   // role-in-team menus and "+ Add to team"
+  host.querySelectorAll('[data-adm-trole]').forEach(b => b.addEventListener('click', () => {
+    admCloseMenu(); admSetTeamRole(m, b.closest('[data-adm-pick]').dataset.admPick.replace('role:', ''), b.dataset.admTrole); admRefresh();
+  }));
+  host.querySelectorAll('[data-adm-leave]').forEach(b => b.addEventListener('click', () => { admLeaveTeam(m, b.dataset.admLeave); admRefresh(); }));
+  host.querySelectorAll('[data-adm-addteam]').forEach(b => b.addEventListener('click', () => {
+    admCloseMenu(); admJoinTeam(m, b.dataset.admAddteam); shareToast(m.name+' added to '+b.dataset.admAddteam); admRefresh();
+  }));
+  host.querySelectorAll('[data-adm-act]').forEach(b => b.addEventListener('click', () => admAct(m.id, b.dataset.admAct)));
 }
 
 /* --- Tools & access --- */
@@ -3418,55 +4019,6 @@ function renderAdmMonitoring(){
 function wireAdmMonitoring(c){
   c.querySelectorAll('[data-adm-range]').forEach(b => b.addEventListener('click', () => { admMonRange = b.dataset.admRange; renderContent(); }));
   wireDropdownPills(c);
-}
-
-/* --- Architecture (sitemap) --- */
-let admArch = false;   // true = the full-screen sitemap is open
-// Each row: admin-side box, optional arrow to the user-side box. kind: '' | 'dashed' | 'accent'.
-const ADM_SITEMAP = [
-  { a:{ t:'People', q:true, d:'Members, teams, roles, invite', kind:'dashed' }, u:{ t:'Profile & security', d:'Profile, password, 2FA' } },
-  { a:{ t:'Tools & access', d:'Mira’s autonomy ceiling (Observer / Assistant / Operator) · company tools pool · which teams can use what' }, u:{ t:'My accounts · My access', d:'Connect my accounts from the pool · read-only view of what I can use' } },
-  { a:{ t:'Tools & access › Company channels', d:'Install the Mira bot in company Slack (once)' }, u:{ t:'My channels', d:'Talk to Mira on Slack, WhatsApp, Telegram' } },
-  { a:{ t:'Mira', d:'Allowed models' }, u:{ t:'Mira & memory', d:'My trust level within the ceiling · what Mira knows about me' } },
-  { a:{ t:'Monitoring', d:'Runs, failures and costs across the org · filter by team' } },
-  { a:{ t:'Company knowledge', d:'Company brain', kind:'dashed' } },
-];
-function renderAdmArch(){
-  const box = b => '<div class="adm-arch__box'+(b.kind ? ' adm-arch__box--'+b.kind : '')+'"><b>'+b.t+(b.q ? ' <i>(?)</i>' : '')+'</b><span>'+b.d+'</span></div>';
-  const rows = ADM_SITEMAP.map(r =>
-    box(r.a)+
-    '<div class="adm-arch__arrow">'+(r.u ? svg('arrowright',2) : '')+'</div>'+
-    (r.u ? box(r.u) : '<div></div>')).join('');
-  return '<div class="adm-arch__inner"><h1 class="adm-arch__title">Admin Panel vs. User Settings</h1>'+
-    '<div class="adm-arch__grid">'+
-      '<div class="adm-arch__head"><b>Admin Panel</b><span>Org level · same in every workspace · admins only</span></div><div></div>'+
-      '<div class="adm-arch__head"><b>User Settings</b><span>Personal · everyone, admins included</span></div>'+
-      rows+
-    '</div></div>';
-}
-/* Keeps the two body-level pieces in sync with the app state. Called from renderContent():
-   - inside the Admin Panel mode: the floating switch exists (and the sitemap while admArch is on);
-   - anywhere else: both are removed and admArch resets, so leaving the Admin Panel never strands the overlay. */
-function admSyncFloat(){
-  const inAdmin = activeMode === 'advanced';
-  if(!inAdmin) admArch = false;
-  document.querySelectorAll('.adm-float,.adm-arch').forEach(n => n.remove());
-  if(!inAdmin) return;
-  if(admArch){
-    const ov = document.createElement('div');
-    ov.className = 'adm-arch'; ov.innerHTML = renderAdmArch();
-    document.body.appendChild(ov);
-  }
-  const sw = document.createElement('div');
-  sw.className = 'adm-float';
-  sw.innerHTML = '<div class="wl-view">'+
-    '<button type="button" class="wl-view__item'+(admArch?'':' is-active')+'" data-adm-arch="0">Panel</button>'+
-    '<button type="button" class="wl-view__item'+(admArch?' is-active':'')+'" data-adm-arch="1">Architecture</button></div>';
-  sw.querySelectorAll('[data-adm-arch]').forEach(b => b.addEventListener('click', () => {
-    const on = b.dataset.admArch === '1';
-    if(on !== admArch){ admArch = on; admSyncFloat(); }
-  }));
-  document.body.appendChild(sw);
 }
 
 /* --- Mira / Rules: no wireframe yet --- */
@@ -4073,8 +4625,12 @@ function updateRtPanel(){
   const pinning = activeId === 'insights' && Boolean(insPin);   // pin-from-chat screen: its chat is this panel
   const dashEdit = !pinning && activeId === 'insights' && Boolean(insNav) && Boolean(insChat);   // a dashboard chat (Edit with Mira / Send report)
   if(drafting || bundling || finding || editing || dashEdit || pinning) pgChat = null;   // a more specific panel takes over
-  const pgOpen = Boolean(pgChat);
-  const open = drafting || bundling || finding || editing || dashEdit || pinning || pgOpen;
+  // People: the person drawer (admMemberPanelHTML). It belongs to the People tab, so leaving the tab closes it.
+  if(activeId !== 'adv-people'){ admMemberOpen = null; admTeamOpen = null; }
+  const admOpen = admMemberOpen && admMember(admMemberOpen) ? admMember(admMemberOpen) : null;
+  const admDOpen = !admOpen && admTeamOpen && admTeam(admTeamOpen) ? admTeam(admTeamOpen) : null;   // Teams tab: the team drawer
+  const pgOpen = Boolean(pgChat) && !admOpen && !admDOpen;
+  const open = Boolean(admOpen) || Boolean(admDOpen) || drafting || bundling || finding || editing || dashEdit || pinning || pgOpen;
   // Hide the floating "Ask Mira" button while the drawer is open (it would overlap
   // the panel's own composer).
   const ask = document.getElementById('askMira');
@@ -4084,19 +4640,24 @@ function updateRtPanel(){
   if(open){
     // Only rebuild (and thus replay the reveal easing) when what the panel shows actually
     // changes — not on every unrelated re-render while it stays open.
-    const key = pgOpen ? 'page:'+pgChat.id : pinning ? 'pin:'+insPin.id : dashEdit ? 'dash:'+insChat+':'+insNav : drafting ? 'new:'+nrState.id : bundling ? 'bundle:'+rtBundle.b.id : finding ? 'find:'+rtFindQuery : String(rtOpenRoutine);
+    const key = admDOpen ? 'admd:'+admDOpen.name+':'+admMemberVer : admOpen ? 'adm:'+admOpen.id+':'+admMemberVer : pgOpen ? 'page:'+pgChat.id : pinning ? 'pin:'+insPin.id : dashEdit ? 'dash:'+insChat+':'+insNav : drafting ? 'new:'+nrState.id : bundling ? 'bundle:'+rtBundle.b.id : finding ? 'find:'+rtFindQuery : String(rtOpenRoutine);
     if(host.dataset.routine !== key){
-      host.innerHTML = pgOpen ? pgPanelHTML(pgChat) : pinning ? insPinPanelHTML() : dashEdit ? (insChat === 'build' ? insBuildPanelHTML() : insChat === 'summary' ? insSummaryPanelHTML(insDashLabel(insNav)) : insChat === 'filter' ? insFilterPanelHTML() : insEditPanelHTML(insDashLabel(insNav))) : drafting ? rtNewPanelHTML() : bundling ? rtlBundlePanelHTML() : finding ? rtFindPanelHTML(rtFindQuery) : rtPanelHTML(rtOpenRoutine);
+      host.innerHTML = admDOpen ? admTeamPanelHTML(admDOpen) : admOpen ? admMemberPanelHTML(admOpen) : pgOpen ? pgPanelHTML(pgChat) : pinning ? insPinPanelHTML() : dashEdit ? (insChat === 'build' ? insBuildPanelHTML() : insChat === 'summary' ? insSummaryPanelHTML(insDashLabel(insNav)) : insChat === 'filter' ? insFilterPanelHTML() : insEditPanelHTML(insDashLabel(insNav))) : drafting ? rtNewPanelHTML() : bundling ? rtlBundlePanelHTML() : finding ? rtFindPanelHTML(rtFindQuery) : rtPanelHTML(rtOpenRoutine);
       host.dataset.routine = key;
       const close = host.querySelector('[data-rt-close]');
       if(close) close.addEventListener('click', () => {
         // Closing the build chat before the first "Add to dashboard" drops the draft and goes back; afterwards it just closes.
         if(insDraft){ if(!insDraft.saved) insNav = insDraft.prevNav; insDraft = null; }
+        admMemberOpen = null; admTeamOpen = null;   // People: closing the drawer also clears the selected row
         pgChat = null; insChat = null; insPin = null; rtOpenRoutine = null; rtFindQuery = null; rtNewOpen = false; rtBundle = null; render(); });
       // Expand: continue this routine's chat full screen, in the Ask Mira tab.
       const expand = host.querySelector('[data-rt-expand]');
       if(expand && !pgOpen && !finding && !drafting && !bundling) expand.addEventListener('click', () => rtOpenFullChat(rtOpenRoutine));
-      if(dashEdit && insChat === 'build'){
+      if(admDOpen){
+        wireAdmTeamPanel(host, admDOpen);   // the team drawer
+      } else if(admOpen){
+        wireAdmMemberPanel(host, admOpen);   // the person drawer: pickers and buttons, no chat
+      } else if(dashEdit && insChat === 'build'){
         wireInsBuildPanel(host, insDraft);   // the New dashboard conversation
       } else if(pinning){
         wireInsPinPanel(host, insPin);   // its own conversation (see wireInsPinPanel)
@@ -5809,7 +6370,7 @@ function inResultsHTML(){
   if(!rows.length) return '<p class="in-nomatch">No insights match your search.</p>';
   const body = rows.map(r =>
     '<tr data-in-id="'+r.id+'"'+(IN_DETAILS[r.id] ? ' class="is-clickable"' : '')+'>'+
-      '<td><span class="in-name">'+rtEsc(r.name)+'</span></td>'+
+      '<td><div class="in-firstcell"><span class="in-name">'+rtEsc(r.name)+'</span>'+(IN_DETAILS[r.id] ? inOpenBtn() : '')+'</div></td>'+
       '<td>'+insSrcHTML(r.source)+'</td>'+
       '<td><span class="in-chip">'+r.madeWith+'</span></td>'+
       '<td>'+rtEsc(r.updated)+'</td>'+
