@@ -26,6 +26,7 @@
   --c-copy:#525252;           /* body copy / descriptions / metadata (weight 400 text) */
   --c-muted:#858585;          /* secondary text, inactive nav, icons */
   --c-border:#ececed;         /* card borders, dividers */
+  --c-border-soft:#F2F2F2;    /* TRIAL: border of every card / box and every outline button; to revert, put var(--c-border) or var(--c-border-strong) back where --c-border-soft is used */
   --c-border-strong:#e4e4e4;  /* panel rules, off toggle, avatar bg */
   --c-bg:#fafafa;             /* canvas / sidebar */
   --c-surface:#ffffff;        /* cards, panels */
@@ -147,7 +148,7 @@ button{font-family:inherit;cursor:pointer}
 body.nav-e .teamsw{display:block}
 body.nav-e .brand{display:none}
 .sidebar.is-collapsed .teamsw{display:none}
-.teamsw__btn{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:7px 10px;margin-left:-10px;border:none;background:transparent;color:var(--name);font-size:15px;font-weight:var(--fw-semibold);cursor:pointer;transition:background .12s ease}
+.teamsw__btn{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:7px 10px;margin-left:-10px;border:none;background:transparent;color:var(--name);font-size:15px;font-weight:var(--fw-medium);cursor:pointer;transition:background .12s ease}
 .teamsw__btn:hover,.teamsw__btn[aria-expanded="true"]{background:var(--c-hover)}
 .teamsw__btn svg{color:var(--slate-icon);flex:0 0 16px}
 .teamsw__menu{
@@ -491,7 +492,7 @@ body.nav-e .account-menu__ws + .account-menu__sep{display:none}
 .chat-hero{width:100%;max-width:880px;margin-top:17vh;display:flex;flex-direction:column;align-items:center;gap:26px}
 .chat-hero__title{
   margin:0;text-align:center;
-  font-size:clamp(30px,3.6vw,46px);font-weight:var(--fw-semibold);letter-spacing:-.01em;color:var(--ink);
+  font-size:clamp(30px,3.6vw,46px);font-weight:var(--fw-medium);letter-spacing:-.01em;color:var(--ink);
 }
 .mira{
   background:linear-gradient(95deg,#8752be 0%,#b440af 40%,#7d88bc 66%,#5cc9d2 100%);
@@ -552,7 +553,7 @@ body.nav-e .account-menu__ws + .account-menu__sep{display:none}
 /* ---------- Tasks ---------- */
 .wl{max-width:1320px}
 .wl__head{margin-bottom:22px}
-.wl__title{margin:0 0 6px;font-size:28px;font-weight:var(--fw-semibold);letter-spacing:-.01em;color:var(--c-text)}
+.wl__title{margin:0 0 6px;font-size:28px;font-weight:var(--fw-medium);letter-spacing:-.01em;color:var(--c-text)}
 .wl__subtitle{margin:0;max-width:960px;font-size:14px;line-height:1.5;color:var(--c-copy)}
 
 /* tabs row */
@@ -696,7 +697,7 @@ body.nav-e .account-menu__ws + .account-menu__sep{display:none}
   transition:background .12s ease;
 }
 .wl-newtask:hover{background:var(--c-ink)}
-.wl-newtask--secondary{background:#fff;color:var(--ink);border:1px solid var(--c-border);padding:8px 16px}
+.wl-newtask--secondary{background:#fff;color:var(--ink);border:1px solid var(--c-border-soft);padding:8px 16px}
 .wl-newtask--secondary:hover{background:var(--c-hover)}
 .wl-newtask__icon{display:inline-flex}.wl-newtask__icon svg{width:17px;height:17px;display:block}
 
@@ -704,7 +705,7 @@ body.nav-e .account-menu__ws + .account-menu__sep{display:none}
 .wl-board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:22px}
 .wl-col{min-width:0}
 .wl-col__head{display:flex;align-items:center;gap:8px;padding:0 2px 12px;border-bottom:1px solid var(--c-border)}
-.wl-col__title{font-size:16px;font-weight:var(--fw-semibold);color:var(--c-text-2)}
+.wl-col__title{font-size:16px;font-weight:var(--fw-medium);color:var(--c-text-2)}
 .wl-col__count{font-size:13px;font-weight:var(--fw-regular);color:var(--c-copy)}
 .wl-col__body{padding:16px 2px}
 .wl-col__empty{margin:0;font-size:13px;color:var(--c-copy)}
@@ -726,7 +727,7 @@ body.nav-e .account-menu__ws + .account-menu__sep{display:none}
 .rt-empty__text{margin:0;max-width:440px;font-size:13px;line-height:1.5;color:var(--c-copy)}
 .rt-empty__actions{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:14px}
 /* Ask Mira: outline button sized like the dark "New routine" button next to it. */
-.rt-empty__btn{padding:9px 16px;border:1px solid var(--c-border);border-radius:10px;background:#fff;font-family:inherit;font-size:13px;font-weight:var(--fw-medium);color:var(--ink);cursor:pointer;transition:background .12s ease}
+.rt-empty__btn{padding:9px 16px;border:1px solid var(--c-border-soft);border-radius:10px;background:#fff;font-family:inherit;font-size:13px;font-weight:var(--fw-medium);color:var(--ink);cursor:pointer;transition:background .12s ease}
 .rt-empty__btn:hover{background:var(--c-hover)}
 /* Search hit: soft violet highlight on the matched fragment. */
 .rt-hit{background:rgba(136,85,210,.2);color:inherit;border-radius:3px;padding:0 1px}
@@ -777,7 +778,7 @@ body.nav-e .account-menu__ws + .account-menu__sep{display:none}
    single marker that this is a chat with Mira (no avatar/name row inside the thread). */
 .rt-panel__who{display:flex;align-items:center;gap:10px;min-width:0}
 .rt-panel__who .nr__avatar{flex:0 0 22px}
-.rt-panel__title{font-size:15px;font-weight:var(--fw-semibold);color:var(--name);   /* same type as the workspace name (.teamsw__btn) */
+.rt-panel__title{font-size:15px;font-weight:var(--fw-medium);color:var(--name);   /* same type as the workspace name (.teamsw__btn) */
   min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 /* Header buttons: expand (opens this routine's chat in the Ask Mira tab) + close. */
 .rt-panel__actions{display:flex;align-items:center;gap:2px;flex:0 0 auto}
@@ -815,8 +816,8 @@ body.nav-e .account-menu__ws + .account-menu__sep{display:none}
 /* Lead-in line between the decision buttons and the suggestion pills. */
 .nr__or{margin:6px 0 -2px;font-size:13px;line-height:1.4;color:var(--c-copy)}
 .nr__btn{
-  height:36px;padding:0 16px;border-radius:10px;border:1px solid var(--c-border-strong);background:#fff;
-  font-family:inherit;font-size:14px;font-weight:var(--fw-medium);color:var(--c-text);cursor:pointer;
+  height:32px;padding:0 12px;border-radius:10px;border:1px solid var(--c-border-strong);background:#fff;   /* 32px + 13px text = the same as .nr__chip */
+  font-family:inherit;font-size:13px;font-weight:var(--fw-medium);color:var(--c-text);cursor:pointer;
   transition:background .12s ease,border-color .12s ease;
   animation:nrRise .48s ease both;animation-delay:.4s;
 }
@@ -852,7 +853,7 @@ body.nav-e .account-menu__ws + .account-menu__sep{display:none}
    border, 10px radius, soft shadow, 16px padding. Built by cardShell() in the script. */
 .card-shell,.rt-card{
   display:flex;flex-direction:column;
-  padding:16px;background:#fff;border:1px solid var(--c-border);border-radius:10px;
+  padding:16px;background:#fff;border:1px solid var(--c-border-soft);border-radius:10px;
   box-shadow:var(--card-shadow,0 1px 2px rgba(136,85,210,.04));
 }
 .rt-card{
@@ -929,13 +930,13 @@ body.nav-e .account-menu__ws + .account-menu__sep{display:none}
 /* Connect row inside a routine's chat panel (shown when the routine is failing because a tool
    isn't connected). Same pattern as the last onboarding step: tool logo + name on the left,
    a ghost "Connect" button on the right that turns into a green "Connected" tick. */
-.rt-conn{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff;border:1px solid var(--c-border);border-radius:10px;transition:background .2s ease,border-color .2s ease}
+.rt-conn{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#fff;border:1px solid var(--c-border-soft);border-radius:10px;transition:background .2s ease,border-color .2s ease}
 .rt-conn .rt-logo{width:22px;height:22px;flex-basis:22px}
 .rt-conn .rt-logo svg{width:22px;height:22px}
 .rt-conn__name{flex:1 1 auto;min-width:0;font-size:14px;font-weight:var(--fw-medium);color:var(--c-text)}
 .rt-conn__btn{
   flex:0 0 auto;display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;
-  border:1px solid var(--c-border-strong);background:#fff;color:var(--c-text);cursor:pointer;
+  border:1px solid var(--c-border-soft);background:#fff;color:var(--c-text);cursor:pointer;
   font-family:inherit;font-size:12px;font-weight:var(--fw-medium);letter-spacing:.07em;text-transform:uppercase;
   transition:background .12s ease;
 }
@@ -952,7 +953,7 @@ body.nav-e .account-menu__ws + .account-menu__sep{display:none}
 @keyframes rtViewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){ .rt-view--enter{animation:none} }
 .rtl .ind-crumb{margin-bottom:10px;color:var(--c-copy)}
-/* The clickable crumb uses the Link component (home-link: underline, ink on hover), at breadcrumb size. */
+/* The clickable crumb uses the Link component (home-link: muted, ink on hover), at breadcrumb size. */
 .rtl .ind-crumb .home-link{font-size:13px;color:var(--c-copy)}
 .rtl .ind-crumb .home-link:hover{color:var(--c-text)}
 .rtl .wl__subtitle,.rtl .ind-crumb span{color:var(--c-copy)}
@@ -964,7 +965,7 @@ body.nav-e .account-menu__ws + .account-menu__sep{display:none}
 .rtl-label{margin:0 0 12px;font-size:12px;font-weight:var(--fw-medium);color:var(--slate);
   font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;text-transform:uppercase;letter-spacing:.06em}   /* = the "Apps" label of the side nav */
 .rtl-label--gap{margin-top:28px}
-.rtl-label--list{margin-bottom:10px;font-family:var(--font);font-size:16px;font-weight:var(--fw-semibold);color:var(--c-text);text-transform:none;letter-spacing:normal}   /* headings above the routines list keep the section-title look */
+.rtl-label--list{margin-bottom:10px;font-family:var(--font);font-size:16px;font-weight:var(--fw-medium);color:var(--c-text);text-transform:none;letter-spacing:normal}   /* headings above the routines list keep the section-title look */
 .rtl-label--list.rtl-label--gap{margin-top:24px}
 .rtl-sub{margin:0;font-size:13px;line-height:1.5;color:var(--c-copy)}
 /* Bundle: one of Home's grey containers holding its routines. */
@@ -1138,9 +1139,10 @@ body.nav-e .account-menu__ws + .account-menu__sep{display:none}
   align-self:flex-start;max-width:600px;padding:0;
   font-size:16px;line-height:1.6;color:var(--ink);
 }
+.nr__bubble b,.nr__bubble strong,.nr__quote b,.nr__quote strong{font-weight:var(--fw-medium)}   /* bold names in Mira's messages ("Slack", a routine name): 500, not the browser's 700 */
 .nr__quote{margin-top:12px;padding:12px 14px;border-radius:12px;background:var(--c-bg);font-size:14px;line-height:1.55}   /* quoted text (the report draft) on the side nav's grey */
 .nr__chips{display:flex;flex-direction:row;flex-wrap:wrap;align-items:flex-start;gap:8px;margin-top:4px}   /* 8px = the gap between the header buttons (Share, Send report) */
-.nr__chips:has(.nr__btn){align-items:center}   /* a primary button (36px) in a chip row (32px): centred on the same line */
+.nr__chips:has(.nr__btn){align-items:center}   /* a button and a chip are both 32px; centred on the same line */
 .nr__chips .nr__btn--gap{margin-left:8px}   /* the main action sits a little apart from the options (16px in total) */
 /* Chat suggestion badge — shared by the Mira "New routine" chat and the routine
    side panel. Rounded pill, 36px tall, 13px text. */
@@ -1162,7 +1164,7 @@ body.nav-e .account-menu__ws + .account-menu__sep{display:none}
   padding:28px 30px 26px;background:var(--c-bg);border-left:1px solid var(--sidebar-border);
 }
 .nr__panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:28px}
-.nr__panel-title{font-size:19px;font-weight:var(--fw-semibold);color:var(--ink)}
+.nr__panel-title{font-size:19px;font-weight:var(--fw-medium);color:var(--ink)}
 .nr__draft{
   flex:0 0 auto;padding:4px 11px;border:1px solid var(--c-border);border-radius:999px;
   font-size:12px;font-weight:var(--fw-medium);color:var(--slate);background:#fff;
@@ -1200,7 +1202,7 @@ body.nav-e .account-menu__ws + .account-menu__sep{display:none}
 /* Greeting row: title + workspace chip on the left, status + date + settings right. */
 .home-top{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
 .home-top__l,.home-top__r{display:flex;align-items:center;gap:8px;min-width:0}
-.home-top__title{margin:0;font-size:28px;font-weight:var(--fw-semibold);letter-spacing:-.01em;color:var(--c-text)}
+.home-top__title{margin:0;font-size:28px;font-weight:var(--fw-medium);letter-spacing:-.01em;color:var(--c-text)}
 .home-top__checked{font-size:13px;color:var(--c-copy)}
 .home-pill{
   display:inline-flex;align-items:center;height:32px;padding:0 12px;border-radius:999px;
@@ -1468,7 +1470,7 @@ button.home-addbtn.is-open:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_)
    the muted colour were dropped; the heading colour (--c-text) is used instead. */
 .home-box__title{
   margin:0;font-family:var(--font);
-  font-size:16px;font-weight:var(--fw-semibold);color:var(--c-text);
+  font-size:16px;font-weight:var(--fw-medium);color:var(--c-text);
 }
 .home-box__meta{margin-left:8px;font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:var(--c-muted)}
 .home-box__list{display:flex;flex-direction:column;gap:6px}
@@ -1482,7 +1484,7 @@ button.home-addbtn.is-open:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_)
 
 /* Item card inside a container (task / watch item). */
 .home-card{
-  position:relative;background:#fff;border:1px solid var(--c-border);border-radius:10px;
+  position:relative;background:#fff;border:1px solid var(--c-border-soft);border-radius:10px;
   box-shadow:var(--card-shadow,0 1px 2px rgba(136,85,210,.04));
   padding:16px;display:flex;flex-direction:column;gap:6px;
 }
@@ -1495,7 +1497,7 @@ button.home-addbtn.is-open:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_)
 .home-card__icons{flex:0 0 auto;align-self:center;display:flex;align-items:center;gap:2px;margin-right:-8px}
 /* Single-card panel for the other sections (Mira handled today, Business snapshot):
    white card chrome (border, 10px radius). The open "done" list is divided from the summary line. */
-.home-box__panel{background:#fff;border:1px solid var(--c-border);border-radius:10px;
+.home-box__panel{background:#fff;border:1px solid var(--c-border-soft);border-radius:10px;
   box-shadow:var(--card-shadow,0 1px 2px rgba(136,85,210,.04));overflow:hidden}
 .home-box__panel--empty{min-height:160px}
 /* HR widget (from the HR wireframe): period + segmented progress bar + legend, three stat tiles
@@ -1511,7 +1513,7 @@ button.home-addbtn.is-open:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_)
 .home-hr__stat{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:10px;background:var(--c-bg);border:1px solid transparent}
 .home-hr__stat--tbc{background:#fff;border:1px solid var(--c-border-strong)}
 .home-hr__statlabel{font-size:12px;font-weight:var(--fw-regular);color:var(--c-copy)}
-.home-hr__statvalue{font-size:20px;font-weight:var(--fw-semibold);line-height:1.2;color:var(--c-text)}
+.home-hr__statvalue{font-size:20px;font-weight:var(--fw-medium);line-height:1.2;color:var(--c-text)}
 .home-hr__rows{margin:0;padding:0;list-style:none;display:flex;flex-direction:column}
 .home-hr__rows li{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--c-border);font-size:13px;font-weight:var(--fw-regular);color:var(--c-text)}
 .home-hr__val{color:var(--c-muted);text-align:right}
@@ -1519,7 +1521,7 @@ button.home-addbtn.is-open:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_)
 .home-box__panel.home-cal:not(.home-tiles){flex-direction:row;align-items:flex-start;gap:20px}
 .home-cal__date{display:flex;flex-direction:column;align-items:flex-start;flex:0 0 auto;min-width:48px}
 .home-cal__dow{font-size:12px;font-weight:var(--fw-medium);color:var(--slate);font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;text-transform:uppercase;letter-spacing:.06em} /* = .nav-group__label ("Apps") */
-.home-cal__day{font-size:34px;font-weight:var(--fw-semibold);line-height:1.1;letter-spacing:-.02em;color:var(--c-text)}
+.home-cal__day{font-size:34px;font-weight:var(--fw-medium);line-height:1.1;letter-spacing:-.02em;color:var(--c-text)}
 .home-cal__events{flex:1 1 auto;min-width:0;margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
 .home-cal__event{display:flex;gap:10px;align-items:stretch}
 .home-cal__bar{flex:0 0 3px;border-radius:2px;background:var(--cal)}
@@ -1617,7 +1619,7 @@ button.home-addbtn.is-open:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_)
 
 /* Buttons: outline (secondary) and ink (primary). */
 .home-btn{
-  height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--c-border-strong);background:#fff;
+  height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--c-border-soft);background:#fff;
   font-family:inherit;font-size:13px;font-weight:var(--fw-medium);color:var(--c-text);white-space:nowrap;
   transition:background .12s ease,border-color .12s ease;
 }
@@ -1626,16 +1628,21 @@ button.home-addbtn.is-open:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_)
 .home-btn--lg{height:40px;padding:0 18px;font-size:14px}
 .home-btn--primary{background:var(--c-ink);border-color:var(--c-ink);color:#fff}
 .home-btn--primary:hover{background:var(--c-ink);opacity:.88}
+/* Button variants, switch with one modifier: (none) or --outline = white fill + grey border, --primary = ink fill, --ghost = no fill, no border
+   (same muted-to-ink look as the nav's "+ New dashboard"). The ghost keeps a transparent 1px border so it is the same size as the others. */
+.home-btn--outline{background:#fff;border-color:var(--c-border-soft);color:var(--c-text)}
+.home-btn--ghost{background:transparent;border-color:transparent;color:var(--slate-icon)}
+.home-btn--ghost:hover{background:transparent;color:var(--ink)}
 /* Text links under watch items ("Nudge owners"). */
 .home-links{display:flex;gap:16px;margin-top:6px}
 .home-links__end{display:flex;gap:16px;margin-left:auto}
-.home-link{padding:0 0 1px;border:0;border-bottom:1px solid var(--c-border-strong);background:transparent;font-family:inherit;font-size:14px;color:var(--c-text)}
+.home-link{padding:0;border:0;background:transparent;font-family:inherit;font-size:14px;color:var(--slate-icon)}   /* looks like the ghost button (muted, ink on hover, no underline), without its padding */
 /* The global rule `button:not(.ms-tab):not(.wl-tab):not(.wl-view__item){border-radius:999px !important}`
    rounds the underline into a curve. Mirror its :not() chain to out-rank it (higher
    specificity wins between two !important rules) so links get a straight underline. */
 button.home-link:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){border-radius:0 !important}
 button.home-addmenu__item:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){border-radius:6px !important}
-.home-link:hover{border-bottom-color:var(--c-text)}
+.home-link:hover{color:var(--ink)}
 
 /* Mira handled today: one summary line, chevron expands the list. */
 .home-sum{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;font-size:13px;font-weight:var(--fw-regular);color:var(--c-copy)}
@@ -1646,8 +1653,8 @@ button.home-addmenu__item:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){
 
 /* Business snapshot: 2x2 tiles. */
 .home-tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.home-tile{border:1px solid var(--c-border);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:2px;background:#fff}
-.home-tile__value{font-size:28px;font-weight:var(--fw-semibold);letter-spacing:-.01em;line-height:1.15;color:var(--c-text)}
+.home-tile{border:1px solid var(--c-border-soft);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:2px;background:#fff}
+.home-tile__value{font-size:28px;font-weight:var(--fw-medium);letter-spacing:-.01em;line-height:1.15;color:var(--c-text)}
 .home-tile__label{font-size:13px;font-weight:var(--fw-regular);color:var(--c-copy)}
 .home-tile__foot{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:2px 8px;margin-top:8px;font-size:12px}
 .home-tile__delta{font-weight:var(--fw-medium)}
@@ -1778,6 +1785,7 @@ button.adm-pseg:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){border-rad
 .adm-pseg.is-on .adm-pradio::after{background:var(--c-brand-purple)}
 .adm-pseg:disabled{opacity:.4;cursor:not-allowed}
 .adm-drawer__perms{margin-top:18px}
+.adm-drawer__sec > .adm-drawer__perms:first-child,.adm-drawer > .adm-drawer__perms:first-child{margin-top:0}   /* no level cards above (a team's Custom connection, the Mira plugin drawer): the first group starts at the panel's own padding, not 18px lower */
 
 .adm-drawer__perms .adm-perm{border-top:1px solid var(--c-border);flex-wrap:nowrap}   /* tool drawer: always two columns, a long label wraps to a second line instead of pushing the control down */
 .adm-drawer__perms .adm-perm > span{flex:1 1 auto;min-width:0}
@@ -1862,7 +1870,7 @@ button.adm-pseg:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){border-rad
 .adm-drawer__pickers{display:flex;gap:8px;flex-wrap:wrap}
 .adm-drawer__line{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .adm-drawer__line > .home-btn,.adm-drawer__line > .home-link{flex:0 0 auto;white-space:nowrap}
-.adm-drawer__card{padding:12px;border:1px solid var(--c-border);border-radius:12px}
+.adm-drawer__card{padding:12px;border:1px solid var(--c-border-soft);border-radius:12px}
 .adm-drawer__head .wl-ddpill{white-space:nowrap}   /* "Add people" in the Members header */
 .adm-drawer__head .wl-ddpill > svg{width:14px;height:14px;display:block;flex:0 0 14px}
 .adm-drawer__members{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
@@ -1903,7 +1911,7 @@ button.adm-pseg:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){border-rad
 .adm-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
 @media (max-width:900px){.adm-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .adm-stat__label{font-size:13px;color:var(--c-copy)}
-.adm-stat__value{margin-top:6px;font-size:28px;font-weight:var(--fw-semibold);color:var(--c-text)}
+.adm-stat__value{margin-top:6px;font-size:28px;font-weight:var(--fw-medium);color:var(--c-text)}
 .adm-bars{height:160px;display:flex;align-items:flex-end;gap:10px;margin-top:12px;border-bottom:1px solid var(--c-border)}
 .adm-bars span{flex:1 1 0;background:var(--c-brand-purple);opacity:.55;border-radius:4px 4px 0 0}
 .adm-card-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
@@ -1931,7 +1939,7 @@ button.adm-pseg:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){border-rad
 .adm-gov__sec{margin-top:32px}
 .adm-gov__sec--first{margin-top:0}
 .adm-gov__sec .adm-list{margin-top:10px}
-.adm-gov__box{margin-top:10px;background:#fff;border:1px solid var(--c-border);border-radius:10px}   /* the row look of .adm-row, around both switches */
+.adm-gov__box{margin-top:10px;background:#fff;border:1px solid var(--c-border-soft);border-radius:10px}   /* the row look of .adm-row, around both switches */
 .adm-gov__line{display:flex;align-items:center;gap:12px;padding:12px 14px}
 .adm-gov__line + .adm-gov__line{border-top:1px solid var(--c-border)}
 .rt-toggle:disabled{opacity:.4;cursor:not-allowed}   /* the last model on, and the email switch while support access is off */
@@ -2004,7 +2012,7 @@ button.adm-pseg:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){border-rad
 .ind-tools .wl-newtask--secondary{padding:6px 14px;font-size:13px}
 /* sections: fixed order, small uppercase heading (600) */
 .in-sec{margin-top:26px}
-.in-sec__title{margin:0 0 12px;font-family:var(--font);font-size:16px;font-weight:var(--fw-semibold);color:var(--c-text)}   /* = Home section titles */
+.in-sec__title{margin:0 0 12px;font-family:var(--font);font-size:16px;font-weight:var(--fw-medium);color:var(--c-text)}   /* = Home section titles */
 /* The sections sit on one rounded grey surface (Home "containers" look), white cards on it */
 .ind-body{display:flex;flex-direction:column;gap:28px;margin-top:20px;padding:8px 16px 16px;background:#FAFAFA;border-radius:12px}
 .ind-body .in-sec{margin-top:0}
@@ -2033,7 +2041,7 @@ button.adm-pseg:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){border-rad
 /* KPI tile: label (400), value (600, tabular), sub-line (400) */
 .in-kpi{gap:2px;padding:14px 16px;font-variant-numeric:tabular-nums}
 .in-kpi__label{font-size:12px;font-weight:var(--fw-regular);color:var(--c-copy)}
-.in-kpi__value{margin-top:6px;font-size:24px;font-weight:var(--fw-semibold);letter-spacing:-.01em;line-height:1.15;color:var(--c-text)}
+.in-kpi__value{margin-top:6px;font-size:24px;font-weight:var(--fw-medium);letter-spacing:-.01em;line-height:1.15;color:var(--c-text)}
 .in-kpi__cur{display:block;font-size:12px;font-weight:var(--fw-regular);letter-spacing:0;color:var(--c-muted)}
 .in-kpi__sub{margin-top:6px;font-size:12px;font-weight:var(--fw-regular);color:var(--c-copy)}
 .in-kpi__sub--bad{font-weight:var(--fw-medium);color:var(--c-error)}   /* semantic: always next to a ▼ in the text */
@@ -2114,7 +2122,7 @@ button.adm-pseg:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){border-rad
    Filter bar under the dashboard header = a row of the existing dropdown pills (.wl-ddpill) + text links (.home-link).
    The card chip and the view switches are the same pills, only sized down to sit in a card header / above its body. */
 .dc-filters{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:0 16px 8px}
-.dc-filters__actions{display:flex;align-items:center;gap:16px;margin-left:auto}   /* links on the right of the bar */
+.dc-filters__actions{display:flex;align-items:center;gap:16px;margin-left:auto}   /* Clear all, on the right of the bar */
 .dc-switches{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
 .dc .wl-ddpill{padding:3px 10px;font-size:12px}               /* compact: card header chip and view switches */
 .dc__tools .wl-ddmenu{left:auto;right:0}                       /* the chip's menu opens inward, not out of the card */
@@ -2207,7 +2215,7 @@ button.adm-pseg:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){border-rad
 .dc-kpi:first-child{padding-left:0}
 .dc-kpi + .dc-kpi{border-left:1px solid var(--c-border)}
 .dc-kpi__label{font-size:12px;font-weight:var(--fw-regular);color:var(--c-copy)}
-.dc-kpi__value{margin-top:4px;font-size:22px;font-weight:var(--fw-semibold);letter-spacing:-.01em;color:var(--c-text);white-space:nowrap}
+.dc-kpi__value{margin-top:4px;font-size:22px;font-weight:var(--fw-medium);letter-spacing:-.01em;color:var(--c-text);white-space:nowrap}
 .dc-kpi__sub{font-size:12px;font-weight:var(--fw-regular);color:var(--c-copy)}
 .dc-kpi__sub.is-bad{color:var(--c-error)}   /* semantic: always next to a ▼ in the text */
 /* Responsive by the card's own width, not the window's: the Mira side panel narrows the cards without changing the
@@ -2230,11 +2238,11 @@ button.adm-pseg:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){border-rad
 .dc-stage{display:flex;flex-direction:column;gap:6px;min-width:0}
 .dc-stage__bar{display:block;height:28px;border-radius:4px}
 .dc-stage__label{font-size:12px;font-weight:var(--fw-regular);color:var(--c-copy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.dc-stage__n{font-size:20px;font-weight:var(--fw-semibold);letter-spacing:-.01em;line-height:1.1;color:var(--c-text)}
+.dc-stage__n{font-size:20px;font-weight:var(--fw-medium);letter-spacing:-.01em;line-height:1.1;color:var(--c-text)}
 /* Stats (Tasks, HR): big numbers with a caption under each */
 .dc-stats{display:flex;gap:28px;flex-wrap:wrap;font-variant-numeric:tabular-nums}
 .dc-stat{display:flex;flex-direction:column;gap:2px}
-.dc-stat__n{font-size:26px;font-weight:var(--fw-semibold);letter-spacing:-.01em;line-height:1.15;color:var(--c-text)}
+.dc-stat__n{font-size:26px;font-weight:var(--fw-medium);letter-spacing:-.01em;line-height:1.15;color:var(--c-text)}
 .dc-stat__label{font-size:12px;font-weight:var(--fw-regular);color:var(--c-copy)}
 .dc-stat__label--link{padding:0;border:none;background:transparent;text-align:left;text-decoration:underline;text-underline-offset:2px;color:var(--c-copy)}
 .dc-stat__label--link:hover{color:var(--c-text)}
@@ -2308,7 +2316,7 @@ button.adm-pseg:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){border-rad
 .ms-tab.is-active .ms-tab__icon{color:var(--c-brand-purple)}
 
 .ms-sect{margin-bottom:24px}
-.ms-sect__title{display:flex;align-items:center;gap:9px;margin:0 0 8px;font-size:16px;font-weight:var(--fw-semibold);color:var(--ink)}
+.ms-sect__title{display:flex;align-items:center;gap:9px;margin:0 0 8px;font-size:16px;font-weight:var(--fw-medium);color:var(--ink)}
 .ms-sect__icon{display:inline-flex;color:var(--accent)}.ms-sect__icon svg{width:20px;height:20px;display:block}
 .ms-sect__desc{margin:0;font-size:14px;line-height:1.5;color:var(--c-copy);max-width:760px}
 
@@ -2996,7 +3004,7 @@ function renderInsightsDashboard(d, draftDash){
         // Only the owner changes who has access (like a routine shared with me): a recipient gets no Share button.
         ((dash && (dash.role || 'owner') !== 'owner') ? '' : '<button type="button" class="wl-newtask wl-newtask--secondary" data-dc-share>'+svg('share',1.7)+'Share</button>')+
         // Send report sits right of Share, for every role (a viewer can send a report too); it opens Mira's side panel.
-        (dash ? '<button type="button" class="wl-newtask wl-newtask--secondary" data-dc-report>Send report</button>' : '')+
+        (dash ? '<button type="button" class="wl-newtask" data-dc-report>Send report</button>' : '')+
         (dash ? insMoreMenuHTML(dash) : '')+
       '</div>')+
     '</div>'+
@@ -3553,7 +3561,7 @@ const ADM_SUBTITLES = {
   'People':                 () => 'Who is in '+ADM_COMPANY+', their role and their teams.',
   'Connections & channels': () => 'The connections people may use, and the most Mira can do in each. Each person still decides how much Mira does on their own account, within these limits.',
   // Mira (2026-10-30): the agreed text, without the "External tools are in Connections & channels." sentence (removed on request).
-  'Mira':                   () => 'What Mira can do inside '+ADM_COMPANY+': plugins by Binome, skills, ready-made agents and instructions for everyone.',
+  'Mira':                   () => 'What Mira can do inside '+ADM_COMPANY+': apps by Binome, skills, ready-made agents and instructions for everyone.',
   // Governance (2026-10-30): the agreed text.
   'Governance':             () => 'How Mira is running across '+ADM_COMPANY+', what it costs, and who can access your setup.',
   'Company knowledge':      () => 'What Mira knows about '+ADM_COMPANY+', shared with everyone.'
@@ -4142,7 +4150,7 @@ function admTeamPanelHTML(t){
       '<span class="profile__meta"><span class="adm-drawer__name"><span class="profile__name">'+m.name+'</span>'+
         '<span class="home-badge '+ADM_STATUS_BADGE[m.status]+'">'+m.status+'</span></span>'+
         '<span class="profile__sub">'+admRoleOf(m)+'</span></span></span>'+
-      '<button type="button" class="rt-panel__close" data-adm-tleave="'+m.id+'" aria-label="Remove '+m.name+' from '+t.name+'">'+svg('close',2)+'</button></li>').join('');
+      '<button type="button" class="rt-panel__close" data-adm-tleave="'+m.id+'" aria-label="Remove '+m.name+' from '+t.name+'">'+svg('minuscircle',1.8)+'</button></li>').join('');
   // Admins are not offered: they sit above all teams (consistent with the person drawer, which has no "Add to team" for an admin).
   // "Add people" opens a modal built on the Share modal (see admAddPeopleModal): search, and a mark for who is already in the team.
   const add = '<button type="button" class="wl-ddpill" data-adm-addpeople>'+svg('plus',2)+'Add people</button>';
@@ -4196,7 +4204,7 @@ function admMemberPanelHTML(m){
   // Head in the table) and is set per team below or in the team drawer. The dropdown always shows the stored role.
   const role = sec('Role in organization',
     '<div class="adm-drawer__full">'+ddPillHTML({ key:'drole', label:'', value:m.role, itemsHTML:['Admin','Member'].map(r => ddItem(r, r === m.role)).join('') })+'</div>');
-  // Teams: one row per team with the person's role in it (Head or Member) and a remove x. "+ Add to team" is a link at the right of the
+  // Teams: one row per team with the person's role in it (Head or Member) and a remove x. "+ Add to team" is a ghost button at the right of the
   // label (hidden for an admin, who sits above all teams; existing memberships can still be removed). Setting Head here makes the
   // person the team's head and replaces the previous one, exactly like the Head picker in the team drawer.
   const teamRows = m.teams.map(name => {
@@ -4209,7 +4217,7 @@ function admMemberPanelHTML(m){
   }).join('');
   const free = ADM_TEAMS.filter(t => m.teams.indexOf(t.name) < 0);
   const addTeam = '<span class="rt-more" data-adm-pick="addteam">'+
-    '<button type="button" class="home-link" data-adm-btn aria-haspopup="menu" aria-expanded="false">+ Add to team</button>'+
+    '<button type="button" class="home-btn home-btn--ghost" data-adm-btn aria-haspopup="menu" aria-expanded="false">+ Add to team</button>'+
     '<div class="wl-ddmenu adm-pick__menu" role="menu" hidden>'+(free.length ? free.map(t => '<button type="button" class="wl-ddmenu__item" role="menuitem" data-adm-addteam="'+t.name+'">'+t.name+'</button>').join('')
       : '<div class="adm-row__meta adm-pick__empty">Already in every team.</div>')+'</div></span>';
   const teams = sec('Teams', m.teams.length ? '<ul class="adm-drawer__members adm-drawer__teamlist">'+teamRows+'</ul>'
@@ -4321,14 +4329,12 @@ function wireAdmChannels(c){
     });
   });
 }
-const admToolLevelF = new Set();    // Autonomy level dropdown (multi); empty = every level. (2026-10-30: replaced the All / Custom permissions pills and the Team dropdown)
 let admToolQuery = '';
 function admLogo(t){
   // Xero and Granola have no logo asset yet -> the generic plug icon in the same 18px slot.
   return '<span class="rt-logo">'+(t.logo ? RT_TOOLS[t.logo].logo : '<svg viewBox="0 0 24 24" fill="none" stroke="#525252" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+ICONS.plug+'</svg>')+'</span>';
 }
 function admToolVisible(t){
-  if(admToolLevelF.size && !admToolLevelF.has(t.access)) return false;
   const q = admToolQuery.trim().toLowerCase();
   return !q || (t.name+' '+t.kind).toLowerCase().includes(q);
 }
@@ -4360,10 +4366,8 @@ function renderAdmTools(){
   if(admToolsTab === 'tools'){
     body = '<div class="adm-split">'+
       '<section class="adm-col adm-col--table" aria-label="Connections">'+
-        // Filter on the left; the collapsible search and the primary action (Add tool) on the right, just above the table (as in People).
-        '<div class="wl-toolbar"><div class="wl-toolbar__left">'+
-          admMultiDdHTML('admtoollevel', 'Autonomy level', ADM_LEVELS.map(l => l[0]).concat('Custom'), admToolLevelF)+
-        '</div><div class="wl-toolbar__right">'+
+        // No filters (the Autonomy level filter was removed 2026-11-02); the collapsible search and the primary action (Add tool) sit on the right, just above the table.
+        '<div class="wl-toolbar"><div class="wl-toolbar__left"></div><div class="wl-toolbar__right">'+
           searchBoxHTML('Search connections')+
           '<button type="button" class="wl-newtask" data-adm-tool-new><span class="wl-newtask__icon">'+svg('plus',2)+'</span>Add connection</button>'+
         '</div></div>'+
@@ -4407,11 +4411,6 @@ function wireAdmTools(c){
     if(admToolQuery){ input.value = admToolQuery; search.classList.add('is-open','has-value'); search.querySelector('.wl-search__btn').setAttribute('aria-expanded','true'); input.removeAttribute('tabindex'); }
     input.addEventListener('input', () => { admToolQuery = input.value; admToolUpdateRows(c); });   // rows only, so the box keeps focus
   }
-  const reopen = admReopen === 'admtoollevel';
-  wireMultiDropdown(c, 'admtoollevel', val => {
-    if(val === '__clear__') admToolLevelF.clear(); else admToolLevelF.has(val) ? admToolLevelF.delete(val) : admToolLevelF.add(val);
-    admReopen = 'admtoollevel'; renderContent();
-  }, reopen);
   admReopen = null;
   admWireToolRows(c);
 }
@@ -4811,7 +4810,7 @@ function admAddToolModal(startName){
     close();
     admToolFlash = new Set(drafts.map(d => d.c.id));
     // Show the new rows: drop the level filter and the search, which could hide them.
-    admToolLevelF.clear(); admToolQuery = ''; admToolsTab = 'tools';
+    admToolQuery = ''; admToolsTab = 'tools';
     renderContent(); admToolFlash.clear();
     shareToast((names.length < 2 ? names.join('') : names.slice(0, -1).join(', ')+' and '+names[names.length-1])+' added. People can now connect their accounts.');
   }
@@ -5187,7 +5186,7 @@ const ADM_PRESETS = [
 const admPreset = id => ADM_PRESETS.find(p => p.id === id);
 // What a preset can use: the company's pool. Connections here are placeholder names (the Connections list has other ones); plugins come from ADM_PLUGINS.
 const admPool = () => [['Connections', ['Gmail','Calendar','ERP','Sheets','Templates','HubSpot','Tasks']],
-                       ['Plugins', ADM_PLUGINS.map(p => p.name)],
+                       ['Apps', ADM_PLUGINS.map(p => p.name)],
                        ['Built-in tools', ADM_BUILTINS.map(b => b[0])]];
 // Who a preset can be given to: teams and people.
 const admUsers = () => [['Teams', ADM_TEAMS.map(t => t.name).concat('Leadership')],
@@ -5274,7 +5273,8 @@ function renderAdmMira(){
     '<div class="wl-tabsrow"><nav class="wl-tabs">'+ADM_MIRA_TABS.map(t => tab(t[0], t[1])).join('')+'</nav></div>'+body+'</div>';
 }
 // The Presets tab is shown as "Agents" (renamed on request); code names (`presets`, ADM_PRESETS, admMiraPresetsHTML) are unchanged.
-const ADM_MIRA_TABS = [['plugins','Plugins'], ['skills','Skills'], ['presets','Agents'], ['instructions','Instructions']];
+// The first tab is called Apps (it was Plugins); ids, data and function names in the code still say plugin.
+const ADM_MIRA_TABS = [['plugins','Apps'], ['skills','Skills'], ['presets','Agents'], ['instructions','Instructions']];
 
 // Unsaved instructions: leaving the page or the tab asks first. `go` runs once the person agrees (or when nothing is unsaved).
 function admMiraGuard(go){
@@ -5356,10 +5356,10 @@ function admPresetPanelHTML(pr){
   const chips = (kind, names) => names.length ? '<div class="adm-chips">'+names.map(n =>
     '<span class="share-chip">'+rtEsc(n)+'<button type="button" class="share-chip__x" data-adm-mp-rm="'+kind+'" data-v="'+rtEsc(n)+'" aria-label="Remove '+rtEsc(n)+'">'+svg('close',2)+'</button></span>').join('')+'</div>'
     : '<div class="adm-row__meta">'+(kind === 'by' ? 'Not used yet.' : 'Nothing yet.')+'</div>';
-  // "+ Add" = the person drawer's "+ Add to team" menu, listing what is not picked yet, in groups.
+  // "+ Add" (a ghost button) = the person drawer's "+ Add to team" menu, listing what is not picked yet, in groups.
   const addMenu = (kind, groups, have) => {
     const free = groups.map(g => [g[0], g[1].filter(n => !have.includes(n))]).filter(g => g[1].length);
-    return '<span class="rt-more" data-adm-pick="mp-'+kind+'"><button type="button" class="home-link" data-adm-btn aria-haspopup="menu" aria-expanded="false">+ Add</button>'+
+    return '<span class="rt-more" data-adm-pick="mp-'+kind+'"><button type="button" class="home-btn home-btn--ghost" data-adm-btn aria-haspopup="menu" aria-expanded="false">+ Add</button>'+
       '<div class="wl-ddmenu adm-pick__menu" role="menu" hidden>'+(free.length ? free.map(g => '<div class="adm-row__meta adm-pick__empty">'+g[0]+'</div>'+g[1].map(n =>
         '<button type="button" class="wl-ddmenu__item" role="menuitem" data-adm-mp-add="'+kind+'" data-v="'+rtEsc(n)+'">'+rtEsc(n)+'</button>').join('')).join('')
         : '<div class="adm-row__meta adm-pick__empty">Everything is already added.</div>')+'</div></span>';
@@ -8198,9 +8198,10 @@ function insFilterBarHTML(dash){
     // Expanded: the hidden chips come first and the toggle (now "Less filters") sits to the right of the last chip.
     (insFiltersMore ? rest.map(chip).join('') : '')+
     (rest.length ? link('data-flt-more aria-expanded="'+insFiltersMore+'"', insFiltersMore ? 'Less filters' : 'More filters ('+rest.length+')') : '')+
+    // "+ Add filter" is a ghost button right after the last chip (and the More / Less toggle); only Clear all stays on the right.
+    (owner ? '<button type="button" class="home-btn home-btn--ghost" data-flt-add>+ Add filter</button>' : '')+
     '<span class="dc-filters__actions">'+
       (anyPicked ? link('data-flt-clear', 'Clear all') : '')+
-      (owner ? link('data-flt-add', '+ Add filter') : '')+
     '</span></div>';
 }
 /* Every filter whose chip can be on the page: the dashboard's and the pinned insights' own. */
@@ -8595,11 +8596,12 @@ function insEditPanelHTML(label){
 function insSrcHTML(src){
   const logo = '<span class="rt-logo has-tip" data-tip="Salesforce" style="vertical-align:-4px">'+RT_TOOLS.salesforce.logo+'</span>';   // same 18px logo as the routine cards
   const m = /^Dynamics(?: \(ERP\))?(?:\s*·\s*(.*))?$/.exec(src);
-  if(m) return logo+(m[1] ? ' · '+rtEsc(m[1]) : '');
+  // A card header shows only the app logo (and the info icon next to it); the detail after the source is not printed on the card.
+  if(m) return logo;
   if(/^Notion$/.test(src)) return '<span class="rt-logo has-tip" data-tip="Notion" style="vertical-align:-4px">'+RT_TOOLS.notion.logo+'</span>';
   // Gmail gets its own logo the same way (the Google mail icon from the routine tools)
   const g = /^Gmail(?:\s*·\s*(.*))?$/.exec(src);
-  return g ? '<span class="rt-logo has-tip" data-tip="Gmail" style="vertical-align:-4px">'+RT_TOOLS.gmail.logo+'</span>'+(g[1] ? ' · '+rtEsc(g[1]) : '') : rtEsc(src);
+  return g ? '<span class="rt-logo has-tip" data-tip="Gmail" style="vertical-align:-4px">'+RT_TOOLS.gmail.logo+'</span>' : rtEsc(src);
 }
 /* Creates the copy in `ws`, adds it to that workspace's list under Insights, opens it (switching workspace when
    needed) and says where it went. Same pins, order and widths as the original (numbers are the mock's, no re-query);
@@ -9473,7 +9475,8 @@ function dcCard(p, dash, extraCls = ''){
     '<div class="wl-ddmenu" role="menu" hidden>'+groups.join('')+'</div></div>';   // no dividers between the rows
   // Footer: "See all N" for tables. "About this data" is no longer here: it is the info icon next to the title.
   const foot = [];
-  if(v.type === 'table') foot.push('<button type="button" class="dc-link">See all '+v.total+'</button>');
+  // The "See all N" ghost button is hidden for now (it had no action in the prototype). To bring it back, uncomment:
+  // if(v.type === 'table') foot.push('<button type="button" class="home-btn home-btn--ghost">See all '+v.total+'</button>');
   const info = ins.about
     ? '<button type="button" class="dc-info has-tip" data-tip="'+rtEsc(ins.about)+'" aria-label="About this data: '+rtEsc(ins.about)+'">'+svg('info',1.8)+'</button>' : '';
   // "Not connected" uses the routine cards' own status (red label + warning icon, dotted underline, dark tooltip) in the header.
@@ -9504,7 +9507,7 @@ function dcCard(p, dash, extraCls = ''){
     tag:'section', cls:'home-box dc'+extraCls, attrs:'style="grid-column:span '+p.span+'" data-pin="'+ins.id+'"',
     // The grip is the same .home-drag as on the Home widgets (visible only in edit mode, see .dc-page.is-editing .home-drag).
     title:'<button type="button" class="home-drag" data-dc-drag aria-label="Drag to reorder '+rtEsc(ins.title)+'">'+svg('grip',3.2)+'</button>'+
-      '<h2 class="rt-card__title">'+rtEsc(ins.title)+'</h2>'+(p.isNew ? '<span class="home-badge home-badge--purple dc-newbadge">New</span>' : '')+(ins.src && !missing ? '<span class="dc-meta">'+insSrcHTML(ins.src)+(ins.asOf ? ' · '+rtEsc(ins.asOf) : '')+'</span>' : '')+(missing ? '' : info),   // no source chip / info when not connected: the status and the body already name the source
+      '<h2 class="rt-card__title">'+rtEsc(ins.title)+'</h2>'+(p.isNew ? '<span class="home-badge home-badge--purple dc-newbadge">New</span>' : '')+(ins.src && !missing ? '<span class="dc-meta">'+insSrcHTML(ins.src)+'</span>' : '')+(missing ? '' : info),   // no source chip / info when not connected: the status and the body already name the source
     right:'<div class="dc__tools">'+ownChips+status+open+menu+'</div>',
     body:panel });
 }
@@ -9793,7 +9796,9 @@ function inTableBlock(t){
   return '<section class="in-blk in-blk--full">'+
     inBlockHead(t.title, '<span class="in-blk__note">'+rtEsc(t.note)+'</span>')+
     '<table class="in-tbl"><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table>'+
-    '<div class="in-tbl__more"><button type="button" class="in-ask">See all '+t.total+'</button></div></section>';
+    // The "See all N" ghost button under the table is hidden for now (no action in the prototype):
+    // '<div class="in-tbl__more"><button type="button" class="home-btn home-btn--ghost">See all '+t.total+'</button></div>'+
+    '</section>';
 }
 function inAboutBlock(a){
   return '<section class="in-blk in-blk--full in-about" data-in-about>'+
