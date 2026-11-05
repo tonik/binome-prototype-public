@@ -2535,6 +2535,7 @@ button:not(.ms-tab):not(.wl-tab):not(.wl-view__item){border-radius:999px !import
 .notif__head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;font-size:15px;font-weight:var(--fw-semibold);color:var(--ink)}
 .notif__count{font-size:12px;font-weight:var(--fw-regular);color:var(--c-copy)}
 .notif__item{display:flex;gap:12px;padding:14px 16px;border-top:1px solid var(--c-border)}
+.notif__item--ask{cursor:pointer}   /* a permission request: the whole item opens the Approve / Decline dialog */
 .notif__body{flex:1;min-width:0}
 .notif__text{font-size:14px;font-weight:var(--fw-regular);line-height:1.45;color:var(--ink)}
 .notif__text b{font-weight:var(--fw-medium)}
@@ -2780,9 +2781,11 @@ const WORKSPACES = [
   { id:'personal', name:'Personal',   role:'Admin', icon:'user'  },
   // needs = count shown in the red badge next to the name (Needs you items).
   // Sales reads the live list (a function, because HOME_NEEDS is defined later); Ops is a fixed mock.
-  { id:'sales',    name:'Sales Team', short:'Sales', people:6, role:'Admin', icon:'users', needs:() => homeNeedsFor('sales').length },
+  // `people` is read from the team's members in Admin Panel → People (a getter, because ADM_MEMBERS is defined later), so it matches the Teams tab.
+  { id:'sales',    name:'Sales Team', short:'Sales', get people(){ return admTeamMembers('Sales').length; }, role:'Admin', icon:'users', needs:() => homeNeedsFor('sales').length },
   // Prototype mock: shown in the list but not selectable (mock:true -> disabled row).
-  { id:'ops',      name:'Ops team',   short:'Ops', role:'Team',  icon:'users', mock:true, needs:() => 2 },
+  // The user is a plain member of Operations (the People team of that name), so there is no Team settings for it.
+  { id:'ops',      name:'Operations', get people(){ return admTeamMembers('Operations').length; }, role:'Team',  icon:'users', mock:true, needs:() => 2 },
 ];
 let activeWorkspace = 'sales';
 
@@ -3988,8 +3991,9 @@ function admWireRows(c){
 
 /* A drawer section: mono label (and an optional note, link or button on the right) over its content. */
 function admDrawerSec(title, inner, extra){
-  return '<section class="adm-drawer__sec" aria-label="'+title+'">'+
-    '<div class="adm-drawer__head"><h2 class="adm-label">'+title+'</h2>'+(extra || '')+'</div>'+inner+'</section>';
+  // An empty title leaves the head out (and the section without an aria-label), for a section that only holds its content.
+  return '<section class="adm-drawer__sec"'+(title ? ' aria-label="'+title+'"' : '')+'>'+
+    (title ? '<div class="adm-drawer__head"><h2 class="adm-label">'+title+'</h2>'+(extra || '')+'</div>' : '')+inner+'</section>';
 }
 
 /* ---- Add people modal (2026-10-30) ----
@@ -4445,7 +4449,6 @@ function wireAdmTools(c){
 // Connections a team has turned OFF, per team name. The pool is ADM_TOOLS, and anything not listed here is ON, so a connection an admin adds
 // later is ON for every team by default (as the brief says). Sales starts with Notion and Xero off, as in the brief's example.
 const TS_OFF = { Sales: new Set(['notion','xero']) };
-const TS_REQUESTED = new Set();      // "<team>:<connection id>" for the "Ask for more" requests already sent (the link then reads "Requested")
 const tsTeam = () => { const w = WORKSPACES.find(x => x.id === activeWorkspace); return w && w.id !== 'personal' ? admTeam(wsShort(w)) : null; };
 const tsOff = team => TS_OFF[team] || (TS_OFF[team] = new Set());
 // Who may open the page: admins and the team's head, read from the user's role in the workspace (WORKSPACES.role: 'Admin', or 'Head' for a
@@ -4454,8 +4457,6 @@ const tsOff = team => TS_OFF[team] || (TS_OFF[team] = new Set());
 const tsRole = () => { const w = WORKSPACES.find(x => x.id === activeWorkspace); return w ? w.role : ''; };
 const tsIsAdmin = () => tsRole() === 'Admin';
 const tsCanOpen = () => Boolean(tsTeam()) && (tsIsAdmin() || tsRole() === 'Head');
-// Levels above the connection's current one, for the "Ask for more" picker. A Custom level has no order, so it may ask for any of the three.
-const tsLevelsAbove = t => { const names = ADM_LEVELS.map(l => l[0]), i = names.indexOf(t.access); return names.slice(i + 1); };
 
 function openTeamSettings(){
   if(!tsCanOpen()) return;
@@ -4466,8 +4467,8 @@ function tsConnectionRowsHTML(team){
   return ADM_TOOLS.map(t => {
     const on = !tsOff(team.name).has(t.id), key = team.name+':'+t.id;
     // REMOVED (2026-10-30, on request): the "Ask for more" link next to the level (and its "Requested · waiting for an admin" state). Asking for
-    // more permissions now goes through the purple banner under the table ("Request with Mira"). ORPHANED on purpose, kept for later: tsAskModal,
-    // TS_REQUESTED, tsLevelsAbove and the [data-ts-ask] handler in wireTeamSettings.
+    // more permissions now goes through the purple banner under the table ("Request with Mira"). The Ask for more modal and its helpers were deleted
+    // (2026-11-06): what an admin sees of a request is the bell notification (see `permask` in NOTIFS).
     // A row opens the team's drawer for this connection; the Open button (shown on hover or focus) is only an affordance, the click bubbles to the row (as in People).
     return '<tr class="is-clickable'+(t.id === admToolOpen ? ' is-selected' : '')+'" tabindex="0" data-ts-open="'+t.id+'"><td><div class="in-firstcell">'+admLogo(t)+'<span class="in-name">'+t.name+'</span>'+inOpenBtn()+'</div></td>'+
       '<td><div class="ts-level">'+(on ? '<span class="home-badge home-badge--neutral" title="'+tsMaxText(t)+'">'+tsLevel(team, t)+'</span>' : '–')+'</div></td>'+   // off for the team: an en dash
@@ -4522,13 +4523,12 @@ function wireTeamSettings(c){
       text:'People in '+team.name+' won’t be able to use '+t.name+' with Mira, and '+team.name+' routines that use it will stop working. Their accounts stay connected.',
       confirm:'Turn off', danger:true }, () => { off.add(t.id); redraw(); });
   }));
-  // Rows open the drawer. The switch and the "Ask for more" link sit inside the row, so their clicks must not also open it.
+  // Rows open the drawer. The switch sits inside the row, so its click must not also open it.
   c.querySelectorAll('[data-ts-open]').forEach(tr => {
     tr.addEventListener('click', () => { admToolOpen = tr.dataset.tsOpen; admMemberVer++; renderContent(); updateRtPanel(); });
     tr.addEventListener('keydown', e => { if(e.key === 'Enter' && e.target === tr) tr.click(); });
   });
-  c.querySelectorAll('[data-ts-toggle], [data-ts-ask]').forEach(b => b.addEventListener('click', e => e.stopPropagation(), true));
-  c.querySelectorAll('[data-ts-ask]').forEach(b => b.addEventListener('click', () => tsAskModal(team, ADM_TOOLS.find(x => x.id === b.dataset.tsAsk), redraw)));
+  c.querySelectorAll('[data-ts-toggle]').forEach(b => b.addEventListener('click', e => e.stopPropagation(), true));
   const req = c.querySelector('[data-ts-request]');
   if(req) req.addEventListener('click', () => pgOpenPanel());   // the Mira side panel, looking at this page
   // Admins: straight to this team's drawer in Admin Panel -> People -> Teams.
@@ -4581,14 +4581,15 @@ function tsToolPanelHTML(team, t){
   const offered = ADM_LEVELS.map(l => l[0]).filter(n => tsFits(ADM_PERM_PRESETS[n], ceil));
   return '<div class="rt-panel__head adm-head">'+
       '<span class="rt-panel__who">'+admLogo(t)+'<span class="rt-panel__titles"><span class="rt-panel__title">What Mira can do in '+t.name+'</span>'+
-        '<span class="rt-panel__sub">For '+team.name+'. '+tsMaxText(t)+'.</span></span></span>'+
+        '</span></span>'+   // no subtitle: the section title says whose levels these are
       '<span class="rt-panel__actions"><button type="button" class="rt-panel__close" data-rt-close aria-label="Close panel">'+svg('close',2)+'</button></span>'+
     '</div>'+
     '<div class="rt-panel__body"><div class="adm-drawer">'+
-      '<section class="adm-drawer__sec" aria-label="What Mira can do in '+t.name+'">'+
-        (offered.length ? admLevelCardsHTML('ts-tool', admToolLevelOf(perms), offered) : '')+
+      // The title belongs to the level cards: with a Custom max no level fits, so there are no cards and no title (just the permissions).
+      admDrawerSec(offered.length ? 'Levels allowed for '+team.name : '',
+        (offered.length ? admLevelCardsHTML('ts-tool', admToolLevelOf(perms), offered, true) : '')+
         (tsHasOwn(team, t) ? '<button type="button" class="home-link" data-ts-tool-reset style="display:block;margin:0 0 16px">Reset to max level</button>' : '')+   // only once the team has lowered something
-        admPermEditorHTML('ts-tool', perms, null, null, false, ceil)+'</section>'+
+        admPermEditorHTML('ts-tool', perms, null, null, false, ceil))+
     '</div></div>';
 }
 function wireTsToolPanel(host, team, t){
@@ -4599,36 +4600,6 @@ function wireTsToolPanel(host, team, t){
   host.querySelectorAll('[data-ts-tool-perm]').forEach(b => b.addEventListener('click', () => {
     const next = tsToolPerms(team, t); next[+b.dataset.tsToolPerm] = b.dataset.v; tsStorePerms(team, t, next); admRefresh();
   }));
-}
-
-/* "Ask for more" modal. Built on the Add team modal shell: a level picker (only levels above the current one) and an optional one-line why.
-   Sending turns the link into "Requested · waiting for an admin". SIMULATED: nothing is sent; the real request reaches admins as a
-   notification and an email, not in the Admin Panel. */
-function tsAskModal(team, t, onSent){
-  const levels = tsLevelsAbove(t);
-  let level = levels[0];
-  const m = document.createElement('div');
-  m.className = 'home-modal share-modal adm-addpeople adm-addteam adm-dialog';
-  m.innerHTML =
-    '<div class="home-modal__panel" role="dialog" aria-modal="true" aria-label="Ask admins for more in '+rtEsc(t.name)+'">'+
-      '<div class="home-modal__head"><h3 class="home-modal__title">Ask admins for more in '+rtEsc(t.name)+'</h3>'+
-        '<button type="button" class="home-ibtn home-modal__close" data-close aria-label="Close">'+svg('close',2)+'</button></div>'+
-      '<div class="adm-label">Level</div>'+
-      '<div class="adm-drawer__full">'+ddPillHTML({ key:'tslevel', label:'', value:level, itemsHTML:levels.map(l => ddItem(l, l === level)).join('') })+'</div>'+
-      '<div class="adm-label">Why does '+rtEsc(team.name)+' need it?</div>'+
-      '<div class="field"><input type="text" data-why placeholder="Optional" aria-label="Why does '+rtEsc(team.name)+' need it?" autocomplete="off"></div>'+
-      '<div class="home-modal__foot"><button type="button" class="home-btn home-btn--lg" data-close>Cancel</button>'+
-        '<button type="button" class="home-btn home-btn--primary home-btn--lg" data-go>Send request</button></div>'+
-    '</div>';
-  const close = () => { m.remove(); document.removeEventListener('keydown', onKey); };
-  const onKey = e => { if(e.key === 'Escape' && !m.querySelector('.wl-dd.is-open')) close(); };
-  m.addEventListener('mousedown', e => { if(e.target === m) close(); });
-  m.querySelectorAll('[data-close]').forEach(b => b.addEventListener('click', close));
-  wireDropdownPills(m, (key, val) => { level = val; });
-  m.querySelector('[data-go]').addEventListener('click', () => { TS_REQUESTED.add(team.name+':'+t.id); close(); onSent(); });
-  document.addEventListener('keydown', onKey);
-  document.body.appendChild(m);
-  m.querySelector('[data-why]').focus();
 }
 
 /* Tool drawer (2026-10-30), built from the Gmail drawer wireframe: header, "What Mira can do" (the three level cards, then every permission
@@ -4664,12 +4635,13 @@ const ADM_PERM_EXT = [6, 7];   // the two sending rows that leave the company: t
 // and a purple tint when selected; group labels in small mono capitals over a hairline; each permission with three radio buttons
 // (Blocked / Ask / Allowed), purple when selected. A level that matches no preset is "Custom": no card is selected and a note says so.
 // `only` (optional, Team settings 2026-10-30): names of the levels to offer; the others are left out. Default = all three.
-function admLevelCardsHTML(ns, access, only){
+// `noNote` (the three connection drawers, 2026-11-06) leaves out the "Custom settings. Pick a level to reset." line; the Add connection modal keeps it.
+function admLevelCardsHTML(ns, access, only, noNote){
   // With fewer than three cards (Team settings) the grid gets that many equal columns, so the cards stretch across the full width.
   const shown = ADM_LEVELS.filter(l => !only || only.includes(l[0]));
   return '<div class="adm-drawer__levels" style="grid-template-columns:repeat('+shown.length+',minmax(0,1fr))">'+shown.map(l => '<button type="button" class="adm-preset'+(access===l[0]?' is-on':'')+'" data-'+ns+'-level="'+l[0]+'" aria-pressed="'+(access===l[0])+'">'+
     '<span class="adm-preset__t">'+l[0]+'</span><span class="adm-preset__d">'+l[1]+'</span></button>').join('')+'</div>'+
-    (access === 'Custom' ? '<div class="adm-preset__note">Custom settings. Pick a level to reset.</div>' : '');
+    (access === 'Custom' && !noNote ? '<div class="adm-preset__note">Custom settings. Pick a level to reset.</div>' : '');
 }
 // `groups` and `ext` default to Gmail's groups and the two locked external-sending rows, so the connection drawer and the Add connection modal are
 // unchanged. The Mira plugin drawer (2026-10-30) passes its own capability groups and no locked rows.
@@ -4766,7 +4738,7 @@ function admToolPanelHTML(t){
       '<span class="rt-panel__actions"><button type="button" class="rt-panel__close" data-rt-close aria-label="Close panel">'+svg('close',2)+'</button></span>'+
     '</div>'+
     '<div class="rt-panel__body"><div class="adm-drawer">'+
-      '<section class="adm-drawer__sec" aria-label="What Mira can do in '+t.name+'">'+admLevelCardsHTML('adm-tool', admToolLevelOf(perms))+admPermEditorHTML('adm-tool', perms)+'</section>'+   // no section title: the header already says it
+      admDrawerSec('Max level for everyone', admLevelCardsHTML('adm-tool', admToolLevelOf(perms), null, true)+admPermEditorHTML('adm-tool', perms))+
       '<div class="adm-drawer__exit"><button type="button" class="home-btn home-btn--danger adm-drawer__wide" data-adm-tool-remove>Remove</button></div>'+
     '</div></div>';
 }
@@ -5274,21 +5246,20 @@ const ADM_BUILTINS = [
 
 // Presets: ready-made agents made by Binome = a model + the connections and plugins it uses. The admin decides who uses each one.
 // `uses` and `by` are names (a plugin is matched by its name, so turning a plugin off shows on the cards that use it).
-// "Leadership" is not one of the People teams, so it is offered in the picker as an extra group (placeholder).
 const ADM_MODELS = ['Haiku', 'Sonnet', 'Opus'];   // stands in for "the models allowed in Governance", which does not exist in the prototype
 const ADM_PRESETS = [
-  { id:'exec',    name:'Executive brief',  on:true, model:'Sonnet', uses:['Gmail','Calendar','Insights','Tasks'], by:['Leadership'], desc:'Prepares a short brief of what needs the leadership’s attention.' },
-  { id:'finance', name:'Finance analyst',  on:true, model:'Sonnet', uses:['ERP','Sheets','Excel','Data'],        by:['Finance'],    desc:'Answers finance questions from the ERP and builds spreadsheets.' },
-  { id:'pricing', name:'Pricing engine',   on:true, model:'Opus',   uses:['Pricing','ERP','Templates'],          by:['Sales'],      desc:'Prepares quotes with the right prices and margins.' },
-  { id:'triage',  name:'Inbox triage',     on:true, model:'Haiku',  uses:['Gmail','Tasks','Router'],             by:[],             desc:'Sorts incoming email and turns what needs action into tasks.' },
+  { id:'exec',    name:'Executive brief',  on:true, model:'Sonnet', uses:['Gmail','Google Calendar','Insights','Asana'], by:['Operations'], desc:'Prepares a short brief of what needs the leadership’s attention.' },
+  { id:'finance', name:'Finance analyst',  on:true, model:'Sonnet', uses:['Xero','Google Drive','Excel','Data'],  by:['Finance'],    desc:'Answers finance questions from Xero and builds spreadsheets.' },
+  { id:'pricing', name:'Pricing engine',   on:true, model:'Opus',   uses:['Pricing','Salesforce','Google Drive'], by:['Sales'],      desc:'Prepares quotes with the right prices and margins.' },
+  { id:'triage',  name:'Inbox triage',     on:true, model:'Haiku',  uses:['Gmail','Asana','Router'],             by:[],             desc:'Sorts incoming email and turns what needs action into tasks.' },
 ];
 const admPreset = id => ADM_PRESETS.find(p => p.id === id);
-// What a preset can use: the company's pool. Connections here are placeholder names (the Connections list has other ones); plugins come from ADM_PLUGINS.
-const admPool = () => [['Connections', ['Gmail','Calendar','ERP','Sheets','Templates','HubSpot','Tasks']],
+// What a preset can use: the company's pool. Connections are the Connections list (ADM_TOOLS); apps come from ADM_PLUGINS.
+const admPool = () => [['Connections', ADM_TOOLS.map(t => t.name)],
                        ['Apps', ADM_PLUGINS.map(p => p.name)],
                        ['Built-in tools', ADM_BUILTINS.map(b => b[0])]];
 // Who a preset can be given to: teams and people.
-const admUsers = () => [['Teams', ADM_TEAMS.map(t => t.name).concat('Leadership')],
+const admUsers = () => [['Teams', ADM_TEAMS.map(t => t.name)],
                         ['People', ADM_MEMBERS.filter(m => m.status === 'Active').map(m => m.name)]];
 // Plugins a preset uses that are currently off: the card says it can't use them.
 const admPresetOffPlugins = pr => ADM_PLUGINS.filter(p => !p.on && pr.uses.includes(p.name));
@@ -5304,10 +5275,13 @@ function admPluginSet(p, on){
     () => { p.on = false; admRefresh(); });
 }
 
+// HIDDEN (2026-11-06, on request): the app rows no longer open their drawer, so they look and behave like the skill rows. The drawer is kept: set this to
+// true to bring back the click, the hover glow and the keyboard focus (admOpenMira('plugin', id), admPluginPanelHTML and its handlers are unchanged).
+const ADM_APP_DRAWER = false;
 function admMiraPluginsHTML(){
   const rows = ADM_PLUGINS.map(p => {
     const warn = admPluginWarning(p);
-    return '<div class="adm-row'+(admMiraOpen && admMiraOpen.id === p.id && admMiraOpen.kind === 'plugin' ? ' is-active' : '')+'" tabindex="0" data-adm-mira-open="plugin:'+p.id+'">'+
+    return '<div class="adm-row'+(ADM_APP_DRAWER ? (admMiraOpen && admMiraOpen.id === p.id && admMiraOpen.kind === 'plugin' ? ' is-active' : '')+'" tabindex="0" data-adm-mira-open="plugin:'+p.id+'"' : ' adm-row--static"')+'>'+
       '<span class="adm-ch__ico">'+p.name.charAt(0)+'</span>'+   // letter tile, like the connections' logo tiles
       '<span class="adm-row__main"><span class="adm-mira__name"><span class="adm-row__name">'+p.name+'</span></span>'+   // the "N capabilities" tag was removed on request
         '<div class="adm-row__meta">'+p.desc+'</div>'+
@@ -5598,9 +5572,9 @@ function rtShowOptions(){
     const at = opts.findIndex(o => o.id === 'personal');
     opts.splice(at + 1, 0, { id:'shared', label:'Shared with me' });
   }
-  // Personal also lists the Ops team (a workspace in the switcher) even though no routine
+  // Personal also lists the Operations team (a workspace in the switcher) even though no routine
   // belongs to it yet — selecting it just shows the empty state — and "System".
-  if(activeWorkspace === 'personal') opts.push({ id:'ops', label:'Ops' }, { id:'system', label:'System' });
+  if(activeWorkspace === 'personal') opts.push({ id:'ops', label:'Operations' }, { id:'system', label:'System' });
   return opts;
 }
 /* Pending re-render after a routine toggle has finished animating (see the data-rt-toggle handler). */
@@ -5972,7 +5946,8 @@ function rtShareCtx(r){
 }
 /* Small confirm dialog (same shell as the other modals). `danger` makes the confirm button red.
    Cancel, Escape and a click on the backdrop all close it without doing anything. */
-function rtConfirm(o, onYes){
+// `o.cancel` renames the left button (e.g. "Decline"); with `onNo` that button is a decision and calls it. Escape and a click outside only dismiss.
+function rtConfirm(o, onYes, onNo){
   const m = document.createElement('div');
   m.className = 'home-modal rt-confirm';
   m.innerHTML =
@@ -5980,14 +5955,14 @@ function rtConfirm(o, onYes){
       '<h3 class="home-modal__title">'+o.title+'</h3>'+
       '<div class="home-modal__text rt-confirm__text">'+o.text+'</div>'+
       '<div class="rt-confirm__foot">'+
-        '<button type="button" class="home-btn" data-close>Cancel</button>'+
+        '<button type="button" class="home-btn" data-close>'+(o.cancel || 'Cancel')+'</button>'+
         '<button type="button" class="home-btn '+(o.danger ? 'home-btn--danger' : 'home-btn--primary')+'" data-yes>'+o.confirm+'</button>'+
       '</div>'+
     '</div>';
   const close = () => { m.remove(); document.removeEventListener('keydown', onKey); };
   const onKey = e => { if(e.key === 'Escape') close(); };
   m.addEventListener('mousedown', e => { if(e.target === m) close(); });
-  m.querySelector('[data-close]').addEventListener('click', close);
+  m.querySelector('[data-close]').addEventListener('click', () => { close(); if(onNo) onNo(); });
   m.querySelector('[data-yes]').addEventListener('click', () => { close(); onYes(); });
   document.addEventListener('keydown', onKey);
   document.body.appendChild(m);
@@ -9997,7 +9972,7 @@ const MS_MODELS = [
    tags (.home-badge), the confirmation (rtConfirm), the channel cards (.adm-ch*) and the Instructions box (.ms-textarea). Only the small layout glue .set-* is new.
    SIMULATED: all state lives in memory (a reload resets it). Connect / Reconnect do not open an OAuth flow, they just flip the status; nothing is
    really disconnected, saved or signed out. Account and Notifications are not in the prototype today, so their contents are PLACEHOLDER. */
-const SET_TEAMS = ['Sales','Customer projects'];   // the teams the prototype user is in ("someone in two teams sees both")
+const SET_TEAMS = ['Sales','Operations'];   // the teams the prototype user is in ("someone in two teams sees both")
 const SET = {
   name:'Agata Tonik', email:'at@tonik.com',
   // Account status per connection id: 'on' (Connected), 'stopped' (Stopped syncing) or absent (Not connected).
@@ -10045,7 +10020,8 @@ function setStorePerms(t, perms){
   if(next.every((v, i) => v === max[i])) delete SET.perms[t.id]; else SET.perms[t.id] = next;   // equal to the max = follow again
 }
 function setReset(t){ delete SET.perms[t.id]; }   // back to following the max
-// The person's own level for the table, the max in words for the tooltip, and the drawer subtitle naming the max and where it comes from.
+// The person's own level for the table and the max in words for the tooltip. setMaxSource, the drawer subtitle naming the max and where it comes from,
+// is ORPHANED (2026-11-06, the drawer now has the section title "Levels allowed for you" instead) and kept for later.
 const setLevel = t => admToolLevelOf(setPerms(t));
 const setMaxTip = t => { const l = admToolLevelOf(setCeil(t)); return l === 'Custom' ? 'Max: custom settings' : 'Max '+l; };
 function setMaxSource(t){
@@ -10066,14 +10042,14 @@ function setToolPanelHTML(t){
   const offered = ADM_LEVELS.map(l => l[0]).filter(n => tsFits(ADM_PERM_PRESETS[n], ceil));
   return '<div class="rt-panel__head adm-head">'+
       '<span class="rt-panel__who">'+admLogo(t)+'<span class="rt-panel__titles"><span class="rt-panel__title">What Mira can do in '+t.name+'</span>'+
-        '<span class="rt-panel__sub">'+setMaxSource(t)+'</span></span></span>'+
+        '</span></span>'+   // no max line: the section title says whose levels these are (setMaxSource is orphaned)
       '<span class="rt-panel__actions"><button type="button" class="rt-panel__close" data-rt-close aria-label="Close panel">'+svg('close',2)+'</button></span>'+
     '</div>'+
     '<div class="rt-panel__body"><div class="adm-drawer">'+
-      '<section class="adm-drawer__sec" aria-label="What Mira can do in '+t.name+'">'+
-        (offered.length ? admLevelCardsHTML('set-tool', admToolLevelOf(perms), offered) : '')+
+      admDrawerSec(offered.length ? 'Levels allowed for you' : '',   // no cards (a Custom max) = no title
+        (offered.length ? admLevelCardsHTML('set-tool', admToolLevelOf(perms), offered, true) : '')+
         (SET.perms[t.id] ? '<button type="button" class="home-link" data-set-tool-reset style="display:block;margin:0 0 16px">Reset to max level</button>' : '')+   // only once the person has lowered something
-        admPermEditorHTML('set-tool', perms, null, null, false, ceil)+'</section>'+
+        admPermEditorHTML('set-tool', perms, null, null, false, ceil))+
     '</div></div>';
 }
 function wireSetToolPanel(host, t){
@@ -10833,16 +10809,16 @@ refreshNavVariant();
    routine to their list. All mock data — nothing is sent anywhere.
    ============================================================ */
 const SHARE_TEAMS = [
-  { id:'t-sales',  name:'Sales Team', members:['Craig','Maria'] },
-  { id:'t-ops',    name:'Ops team',   members:['Tom','Jonas'] },
+  { id:'t-sales',  name:'Sales',      members:['Craig','Maria'] },
+  { id:'t-ops',    name:'Operations', members:['Tom','Jonas'] },
   { id:'t-lead',   name:'Leadership', members:['Anna','Priya'] },
 ];
 /* People can come from any team — the picker is not limited to the current workspace. */
 const SHARE_PEOPLE = [
-  { id:'p-craig', email:'craig.miller@tonik.com', name:'Craig Miller',  first:'Craig', team:'Sales Team' },
-  { id:'p-maria', email:'maria.lopez@tonik.com', name:'Maria Lopez',   first:'Maria', team:'Sales Team' },
-  { id:'p-tom',   email:'tom.becker@tonik.com', name:'Tom Becker',    first:'Tom',   team:'Ops team' },
-  { id:'p-jonas', email:'jonas.weber@tonik.com', name:'Jonas Weber',   first:'Jonas', team:'Ops team' },
+  { id:'p-craig', email:'craig.miller@tonik.com', name:'Craig Miller',  first:'Craig', team:'Sales' },
+  { id:'p-maria', email:'maria.lopez@tonik.com', name:'Maria Lopez',   first:'Maria', team:'Sales' },
+  { id:'p-tom',   email:'tom.becker@tonik.com', name:'Tom Becker',    first:'Tom',   team:'Operations' },
+  { id:'p-jonas', email:'jonas.weber@tonik.com', name:'Jonas Weber',   first:'Jonas', team:'Operations' },
   { id:'p-anna',  email:'anna.kowalska@tonik.com', name:'Anna Kowalska', first:'Anna',  team:'Leadership' },
   { id:'p-priya', email:'priya.nair@tonik.com', name:'Priya Nair',    first:'Priya', team:'Leadership' },
 ];
@@ -11002,7 +10978,7 @@ function openShareModal(cfg){
     const ar = e.target.closest('[data-acc-remove]');
     if(ar){ const o = shareLookup(ar.dataset.accRemove);
       closeMenus();
-      // Wording: a team is "Remove access for Ops team?", a person is "Remove Craig’s access?". "They" for people, so no gender is guessed.
+      // Wording: a team is "Remove access for Operations?", a person is "Remove Craig’s access?". "They" for people, so no gender is guessed.
       rtConfirm({ title:o.members ? 'Remove access for '+o.name+'?' : 'Remove '+o.first+'’s access?',
         text:'“'+title+'” will disappear from '+(o.members ? 'their' : o.first+'’s')+' '+cfg.listName+' and they won’t be able to '+cfg.afterRemove+'.',
         confirm:'Remove access', danger:true }, () => {
@@ -11165,6 +11141,9 @@ const NOTIFS = [
    workspace). It keeps running on the OWNER's data access, and Can view means filter + manual refresh only. */
 NOTIFS.push({ id:'n-dshare', kind:'dshare', from:'Aga', routine:'Pipeline overview', perm:'view', when:'Just now', state:'pending',
   dash:{ label:'Pipeline overview', role:'viewOnly', sharedBy:'Aga', pins:[ { insightId:'key-numbers', size:'L' }, { insightId:'quotes-by-status', size:'S' } ] } });
+/* Maya (Sales) asks for more in Gmail. SIMULATED: really this reaches the admins when someone sends a request from Team settings. `perm` is the
+   index of the permission (ADM_PERM_GROUPS order): 5 = "Sending emails inside the company". Clicking it opens a confirmation (see notifAskReview). */
+NOTIFS.push({ id:'n-ask-maya', kind:'permask', from:'Maya', team:'Sales', tool:'gmail', perm:5, ask:'send emails', when:'10 min ago', state:'pending' });
 const notifPending = () => NOTIFS.filter(n => n.state === 'pending' || n.unread).length;   // waiting for an answer, or not seen yet (information notifications)
 function syncBellDot(){
   const bell = document.querySelector('[data-notif-bell]');
@@ -11174,6 +11153,14 @@ function syncBellDot(){
   else if(!notifPending() && d) d.remove();
 }
 function notifItemHTML(n){
+  // A person asks admins for more in a connection: the whole item (or Review) opens the confirmation. It goes away once answered.
+  if(n.kind === 'permask'){
+    const t = ADM_TOOLS.find(x => x.id === n.tool);
+    return '<div class="notif__item notif__item--ask" data-nid="'+n.id+'" tabindex="0">'+shareAva({name:n.from}, true)+'<div class="notif__body"><div class="notif__text"><b>'+rtEsc(n.from)+'</b> asks for more in <b>'+rtEsc(t ? t.name : n.tool)+'</b></div>'+
+      '<div class="notif__meta"><span class="home-badge home-badge--neutral">'+rtEsc(n.team)+'</span>'+n.when+'</div>'+
+      '<div class="notif__hint">Let Mira '+rtEsc(n.ask)+' from '+rtEsc(t ? t.name : n.tool)+' for '+rtEsc(n.team)+'.</div>'+
+      '<div class="notif__actions"><button type="button" class="home-btn" data-notif-act="review" data-id="'+n.id+'">Review</button></div></div></div>';
+  }
   // An admin changed a connection's level: information only (no Accept or Decline). SIMULATED: really it goes to the heads of the teams that use it.
   if(n.kind === 'ceiling') return '<div class="notif__item" data-nid="'+n.id+'">'+shareAva({name:n.from}, true)+'<div class="notif__body"><div class="notif__text">'+rtEsc(n.text)+'</div>'+
     '<div class="notif__meta"><span class="home-badge home-badge--neutral">'+rtEsc(n.team)+'</span>'+n.when+'</div><div class="notif__hint">'+rtEsc(n.hint)+'</div></div></div>';
@@ -11211,6 +11198,8 @@ function openNotifPanel(bell){
   p.style.top = Math.max(8, r.bottom + 8)+'px';
   p.style.left = Math.max(8, Math.min(collapsed ? r.right + 8 : r.left, window.innerWidth - 392))+'px';
   p.addEventListener('click', e => {
+    const ask = e.target.closest('.notif__item--ask');
+    if(ask){ close(); notifAskReview(NOTIFS.find(x => x.id === ask.dataset.nid)); return; }
     const b = e.target.closest('[data-notif-act]');
     if(!b) return;
     const n = NOTIFS.find(x => x.id === b.dataset.id);
@@ -11234,9 +11223,27 @@ function openNotifPanel(bell){
   const close = () => { p.remove(); document.removeEventListener('mousedown', onDown); document.removeEventListener('keydown', onKey); };
   const onDown = e => { if(!p.contains(e.target) && !bell.contains(e.target)) close(); };
   const onKey = e => { if(e.key === 'Escape') close(); };
+  p.addEventListener('keydown', e => { if(e.key === 'Enter' && e.target.classList.contains('notif__item--ask')) e.target.click(); });
   document.addEventListener('mousedown', onDown);
   document.addEventListener('keydown', onKey);
   document.body.appendChild(p);
+}
+// The confirmation for a permission request (the existing rtConfirm, with Decline / Approve). Approve sets that permission to Allowed for the
+// whole company (the connection's own permissions, so its level follows: Gmail becomes Custom). Either answer clears the request.
+// SIMULATED: Maya cannot be reached from the prototype, so "she is told" is only the toast; there is no message to her.
+function notifAskReview(n){
+  const t = ADM_TOOLS.find(x => x.id === n.tool);
+  const done = (msg) => { NOTIFS.splice(NOTIFS.indexOf(n), 1); syncBellDot(); shareToast(msg); };
+  if(!t){ done('That connection is gone, so the request was cleared'); return; }
+  rtConfirm({
+    title: n.from+' asks for more in '+t.name,
+    text: 'Let Mira '+n.ask+' from '+t.name+' for '+n.team+'. This changes it for all of '+ADM_COMPANY+'.',
+    cancel:'Decline', confirm:'Approve'
+  }, () => {
+    const next = admToolPerms(t).slice(); next[n.perm] = 'Allowed';
+    t.perms = next; t.access = admToolLevelOf(next); tsSettle(t);
+    done('Approved. '+n.from+' was told'); admRefresh();
+  }, () => done('Declined. '+n.from+' was told'));
 }
 (function wireNotifications(){
   const bell = document.querySelector('[data-notif-bell]');
