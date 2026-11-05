@@ -1737,7 +1737,6 @@ button.home-addmenu__item:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){
 .adm-ch__pair .adm-ch__ico + .adm-ch__ico{margin-left:-10px}
 .adm-ch__facts{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:16px;border-top:1px solid var(--c-border);font-size:14px}
 .adm-ch__label{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--c-copy);margin-bottom:4px}
-.adm-ch__danger{color:var(--c-error);border-color:var(--c-error)}   /* red outline, as in the wireframe */
 .adm-ch__allow{display:inline-flex;align-items:center;gap:10px;font-size:14px;cursor:pointer}
 
 .adm-list{display:flex;flex-direction:column;gap:8px}
@@ -3560,7 +3559,7 @@ function renderContent(){
 // texts come from the design; the others are PLACEHOLDER wording, to be replaced.
 const ADM_SUBTITLES = {
   'People':                 () => 'Who is in '+ADM_COMPANY+', their role and their teams.',
-  'Connections & channels': () => 'The connections people may use, and the most Mira can do in each. Each person still decides how much Mira does on their own account, within these limits.',
+  'Connections & channels': () => 'What Mira connects to across '+ADM_COMPANY+' and where people talk to it.',
   // Mira (2026-10-30): the agreed text, without the "External tools are in Connections & channels." sentence (removed on request).
   'Mira':                   () => 'What Mira can do inside '+ADM_COMPANY+': apps by Binome, skills, ready-made agents and instructions for everyone.',
   // Governance (2026-10-30): the agreed text.
@@ -4307,7 +4306,8 @@ let admToolsTab = 'tools';          // 'tools' | 'channels' ('By team' is hidden
 /* Channels tab state (2026-10-30), from the Channels wireframe. Slack is installed ONCE for the company, by an admin (Uninstall asks first;
    once uninstalled the card offers Install). WhatsApp and Telegram are one switch: allowed or not (each person connects their own).
    SIMULATED: nothing is really installed or disconnected. */
-const ADM_CHANNELS = { slack:{ on:true, workspace:'tonik.slack.com' }, personal:true };
+// WhatsApp and Telegram are allowed one by one (they used to share one "personal" flag); the Settings > Channels cards read the same flags.
+const ADM_CHANNELS = { slack:{ on:true, workspace:'tonik.slack.com' }, whatsapp:true, telegram:true };
 // WhatsApp has no logo asset in the app: this is a simple stand-in (green speech bubble with a handset), to be replaced by the real asset.
 const ADM_WHATSAPP_LOGO = '<svg viewBox="0 0 24 24"><path fill="#25D366" d="M12 0C5.4 0 0 5.4 0 12c0 2.1.6 4.2 1.6 6L0 24l6.2-1.6c1.8 1 3.8 1.5 5.8 1.5 6.6 0 12-5.4 12-12S18.6 0 12 0z"/><path fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M17.4 14.9v1.6a1 1 0 0 1-1.1 1 9.9 9.9 0 0 1-4.3-1.5 9.7 9.7 0 0 1-3-3 9.9 9.9 0 0 1-1.5-4.3 1 1 0 0 1 1-1.1h1.6a1 1 0 0 1 1 .9c.1.5.2.9.4 1.4a1 1 0 0 1-.2 1l-.7.7a8 8 0 0 0 3 3l.7-.7a1 1 0 0 1 1-.2c.5.2.9.3 1.4.4a1 1 0 0 1 .9 1z"/></svg>';
 function admChannelsHTML(){
@@ -4319,22 +4319,26 @@ function admChannelsHTML(){
       C.slack.on ? 'Installed once for '+co+'. Everyone can message Mira there directly.' : 'Install it once for '+co+' so everyone can message Mira in Slack.',
       C.slack.on ? '<span class="home-badge home-badge--ok">Installed</span>'
                  : '<button type="button" class="home-btn" data-adm-ch="slack-install">Install Slack</button>')+
-    (C.slack.on ? '<div class="adm-ch__facts">'+fact('Workspace', C.slack.workspace)+'<button type="button" class="home-btn adm-ch__danger" data-adm-ch="slack-uninstall">Uninstall</button></div>' : '')+
+    (C.slack.on ? '<div class="adm-ch__facts">'+fact('Workspace', C.slack.workspace)+'<button type="button" class="home-btn home-btn--danger" data-adm-ch="slack-uninstall">Uninstall</button></div>' : '')+
     '</section>';
-  const other = '<section class="home-card adm-ch__card">'+head('<span class="adm-ch__pair">'+tile(ADM_WHATSAPP_LOGO)+tile(RT_TOOLS.telegram.logo)+'</span>', 'WhatsApp &amp; Telegram',
+  // The Mira app: always on, so there is nothing to switch. Later the multiplayer rules per channel will live on each card.
+  const app = '<section class="home-card adm-ch__card">'+head('<span class="adm-ch__ico"><img class="nr__avatar" src="'+MIRA_AVATAR+'" alt=""></span>', 'Mira app',
+      'Where everyone works with Mira: chat, tasks, routines and insights.', '<span class="adm-row__meta">Always on</span>')+'</section>';
+  // WhatsApp and Telegram are separate cards, each with its own Allowed checkbox (as in the onboarding, where either, both or neither can be on).
+  const own = (key, logo, name) => '<section class="home-card adm-ch__card">'+head(tile(logo), name,
       'Each person connects their own. Company information then reaches personal messengers.',
-      '<label class="adm-ch__allow">Allowed <input type="checkbox" data-adm-ch="personal"'+(C.personal ? ' checked' : '')+' aria-label="Allow WhatsApp and Telegram"></label>')+
-    '</section>';
-  return '<div class="adm-ch">'+slack+other+'</div>';
+      '<label class="adm-ch__allow">Allowed <input type="checkbox" data-adm-ch="'+key+'"'+(C[key] ? ' checked' : '')+' aria-label="Allow '+name+'"></label>')+'</section>';
+  return '<div class="adm-ch">'+app+slack+own('whatsapp', ADM_WHATSAPP_LOGO, 'WhatsApp')+own('telegram', RT_TOOLS.telegram.logo, 'Telegram')+'</div>';
 }
 function wireAdmChannels(c){
   c.querySelectorAll('[data-adm-ch]').forEach(el => {
     const act = el.dataset.admCh;
-    if(act === 'personal') el.addEventListener('change', () => {
-      if(el.checked){ ADM_CHANNELS.personal = true; renderContent(); return; }
+    if(act === 'whatsapp' || act === 'telegram') el.addEventListener('change', () => {
+      const name = act === 'whatsapp' ? 'WhatsApp' : 'Telegram';
+      if(el.checked){ ADM_CHANNELS[act] = true; renderContent(); return; }
       el.checked = true;   // stays ticked until the person confirms
-      rtConfirm({ title:'Turn off WhatsApp and Telegram?', text:'Everyone’s WhatsApp and Telegram are disconnected. Their briefings move to in-app chat or Slack.', confirm:'Turn off', danger:true },
-        () => { ADM_CHANNELS.personal = false; renderContent(); });
+      rtConfirm({ title:'Turn off '+name+'?', text:'Everyone’s '+name+' is disconnected. Their briefings move to in-app chat or Slack.', confirm:'Turn off', danger:true },
+        () => { ADM_CHANNELS[act] = false; renderContent(); });
     });
     else el.addEventListener('click', () => {
       if(act === 'slack-install'){ ADM_CHANNELS.slack.on = true; renderContent(); shareToast('Slack installed'); }
@@ -4354,8 +4358,9 @@ function admToolVisible(t){
 }
 function admToolRowsHTML(){
   const rows = ADM_TOOLS.filter(admToolVisible);
-  // Empty state = the Routines one (.rt-empty). When a search finds nothing in the company's tools it offers to add what was typed
-  // (opens the Add tool modal on step 2 with that tool preselected); when only the filter empties the table it offers Add tool.
+  // Empty state = the Routines one (.rt-empty). Whether a search finds nothing in the company's connections or only the filter empties
+  // the table, it offers the same "Add connection" button. It opens the Add connection modal empty (one step, catalogue only): nothing
+  // is preselected and the typed search text is not carried over.
   if(!rows.length){
     const q = admToolQuery.trim(), ql = q.toLowerCase();
     const known = q && ADM_TOOLS.some(t => (t.name+' '+t.kind).toLowerCase().includes(ql));   // it exists, the level filter hides it
@@ -10100,10 +10105,11 @@ function setAccountsHTML(){
 function setChannelsHTML(){
   const co = ADM_COMPANY, tile = inner => '<span class="adm-ch__ico">'+inner+'</span>';
   const card = (logo, name, text, ctl) => '<section class="home-card adm-ch__card"><div class="adm-ch__head">'+tile(logo)+'<div class="adm-ch__main"><div class="adm-row__name">'+name+'</div><div class="adm-row__meta">'+text+'</div></div>'+ctl+'</div></section>';
-  const own = (key, logo, name) => ADM_CHANNELS.personal
+  const own = (key, logo, name) => ADM_CHANNELS[key]
     ? card(logo, name, 'Chat with Mira on '+name+'.', '<button type="button" class="home-btn" data-set-ch="'+key+'">'+(SET.ch[key] ? 'Disconnect' : 'Connect')+'</button>')
     : card(logo, name, 'Not allowed in '+co+'. Ask an admin.', '');
   return '<div class="adm">'+setHead('Channels', 'Where you talk to Mira.')+'<div class="adm-ch">'+
+    card('<img class="nr__avatar" src="'+MIRA_AVATAR+'" alt="">', 'Mira app', 'Where everyone works with Mira: chat, tasks, routines and insights.', '<span class="adm-row__meta">Always on</span>')+   // always on: text instead of a button, not clickable
     card(RT_TOOLS.slack.logo, 'Slack', ADM_CHANNELS.slack.on ? 'Chat with Mira in '+co+'&rsquo;s Slack.' : 'Not set up for '+co+'. Ask an admin.',
       ADM_CHANNELS.slack.on ? '<button type="button" class="home-btn" data-set-slack>Open in Slack</button>' : '')+
     own('whatsapp', ADM_WHATSAPP_LOGO, 'WhatsApp')+own('telegram', RT_TOOLS.telegram.logo, 'Telegram')+
