@@ -544,13 +544,17 @@ function StepChannels({channels,setChannels,onBack,onContinue}){
           ? h("span",{className:"connected"}, I.checkc, "Installed")
           : h("button",{className:"btn btn-ghost",onClick:()=>setChannels(c=>({...c,slack:true}))},"Install in Slack"))),
 
-    h("div",{className:"channel pick"+(channels.personal?" sel":""),role:"checkbox","aria-checked":channels.personal,tabIndex:0,
-      onClick:()=>setChannels(c=>({...c,personal:!c.personal})),
-      onKeyDown:e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();setChannels(c=>({...c,personal:!c.personal}));}}},
-      h("span",{className:"cb"+(channels.personal?" on":""),style:channels.personal?{background:"var(--sel-fill)",borderColor:"var(--sel-fill)"}:null}, channels.personal && I.check),
-      h("div",{className:"ch-body"},
-        h("div",{className:"ch-title"},"Let your team talk to Mira on WhatsApp and Telegram"),
-        h("div",{className:"ch-desc"},"Each person connects their own WhatsApp or Telegram \u2014 you\u2019ll connect yours in the next step. Company information then reaches personal messengers."))),
+    // WhatsApp and Telegram are separate cards (logo left, checkbox right, like the tool tiles in step 1): the admin can allow either, both or neither.
+    [["whatsapp","WhatsApp",{glyph:I.wa,bg:"#25D366"}],["telegram","Telegram",{glyph:I.tg,bg:"#229ED9"}]].map(([id,name,icon])=>{
+      const on=channels[id], flip=()=>setChannels(c=>({...c,[id]:!c[id]}));
+      return h("div",{className:"channel slim pick"+(on?" sel":""),key:id,role:"checkbox","aria-checked":on,tabIndex:0,onClick:flip,
+        onKeyDown:e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();flip();}}},
+        h(Icon,{icon}),
+        h("div",{className:"ch-body"},
+          h("div",{className:"ch-title"},"Let Mira talk on "+name),
+          h("div",{className:"ch-desc"},"Each person connects their own. You\u2019ll connect yours in the next step.")),
+        h("span",{className:"cb"+(on?" on":""),style:on?{background:"var(--sel-fill)",borderColor:"var(--sel-fill)"}:null}, on && I.check));
+    }),
 
     h("div",{className:"nav"},
       h("button",{className:"btn btn-ghost",style:{marginRight:"auto"},onClick:onBack}, I.back, "Back"),
@@ -579,10 +583,8 @@ function permDot(tool){
 }
 function StepAccount({selected,channels,acct,setAcct,onBack,onAddTools,onFinish,onSkip}){
   const chanOpts=[];
-  if(channels.personal){
-    chanOpts.push({id:"whatsapp",name:"WhatsApp",icon:{glyph:I.wa,bg:"#25D366"}});
-    chanOpts.push({id:"telegram",name:"Telegram",icon:{glyph:I.tg,bg:"#229ED9"}});
-  }
+  if(channels.whatsapp) chanOpts.push({id:"whatsapp",name:"WhatsApp",icon:{glyph:I.wa,bg:"#25D366"}});
+  if(channels.telegram) chanOpts.push({id:"telegram",name:"Telegram",icon:{glyph:I.tg,bg:"#229ED9"}});
 
   const mailTools=selected.map(id=>BY_ID[id]).filter(t=>t&&MAIL_IDS.includes(t.id));
   const hasMail=acct.mail.length>0;
@@ -637,7 +639,7 @@ function StepAccount({selected,channels,acct,setAcct,onBack,onAddTools,onFinish,
     h("div",{className:"nav"},
       h("button",{className:"btn btn-ghost",style:{marginRight:"auto"},onClick:onBack}, I.back, "Back"),
       h("button",{className:"btn btn-ghost",onClick:onSkip},"Skip for now"),
-      h("button",{className:"btn btn-dark",disabled:!hasMail,onClick:()=>onFinish({mail:true,channels:[...(channels.slack?["slack"]:[]),...acct.channels]})},
+      h("button",{className:"btn btn-dark",disabled:!hasMail,onClick:()=>onFinish({mail:true,channels:[...(channels.slack?["slack"]:[]),...acct.channels.filter(id=>channels[id])]})},
         "See my first briefing")));
 }
 
@@ -674,7 +676,7 @@ function App(){
   const [step,setStep]=useState(0);
   const [selected,setSelected]=useState([]);
   const [perms,setPerms]=useState({});
-  const [channels,setChannels]=useState({slack:false,personal:false});
+  const [channels,setChannels]=useState({slack:false,whatsapp:false,telegram:false});
   const [acct,setAcct]=useState({channels:[],mail:[]});
   const [modalTool,setModalTool]=useState(null);
   const [done,setDone]=useState(null);
@@ -682,7 +684,7 @@ function App(){
 
   React.useEffect(()=>{ const r=document.documentElement; theme?r.setAttribute("data-theme",theme):r.removeAttribute("data-theme"); },[theme]);
   const go=(n)=>{ setStep(n); window.scrollTo({top:0,behavior:"smooth"}); };
-  const restart=()=>{ setDone(null); setStep(0); setSelected([]); setPerms({}); setChannels({slack:false,personal:false}); setAcct({channels:[],mail:[]}); };
+  const restart=()=>{ setDone(null); setStep(0); setSelected([]); setPerms({}); setChannels({slack:false,whatsapp:false,telegram:false}); setAcct({channels:[],mail:[]}); };
 
   const stepLabel = done!=null ? "Done" : "Step "+(step+1)+" of 3";
 
