@@ -1737,7 +1737,6 @@ button.home-addmenu__item:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){
 .adm-ch__pair .adm-ch__ico + .adm-ch__ico{margin-left:-10px}
 .adm-ch__facts{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:16px;border-top:1px solid var(--c-border);font-size:14px}
 .adm-ch__label{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--c-copy);margin-bottom:4px}
-.adm-ch__allow{display:inline-flex;align-items:center;gap:10px;font-size:14px;cursor:pointer}
 
 .adm-list{display:flex;flex-direction:column;gap:8px}
 .adm-row{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;text-align:left;font-family:inherit;
@@ -3288,7 +3287,7 @@ function renderContent(){
       rtKeepOpen = 'show';
       render();
     }, keepOpen === 'show');
-    // "Tool:" is multi-select too: a routine matches when it touches ANY of the picked tools.
+    // "Connections:" is multi-select too: a routine matches when it touches ANY of the picked connections.
     wireMultiDropdown(c, 'tool', val => {
       if(val === '__clear__') rtTool.clear();
       else {
@@ -4321,22 +4320,22 @@ function admChannelsHTML(){
                  : '<button type="button" class="home-btn" data-adm-ch="slack-install">Install Slack</button>')+
     (C.slack.on ? '<div class="adm-ch__facts">'+fact('Workspace', C.slack.workspace)+'<button type="button" class="home-btn home-btn--danger" data-adm-ch="slack-uninstall">Uninstall</button></div>' : '')+
     '</section>';
-  // The Mira app: always on, so there is nothing to switch. Later the multiplayer rules per channel will live on each card.
+  // The Mira app: always on, so there is nothing to switch (a grey tag). Later the multiplayer rules per channel will live on each card.
   const app = '<section class="home-card adm-ch__card">'+head('<span class="adm-ch__ico"><img class="nr__avatar" src="'+MIRA_AVATAR+'" alt=""></span>', 'Mira app',
-      'Where everyone works with Mira: chat, tasks, routines and insights.', '<span class="adm-row__meta">Always on</span>')+'</section>';
-  // WhatsApp and Telegram are separate cards, each with its own Allowed checkbox (as in the onboarding, where either, both or neither can be on).
+      'Where everyone works with Mira: chat, tasks, routines and insights.', '<span class="home-badge home-badge--neutral">Always on</span>')+'</section>';
+  // WhatsApp and Telegram are separate cards, each with its own Active / Disabled switch (the one on the Mira tab's apps and presets; either, both or neither can be on).
   const own = (key, logo, name) => '<section class="home-card adm-ch__card">'+head(tile(logo), name,
       'Each person connects their own. Company information then reaches personal messengers.',
-      '<label class="adm-ch__allow">Allowed <input type="checkbox" data-adm-ch="'+key+'"'+(C[key] ? ' checked' : '')+' aria-label="Allow '+name+'"></label>')+'</section>';
+      admToggleHTML(C[key], (C[key] ? 'Turn off ' : 'Turn on ')+name, 'data-adm-ch="'+key+'"', C[key] ? 'Active' : 'Disabled'))+'</section>';
   return '<div class="adm-ch">'+app+slack+own('whatsapp', ADM_WHATSAPP_LOGO, 'WhatsApp')+own('telegram', RT_TOOLS.telegram.logo, 'Telegram')+'</div>';
 }
 function wireAdmChannels(c){
   c.querySelectorAll('[data-adm-ch]').forEach(el => {
     const act = el.dataset.admCh;
-    if(act === 'whatsapp' || act === 'telegram') el.addEventListener('change', () => {
+    if(act === 'whatsapp' || act === 'telegram') el.addEventListener('click', () => {
       const name = act === 'whatsapp' ? 'WhatsApp' : 'Telegram';
-      if(el.checked){ ADM_CHANNELS[act] = true; renderContent(); return; }
-      el.checked = true;   // stays ticked until the person confirms
+      if(!ADM_CHANNELS[act]){ ADM_CHANNELS[act] = true; renderContent(); return; }
+      // stays on until the person confirms
       rtConfirm({ title:'Turn off '+name+'?', text:'Everyone’s '+name+' is disconnected. Their briefings move to in-app chat or Slack.', confirm:'Turn off', danger:true },
         () => { ADM_CHANNELS[act] = false; renderContent(); });
     });
@@ -5606,7 +5605,7 @@ function rtShowOptions(){
 }
 /* Pending re-render after a routine toggle has finished animating (see the data-rt-toggle handler). */
 let rtToggleTimer = null;
-/* Set just before render() when a Show:/Status:/Tool: toggle should leave its menu open afterwards
+/* Set just before render() when a Show:/Status:/Connections: toggle should leave its menu open afterwards
    (render rebuilds the toolbar, which would otherwise close it after every click). */
 let rtKeepOpen = null;   // 'show' | 'status' | 'tool' | null — which multi menu to reopen after render
 /* Status filter (multi-select, empty = all). A routine's status is derived:
@@ -6214,7 +6213,7 @@ function rtStatusDropdownHTML(){
     (sel.length ? ddClearItem() : '')).replace(/menuitemradio/g, 'menuitemcheckbox');
   return ddPillHTML(Object.assign({ key:'status', itemsHTML:items, multi:true }, rtFilterPill('Status', sel.map(o => o.label))));
 }
-/* Renders the Routines "Tool:" dropdown next to "Show:". Options are built from the
+/* Renders the Routines "Connections:" dropdown next to "Show:". Options are built from the
    tools that actually appear on some routine (dest or uses), so the menu never offers
    a filter that returns nothing. Each item carries the tool's logo before its name;
    data-val stays the plain name, which is what wireDropdownPills writes into the pill
@@ -6230,7 +6229,7 @@ function rtToolDropdownHTML(){
   const sel = rtToolIds().filter(id => rtTool.has(id));
   const items = (rtToolIds().map(id => ddItem(RT_TOOLS[id].name, rtTool.has(id)).replace('</span>'+RT_TOOLS[id].name, '</span>'+rtLogo(id)+RT_TOOLS[id].name)).join('') +
     (sel.length ? ddClearItem() : '')).replace(/menuitemradio/g, 'menuitemcheckbox');
-  return ddPillHTML(Object.assign({ key:'tool', itemsHTML:items, multi:true }, rtFilterPill('Tool', sel.map(id => RT_TOOLS[id].name))));
+  return ddPillHTML(Object.assign({ key:'tool', itemsHTML:items, multi:true }, rtFilterPill('Connections', sel.map(id => RT_TOOLS[id].name))));
 }
 function renderRoutines(){
   // When a routine's panel is open, the shell-level #rtPanel segment takes its own
@@ -10086,7 +10085,7 @@ function setAccountsHTML(){
   const tools = setAccTools();
   let body;
   if(!tools.length){
-    body = '<div class="rt-empty"><div class="rt-empty__title">Your teams don&rsquo;t use any tools yet</div><p class="rt-empty__text">Ask your team head or an admin.</p></div>';
+    body = '<div class="rt-empty"><div class="rt-empty__title">Your teams don&rsquo;t use any connections yet.</div><p class="rt-empty__text">Ask your team head or an admin.</p></div>';
   } else {
     const status = id => SET.acc[id] === 'on' ? '<span class="home-badge home-badge--ok">Connected</span>'
       : SET.acc[id] === 'stopped' ? '<span class="home-badge home-badge--risk">Stopped syncing</span>' : '<span class="home-badge home-badge--neutral">Not connected</span>';
@@ -10100,7 +10099,7 @@ function setAccountsHTML(){
         : '<tr><td><div class="in-firstcell">'+admLogo(t)+'<span class="in-name">'+t.name+'</span></div></td>'+level(t)+'<td>'+status(t.id)+'</td><td class="set-act">'+action(t)+'</td></tr>').join('')+
       '</tbody></table></div></section>'+admLevelsAsideHTML()+'</div>';
   }
-  return '<div class="adm">'+setHead('Connections', 'Connect your accounts so Mira can work with them. You see the tools your teams use.')+body+'</div>';
+  return '<div class="adm">'+setHead('Connections', 'The connections your teams use. Connect your own account to work with Mira in each.')+body+'</div>';
 }
 function setChannelsHTML(){
   const co = ADM_COMPANY, tile = inner => '<span class="adm-ch__ico">'+inner+'</span>';
@@ -10109,7 +10108,7 @@ function setChannelsHTML(){
     ? card(logo, name, 'Chat with Mira on '+name+'.', '<button type="button" class="home-btn" data-set-ch="'+key+'">'+(SET.ch[key] ? 'Disconnect' : 'Connect')+'</button>')
     : card(logo, name, 'Not allowed in '+co+'. Ask an admin.', '');
   return '<div class="adm">'+setHead('Channels', 'Where you talk to Mira.')+'<div class="adm-ch">'+
-    card('<img class="nr__avatar" src="'+MIRA_AVATAR+'" alt="">', 'Mira app', 'Where everyone works with Mira: chat, tasks, routines and insights.', '<span class="adm-row__meta">Always on</span>')+   // always on: text instead of a button, not clickable
+    card('<img class="nr__avatar" src="'+MIRA_AVATAR+'" alt="">', 'Mira app', 'Where everyone works with Mira: chat, tasks, routines and insights.', '<span class="home-badge home-badge--neutral">Always on</span>')+   // always on: a grey tag instead of a button, not clickable
     card(RT_TOOLS.slack.logo, 'Slack', ADM_CHANNELS.slack.on ? 'Chat with Mira in '+co+'&rsquo;s Slack.' : 'Not set up for '+co+'. Ask an admin.',
       ADM_CHANNELS.slack.on ? '<button type="button" class="home-btn" data-set-slack>Open in Slack</button>' : '')+
     own('whatsapp', ADM_WHATSAPP_LOGO, 'WhatsApp')+own('telegram', RT_TOOLS.telegram.logo, 'Telegram')+
