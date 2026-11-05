@@ -1758,6 +1758,7 @@ button.home-addmenu__item:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){
 /* Connections & channels (2026-10-30). Layout glue only. The table sits directly on the page like People; "The three levels" is a panel with no
    border, filled with the same canvas grey as the side nav (--c-bg). */
 .adm-split > .adm-col--table{flex:1 1 520px}   /* wide basis: with the drawer open the three levels panel drops under the table instead of squeezing it */
+.adm-split > .adm-col--conn{flex:0 1 820px}   /* the Connections table (Admin Panel, Team settings, personal Settings) has the same width on all three, 820px like the Settings cards; it only shrinks when the page is narrower */
 .adm-split > .adm-col--side{flex:0 0 300px;padding:16px;background:var(--c-bg);border-radius:10px}
 .adm-drawer__levels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}   /* tool drawer: the three level cards in a row */
 .adm-drawer__levels .adm-row{align-items:flex-start;padding:10px}
@@ -3618,12 +3619,15 @@ const ADM_TEAMS = [
 // role: 'Admin' | 'Member' (Head is derived). teams: names of the teams the person is in (an admin may be in none and still sits above all).
 // status: Active | Invited | Disabled. invitedDays = how long an invitation has waited (Invited only).
 // routines / tasks = what they own, which is what the Remove dialog offers to reassign.
+// dept (optional) = the person's department from the company directory (Microsoft Entra ID or Google Workspace, synced via SCIM), read-only: { name, source }.
+// One per person for now. It is shaped as a synced group on purpose: later this becomes a list of synced groups (an array of { name, source })
+// that can be added to teams. SIMULATED: nothing is really synced; only Maya and Lena have one in the sample data.
 const ADM_MEMBERS = [
   { id:'anna',   name:'Anna Novak',   mail:'anna@company.com',   role:'Admin',  teams:[],                                    status:'Active',  since:'Oct 2026', routines:2, tasks:5 },
   { id:'tom',    name:'Tom Reyes',    mail:'tom@company.com',    role:'Member', teams:['Operations','Customer projects'],    status:'Active',  since:'Oct 2026', routines:3, tasks:7 },
-  { id:'maya',   name:'Maya Klein',   mail:'maya@company.com',   role:'Member', teams:['Sales','Customer projects'],         status:'Active',  since:'Oct 2026', routines:4, tasks:9 },
+  { id:'maya',   name:'Maya Klein',   mail:'maya@company.com',   role:'Member', teams:['Sales','Customer projects'],         status:'Active',  since:'Oct 2026', routines:4, tasks:9, dept:{ name:'Sales', source:'Microsoft Entra ID' } },
   { id:'jonas',  name:'Jonas Okafor', mail:'jonas@company.com',  role:'Member', teams:['Sales'],                             status:'Active',  since:'Oct 2026', routines:1, tasks:3 },
-  { id:'lena',   name:'Lena Berg',    mail:'lena@company.com',   role:'Member', teams:['Finance'],                           status:'Active',  since:'Oct 2026', routines:2, tasks:4 },
+  { id:'lena',   name:'Lena Berg',    mail:'lena@company.com',   role:'Member', teams:['Finance'],                           status:'Active',  since:'Oct 2026', routines:2, tasks:4, dept:{ name:'Finance', source:'Microsoft Entra ID' } },
   { id:'priya',  name:'Priya Shah',   mail:'priya@company.com',  role:'Member', teams:['Operations'],                        status:'Invited', invitedDays:9,  routines:0, tasks:0 },
   { id:'noah',   name:'Noah Fischer', mail:'noah@company.com',   role:'Member', teams:['Operations'],                        status:'Invited', invitedDays:12, routines:0, tasks:0 },
   { id:'daniel', name:'Daniel Wu',    mail:'daniel@company.com', role:'Member', teams:['Sales'],                             status:'Invited', invitedDays:2,  routines:0, tasks:0 },
@@ -4223,6 +4227,12 @@ function admMemberPanelHTML(m){
   const teams = sec('Teams', m.teams.length ? '<ul class="adm-drawer__members adm-drawer__teamlist">'+teamRows+'</ul>'
     : '<div class="adm-row__meta">'+(isAdmin ? 'Admins sit above all teams.' : 'Not in any team yet.')+'</div>',
     isAdmin ? '' : addTeam);
+  // Department (2026-11-06, on request): read-only, from the company directory. Only when the person has one; no department means no section at
+  // all (no empty state). A disabled person gets none of the sections (their drawer is just the Disabled card).
+  // It sits in a row of the Teams list (same padding), and 6px more above and below stand in for the 32px role picker that makes a team row taller, so the name is as far from its label as a team name is from "Teams".
+  const dept = m.dept ? sec('Department', '<ul class="adm-drawer__members adm-drawer__teamlist"><li class="adm-drawer__member"><span style="display:block;padding:6px 0">'+
+    '<div class="adm-row__name" title="To change it, update it in '+m.dept.source+'.">'+rtEsc(m.dept.name)+'</div>'+
+    '<div class="adm-row__meta">Synced from '+m.dept.source+'</div></span></li></ul>') : '';
   // Security: the wireframe has just the reset block (no "2FA: on" line, no last sign-in). An invited person has nothing to reset yet.
   const security = invited
     ? sec('Security', '<div class="adm-drawer__line"><span><div class="adm-row__name">Invitation sent</div><div class="adm-row__meta">'+first+' has not signed in yet. Two-factor is set up at first sign-in.</div></span>'+
@@ -4244,7 +4254,7 @@ function admMemberPanelHTML(m){
       '<span class="rt-panel__actions"><button type="button" class="rt-panel__close" data-rt-close aria-label="Close panel">'+svg('close',2)+'</button></span>'+
     '</div>'+
     '<div class="rt-panel__body"><div class="adm-drawer">'+
-      (removed ? '' : role+teams+security)+leaving+
+      (removed ? '' : role+teams+dept+security)+leaving+
     '</div></div>';
 }
 function wireAdmMemberPanel(host, m){
@@ -4280,9 +4290,12 @@ let ADM_TOOLS = [
   { id:'asana',      name:'Asana',           kind:'Projects',     logo:'asana',      access:'Operator', teams:['Operations','Customer projects'] },
   { id:'hubspot',    name:'HubSpot',         kind:'CRM',          logo:'hubspot',    access:'Custom', teams:['Sales','Customer projects'] },
   { id:'salesforce', name:'Salesforce',      kind:'CRM',          logo:'salesforce', access:'Observer', teams:['Sales'] },
-  { id:'xero',       name:'Xero',            kind:'Accounting',   logo:null,         access:'Assistant', teams:['Finance','Customer projects'] },
+  { id:'xero',       name:'Xero',            kind:'Accounting',   logo:'xero',         access:'Assistant', teams:['Finance','Customer projects'] },
   { id:'granola',    name:'Granola',         kind:'Meeting notes', logo:null,        access:'Observer', teams:['All teams'] },
 ];
+// "The three levels" legend beside the connections table: the same aside in the Admin Panel, Team settings and personal Settings (.adm-col--side).
+const admLevelsAsideHTML = () => '<aside class="adm-col adm-col--side" aria-label="The three levels"><h2 class="adm-sect">The three levels</h2>'+
+  ADM_LEVELS.map(l => '<p class="adm-sub adm-level"><strong>'+l[0]+'</strong>: '+l[1]+'</p>').join('')+'</aside>';
 const ADM_LEVELS = [
   ['Observer',  'Mira reads and tells you what she notices.'],
   ['Assistant', 'Mira drafts. People approve before anything goes out.'],
@@ -4331,7 +4344,7 @@ function wireAdmChannels(c){
 }
 let admToolQuery = '';
 function admLogo(t){
-  // Xero and Granola have no logo asset yet -> the generic plug icon in the same 18px slot.
+  // Granola and FreeAgent have no logo asset yet -> the generic plug icon in the same 18px slot.
   return '<span class="rt-logo">'+(t.logo ? RT_TOOLS[t.logo].logo : '<svg viewBox="0 0 24 24" fill="none" stroke="#525252" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+ICONS.plug+'</svg>')+'</span>';
 }
 function admToolVisible(t){
@@ -4365,7 +4378,7 @@ function renderAdmTools(){
   let body = '';
   if(admToolsTab === 'tools'){
     body = '<div class="adm-split">'+
-      '<section class="adm-col adm-col--table" aria-label="Connections">'+
+      '<section class="adm-col adm-col--table adm-col--conn" aria-label="Connections">'+
         // No filters (the Autonomy level filter was removed 2026-11-02); the collapsible search and the primary action (Add tool) sit on the right, just above the table.
         '<div class="wl-toolbar"><div class="wl-toolbar__left"></div><div class="wl-toolbar__right">'+
           searchBoxHTML('Search connections')+
@@ -4374,9 +4387,7 @@ function renderAdmTools(){
         '<div class="in-tablewrap"><table class="in-table"><thead><tr><th>Connection</th><th>Autonomy level</th></tr></thead>'+
           '<tbody data-adm-tool-body>'+admToolRowsHTML()+'</tbody></table></div>'+
       '</section>'+
-      '<aside class="adm-col adm-col--side" aria-label="The three levels"><h2 class="adm-sect">The three levels</h2>'+
-        ADM_LEVELS.map(l => '<p class="adm-sub adm-level"><strong>'+l[0]+'</strong>: '+l[1]+'</p>').join('')+
-      '</aside>'+
+      admLevelsAsideHTML()+
     '</div>';
   }
   if(admToolsTab === 'channels') body = admChannelsHTML();
@@ -4454,7 +4465,7 @@ function tsConnectionRowsHTML(team){
     // TS_REQUESTED, tsLevelsAbove and the [data-ts-ask] handler in wireTeamSettings.
     // A row opens the team's drawer for this connection; the Open button (shown on hover or focus) is only an affordance, the click bubbles to the row (as in People).
     return '<tr class="is-clickable'+(t.id === admToolOpen ? ' is-selected' : '')+'" tabindex="0" data-ts-open="'+t.id+'"><td><div class="in-firstcell">'+admLogo(t)+'<span class="in-name">'+t.name+'</span>'+inOpenBtn()+'</div></td>'+
-      '<td><div class="ts-level"><span class="home-badge home-badge--neutral" title="Set by admins for all of '+ADM_COMPANY+'.">'+t.access+'</span></div></td>'+
+      '<td><div class="ts-level">'+(on ? '<span class="home-badge home-badge--neutral" title="'+tsMaxText(t)+'">'+tsLevel(team, t)+'</span>' : '–')+'</div></td>'+   // off for the team: an en dash
       '<td>'+admToggleHTML(on, (on ? 'Stop using ' : 'Use ')+t.name+' in '+team.name, 'data-ts-toggle="'+t.id+'"')+'</td></tr>';
   }).join('');
 }
@@ -4471,8 +4482,9 @@ function renderTeamSettings(){
   if(!team) return '';
   let body;
   if(activeId === 'ts-connections'){   // the sidebar tab decides what is shown
-    body = '<div class="in-tablewrap"><table class="in-table"><thead><tr><th>Connection</th><th>Mira’s autonomy level</th><th>Used by '+team.name+'</th></tr></thead>'+
-        '<tbody>'+tsConnectionRowsHTML(team)+'</tbody></table></div>'+
+    body = '<div class="adm-split"><section class="adm-col adm-col--table adm-col--conn" aria-label="Connections">'+
+        '<div class="in-tablewrap"><table class="in-table"><thead><tr><th>Connection</th><th>Mira’s autonomy level</th><th>Used by '+team.name+'</th></tr></thead>'+
+        '<tbody>'+tsConnectionRowsHTML(team)+'</tbody></table></div></section>'+admLevelsAsideHTML()+'</div>'+
       // Purple banner (2026-10-30, on request): the existing .dc-banner with its white button. "Request with Mira" opens the Mira side panel (pgOpenPanel).
       // SIMULATED: Mira's reply is the generic canned one; nothing is sent to an admin.
       '<div class="dc-banner" role="status" style="margin-top:24px"><div><div class="dc-banner__title">Missing a connection or need more permissions?</div>'+
@@ -4528,36 +4540,59 @@ function wireTeamSettings(c){
      Observer; Observer offers only Observer. A Custom company level offers the levels whose every permission fits under it (maybe none).
    - Permissions: each row offers its ceiling value and the ones below it (Allowed > Ask > Blocked), so a permission the company has on Ask
      shows only Blocked and Ask.
-   The team's choice starts equal to the ceiling (no restriction) and is kept per team and connection in TS_PERMS (SIMULATED: in memory, it
-   changes nothing else on the page). It is clamped to the ceiling every time it is read, so it cannot exceed what admins allow. */
+   INHERITANCE (agreed 5 Nov). A team FOLLOWS the admin's level for a connection, up or down, until it changes something. TS_PERMS holds only
+   the teams' own choices ("<team>:<connection id>" -> one value per permission): no entry = following. Opening a drawer never writes. A choice is
+   stored only by tsStorePerms, and dropped again when the TEAM sets it equal to the ceiling (the team goes back to following). When the admin
+   goes lower than a team's own choice, the clamp is STORED (tsSettle, 6 Nov): the team keeps the lower value even if the admin later raises the
+   level again, and stays on its own choice (it does not go back to following, because it did not choose to). Reads clamp too, as a safety net.
+   SIMULATED: in memory, it changes nothing else on the page. */
 const TS_RANK = { Blocked:0, Ask:1, Allowed:2 };
 const TS_PERMS = {};   // "<team>:<connection id>" -> one value per permission
 const tsFits = (perms, ceil) => perms.every((v, i) => TS_RANK[v] <= TS_RANK[ceil[i]]);
-function tsToolPerms(team, t){
-  const ceil = admToolPerms(t), key = team.name+':'+t.id;
-  TS_PERMS[key] = (TS_PERMS[key] || ceil).map((v, i) => TS_RANK[v] <= TS_RANK[ceil[i]] ? v : ceil[i]);
-  return TS_PERMS[key];
+const tsClamp = (perms, ceil) => perms.map((v, i) => TS_RANK[v] <= TS_RANK[ceil[i]] ? v : ceil[i]);
+// What a team gets now for a connection: its own choice clamped to `ceil` (the admin's values unless told otherwise), or the ceiling itself while it follows.
+const tsEffective = (name, t, ceil) => { ceil = ceil || admToolPerms(t); const own = TS_PERMS[name+':'+t.id]; return own ? tsClamp(own, ceil) : ceil.slice(); };
+const tsToolPerms = (team, t) => tsEffective(team.name, t);
+// The team's own level in the table (Custom while it follows a Custom admin level), the admin's max as words for the tooltip and the drawer
+// subtitle, and whether the team has lowered anything (an own choice is stored). tsReset puts the team back to following the admin.
+const tsLevel = (team, t) => admToolLevelOf(tsToolPerms(team, t));
+const tsMaxText = t => t.access === 'Custom' ? 'Max: custom settings set by admins' : 'Max '+t.access;
+const tsHasOwn = (team, t) => Boolean(TS_PERMS[team.name+':'+t.id]);
+function tsReset(team, t){ delete TS_PERMS[team.name+':'+t.id]; }   // a fresh copy: changing it changes nothing, use tsStorePerms
+function tsStorePerms(team, t, perms){
+  const ceil = admToolPerms(t), key = team.name+':'+t.id, next = tsClamp(perms, ceil);
+  if(next.every((v, i) => v === ceil[i])) delete TS_PERMS[key]; else TS_PERMS[key] = next;   // equal to the admin's level = follow again
+  tsSettle(t);   // a team going lower can lower what a person may choose
+}
+// After a ceiling went down (the admin saved a lower level, or a team lowered its own): write the clamp into every stored choice that is now
+// above it, so it stays lower if the ceiling goes up again. Teams first (against the admin's level), then people (against their max).
+function tsSettle(t){
+  const ceil = admToolPerms(t);
+  Object.keys(TS_PERMS).filter(k => k.endsWith(':'+t.id)).forEach(k => { TS_PERMS[k] = tsClamp(TS_PERMS[k], ceil); });
+  if(SET.perms[t.id]) SET.perms[t.id] = tsClamp(SET.perms[t.id], setCeil(t));
 }
 function tsToolPanelHTML(team, t){
   const ceil = admToolPerms(t), perms = tsToolPerms(team, t);
   const offered = ADM_LEVELS.map(l => l[0]).filter(n => tsFits(ADM_PERM_PRESETS[n], ceil));
   return '<div class="rt-panel__head adm-head">'+
       '<span class="rt-panel__who">'+admLogo(t)+'<span class="rt-panel__titles"><span class="rt-panel__title">What Mira can do in '+t.name+'</span>'+
-        '<span class="rt-panel__sub">For '+team.name+', up to what admins allow.</span></span></span>'+
+        '<span class="rt-panel__sub">For '+team.name+'. '+tsMaxText(t)+'.</span></span></span>'+
       '<span class="rt-panel__actions"><button type="button" class="rt-panel__close" data-rt-close aria-label="Close panel">'+svg('close',2)+'</button></span>'+
     '</div>'+
     '<div class="rt-panel__body"><div class="adm-drawer">'+
       '<section class="adm-drawer__sec" aria-label="What Mira can do in '+t.name+'">'+
         (offered.length ? admLevelCardsHTML('ts-tool', admToolLevelOf(perms), offered) : '')+
+        (tsHasOwn(team, t) ? '<button type="button" class="home-link" data-ts-tool-reset style="display:block;margin:0 0 16px">Reset to max level</button>' : '')+   // only once the team has lowered something
         admPermEditorHTML('ts-tool', perms, null, null, false, ceil)+'</section>'+
     '</div></div>';
 }
 function wireTsToolPanel(host, team, t){
   host.querySelectorAll('[data-ts-tool-level]').forEach(b => b.addEventListener('click', () => {
-    TS_PERMS[team.name+':'+t.id] = ADM_PERM_PRESETS[b.dataset.tsToolLevel].slice(); admRefresh();
+    tsStorePerms(team, t, ADM_PERM_PRESETS[b.dataset.tsToolLevel]); admRefresh();
   }));
+  host.querySelectorAll('[data-ts-tool-reset]').forEach(b => b.addEventListener('click', () => { tsReset(team, t); admRefresh(); }));
   host.querySelectorAll('[data-ts-tool-perm]').forEach(b => b.addEventListener('click', () => {
-    tsToolPerms(team, t)[+b.dataset.tsToolPerm] = b.dataset.v; admRefresh();
+    const next = tsToolPerms(team, t); next[+b.dataset.tsToolPerm] = b.dataset.v; tsStorePerms(team, t, next); admRefresh();
   }));
 }
 
@@ -4669,6 +4704,46 @@ function admTeamsPhrase(lists){
   return names.length < 2 ? names.join('') : names.slice(0, -1).join(', ')+' and '+names[names.length-1];
 }
 
+/* Changing a connection's level (2026-11-05, on request). A change in the admin drawer applies at once (no Save or Cancel; an earlier version
+   edited a draft behind Save and was taken out on request) and tells the teams, one notification per change. The drawer shows no line about
+   who gets told (an "Affects ..." line and then a "Changes here notify ..." line were both taken out on request).
+   Who is told, per team that uses the connection (it is not switched off in Team settings; a team's own choice is TS_PERMS):
+   - the team ends up with LESS than before (it followed the admin down, or its own choice is clamped): "lowered";
+   - otherwise, if the ceiling went up anywhere: "raised". A team that follows gets more autonomy without doing anything, so it is told; a team
+     with its own choice is told it can now go higher;
+   - a team that is already within the new ceiling and sees no change is not told. */
+const ADM_GROUP_VERBS = [[0, 2, 'read'], [3, 4, 'create or edit'], [5, 7, 'send']];   // permission index ranges (see ADM_PERM_PRESETS) and what they let Mira do
+function admToolImpact(t, next){
+  const before = admToolPerms(t), up = next.some((v, i) => TS_RANK[v] > TS_RANK[before[i]]);
+  const out = [];
+  ADM_TEAMS.forEach(tm => {
+    if(tsOff(tm.name).has(t.id)) return;
+    const was = tsEffective(tm.name, t, before), now = tsEffective(tm.name, t, next), own = Boolean(TS_PERMS[tm.name+':'+t.id]);
+    const verbs = ADM_GROUP_VERBS.filter(g => now.slice(g[0], g[1] + 1).some((v, i) => TS_RANK[v] < TS_RANK[was[g[0] + i]])).map(g => g[2]);
+    if(verbs.length) out.push({ team:tm, kind:'lowered', verbs });
+    else if(up) out.push({ team:tm, kind:'raised', own });
+  });
+  return out;
+}
+// SIMULATED: the heads of the affected teams cannot be someone else in the prototype, so each notification lands in this bell, labelled with its team.
+function admToolNotify(t, impact, next){
+  const level = admToolLevelOf(next), lvl = level === 'Custom' ? null : level;
+  const list = a => a.length < 2 ? a.join('') : a.slice(0, -1).join(', ')+' and '+a[a.length - 1];
+  impact.forEach((x, k) => {
+    const name = x.team.name;
+    let text, hint;
+    if(x.kind === 'lowered'){
+      text = lvl ? 'Admins lowered '+t.name+' to '+lvl+'.' : 'Admins lowered what Mira can do in '+t.name+'.';
+      hint = name+' routines that '+list(x.verbs)+' in '+t.name+' will need approval or stop working.';
+    } else {
+      text = lvl ? 'Admins raised '+t.name+' to '+lvl+'.' : 'Admins raised what Mira can do in '+t.name+'.';
+      hint = x.own ? (lvl ? 'You can now go up to '+lvl+'.' : 'You can now allow more in '+t.name+'.') : 'Mira now has more autonomy in '+name+'. You can lower it in Team settings.';
+    }
+    NOTIFS.splice(k, 0, { id:'n-ceil-'+(++admCeilSeq)+'-'+k, kind:'ceiling', from:'Admins', team:name, text, hint, when:'Just now', state:'info', unread:true });
+  });
+  syncBellDot();
+}
+let admCeilSeq = 0;
 function admToolPanelHTML(t){
   const perms = admToolPerms(t);
   const who = 'Applies to everyone at '+ADM_COMPANY+'.';   // no "Available to" any more, so there is no per-team wording
@@ -4679,17 +4754,20 @@ function admToolPanelHTML(t){
       '<span class="rt-panel__actions"><button type="button" class="rt-panel__close" data-rt-close aria-label="Close panel">'+svg('close',2)+'</button></span>'+
     '</div>'+
     '<div class="rt-panel__body"><div class="adm-drawer">'+
-      '<section class="adm-drawer__sec" aria-label="What Mira can do in '+t.name+'">'+admLevelCardsHTML('adm-tool', t.access)+admPermEditorHTML('adm-tool', perms)+'</section>'+   // no section title: the header already says it
+      '<section class="adm-drawer__sec" aria-label="What Mira can do in '+t.name+'">'+admLevelCardsHTML('adm-tool', admToolLevelOf(perms))+admPermEditorHTML('adm-tool', perms)+'</section>'+   // no section title: the header already says it
       '<div class="adm-drawer__exit"><button type="button" class="home-btn home-btn--danger adm-drawer__wide" data-adm-tool-remove>Remove</button></div>'+
     '</div></div>';
 }
 function wireAdmToolPanel(host, t){
-  host.querySelectorAll('[data-adm-tool-level]').forEach(b => b.addEventListener('click', () => {
-    t.access = b.dataset.admToolLevel; t.perms = ADM_PERM_PRESETS[t.access].slice(); admRefresh();
-  }));
-  host.querySelectorAll('[data-adm-tool-perm]').forEach(b => b.addEventListener('click', () => {
-    admToolPerms(t)[+b.dataset.admToolPerm] = b.dataset.v; t.access = admToolLevelOf(t.perms); admRefresh();
-  }));
+  // Who is affected is worked out against the OLD level, so it comes before the write.
+  const apply = next => {
+    const impact = admToolImpact(t, next);
+    t.perms = next; t.access = admToolLevelOf(next);
+    tsSettle(t);   // teams and people above the new level are lowered for good
+    admToolNotify(t, impact, next); admRefresh();
+  };
+  host.querySelectorAll('[data-adm-tool-level]').forEach(b => b.addEventListener('click', () => apply(ADM_PERM_PRESETS[b.dataset.admToolLevel].slice())));
+  host.querySelectorAll('[data-adm-tool-perm]').forEach(b => b.addEventListener('click', () => { const next = admToolPerms(t).slice(); next[+b.dataset.admToolPerm] = b.dataset.v; apply(next); }));
   host.querySelector('[data-adm-tool-remove]').addEventListener('click', () => {
     ADM_TOOLS = ADM_TOOLS.filter(x => x.id !== t.id); admToolOpen = null; shareToast(t.name+' removed'); admRefresh();
   });
@@ -4707,10 +4785,10 @@ const ADM_CATALOG = [
   { id:'gmail', name:'Gmail', cat:'Email', pop:true, logo:'gmail' }, { id:'gcal', name:'Google Calendar', cat:'Calendar', pop:true, logo:'gcal' },
   { id:'gdrive', name:'Google Drive', cat:'Storage', pop:true, logo:'gdrive' }, { id:'asana', name:'Asana', cat:'Projects', pop:true, logo:'asana' },
   { id:'notion', name:'Notion', cat:'Docs', pop:true, logo:'notion' }, { id:'granola', name:'Granola', cat:'Meeting notes', pop:true, logo:null },
-  { id:'outlook', name:'Outlook', cat:'Email and calendar', logo:null }, { id:'hubspot', name:'HubSpot', cat:'CRM', logo:'hubspot' },
-  { id:'xero', name:'Xero', cat:'Accounting', logo:null }, { id:'freeagent', name:'FreeAgent', cat:'Accounting', logo:null },
+  { id:'outlook', name:'Outlook', cat:'Email and calendar', logo:'outlook' }, { id:'hubspot', name:'HubSpot', cat:'CRM', logo:'hubspot' },
+  { id:'xero', name:'Xero', cat:'Accounting', logo:'xero' }, { id:'freeagent', name:'FreeAgent', cat:'Accounting', logo:null },
   { id:'linear', name:'Linear', cat:'Issues', logo:'linear' },
-  { id:'github', name:'GitHub', cat:'Developer', logo:null }, { id:'zendesk', name:'Zendesk', cat:'Support', logo:null },
+  { id:'github', name:'GitHub', cat:'Developer', logo:'github' }, { id:'zendesk', name:'Zendesk', cat:'Support', logo:'zendesk' },
   { id:'salesforce', name:'Salesforce', cat:'CRM', logo:'salesforce' },
 ];
 // Slack, WhatsApp and Telegram are channels (where people talk to Mira), not tools: they are not in the catalogue and are managed in the Channels tab.
@@ -5418,6 +5496,11 @@ const RT_TOOLS = {
   linear:{ name:"Linear", logo:"<svg viewBox=\"0 0 24 24\"><rect width=\"24\" height=\"24\" rx=\"6\" fill=\"#5e6ad2\"/><path fill=\"#fff\" d=\"M5.2 13.4l5.4 5.4a7.4 7.4 0 0 1-5.4-5.4zm-.1-2.3l7.8 7.8c.6-.1 1.2-.3 1.7-.6L5.7 9.4c-.3.5-.5 1.1-.6 1.7zm1.4-3.1l9.5 9.5c.4-.3.8-.6 1.1-1L7.5 6.9c-.4.3-.7.7-1 1.1zM9 6l9 9c.2-.3.4-.7.6-1L10 5.4c-.4.2-.7.4-1 .6zm2.2-.9l7.7 7.7a7.4 7.4 0 0 0-7.7-7.7z\"/></svg>" },
   hubspot:{ name:"HubSpot", logo:"<svg viewBox=\"0 0 24 24\"><path fill=\"#FF7A59\" d=\"M18.164 7.93V5.084a2.198 2.198 0 001.267-1.978v-.067A2.2 2.2 0 0017.238.845h-.067a2.2 2.2 0 00-2.193 2.193v.067a2.196 2.196 0 001.252 1.973l.013.006v2.852a6.22 6.22 0 00-2.969 1.31l.012-.01-7.828-6.095A2.497 2.497 0 104.3 4.656l-.012.006 7.697 5.991a6.176 6.176 0 00-1.038 3.446c0 1.343.425 2.588 1.147 3.607l-.013-.02-2.342 2.343a1.968 1.968 0 00-.58-.095h-.002a2.033 2.033 0 102.033 2.033 1.978 1.978 0 00-.1-.595l.005.014 2.317-2.317a6.247 6.247 0 104.782-11.134l-.036-.005zm-.964 9.378a3.206 3.206 0 113.215-3.207v.002a3.206 3.206 0 01-3.207 3.207z\"/></svg>" },
   gsheets:{ name:"Google Sheets", logo:"<svg viewBox=\"0 0 24 24\"><path fill=\"#0F9D58\" d=\"M11.318 12.545H7.91v-1.909h3.41v1.91zM14.728 0v6h6l-6-6zm1.363 10.636h-3.41v1.91h3.41v-1.91zm0 3.273h-3.41v1.91h3.41v-1.91zM20.727 6.5v15.864c0 .904-.732 1.636-1.636 1.636H4.909a1.636 1.636 0 0 1-1.636-1.636V1.636C3.273.732 4.005 0 4.909 0h9.318v6.5h6.5zm-3.273 2.773H6.545v7.909h10.91v-7.91zm-6.136 4.636H7.91v1.91h3.41v-1.91z\"/></svg>" },
+  // Xero, GitHub, Zendesk and Outlook (2026-11-06, on request): the Simple Icons glyph in the brand colour. Granola and FreeAgent have no logo asset yet (plug icon).
+  xero:{ name:"Xero", logo:"<svg viewBox=\"0 0 24 24\"><path fill=\"#13B5EA\" d=\"M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm6.585 14.655c-1.485 0-2.69-1.206-2.69-2.689 0-1.485 1.207-2.691 2.69-2.691 1.485 0 2.69 1.207 2.69 2.691s-1.207 2.689-2.69 2.689zM7.53 14.644c-.099 0-.192-.041-.267-.116l-2.043-2.04-2.052 2.047c-.069.068-.16.108-.258.108-.202 0-.368-.166-.368-.368 0-.099.04-.191.111-.263l2.04-2.05-2.038-2.047c-.075-.069-.113-.162-.113-.261 0-.203.166-.366.368-.366.098 0 .188.037.258.105l2.055 2.048 2.048-2.045c.069-.071.162-.108.26-.108.211 0 .375.165.375.366 0 .098-.029.188-.104.258l-2.056 2.055 2.055 2.051c.068.069.104.16.104.258 0 .202-.165.368-.365.368h-.01zm8.017-4.591c-.796.101-.882.476-.882 1.404v2.787c0 .202-.165.366-.366.366-.203 0-.367-.165-.368-.366v-4.53c0-.204.16-.366.362-.366.166 0 .316.125.346.289.27-.209.6-.317.93-.317h.105c.195 0 .359.165.359.368 0 .201-.164.352-.375.359 0 0-.09 0-.164.008l.053-.002zm-3.091 2.205H8.625c0 .019.003.037.006.057.02.105.045.211.083.31.194.531.765 1.275 1.829 1.29.33-.003.631-.086.9-.229.21-.12.391-.271.525-.428.045-.058.09-.112.12-.168.18-.229.405-.186.54-.083.164.135.18.391.045.57l-.016.016c-.21.27-.435.495-.689.66-.255.164-.525.284-.811.345-.33.09-.645.104-.975.06-1.095-.135-2.01-.93-2.28-2.01-.06-.21-.09-.42-.09-.645 0-.855.421-1.695 1.125-2.205.885-.615 2.085-.66 3-.075.63.405 1.035 1.021 1.185 1.771.075.419-.21.794-.734.81l.068-.046zm6.129-2.223c-1.064 0-1.931.865-1.931 1.931 0 1.064.866 1.931 1.931 1.931s1.931-.867 1.931-1.931c0-1.065-.866-1.933-1.931-1.933v.002zm0 2.595c-.367 0-.666-.297-.666-.666 0-.367.3-.665.666-.665.367 0 .667.299.667.665 0 .369-.3.667-.667.666zm-8.04-2.603c-.91 0-1.672.623-1.886 1.466v.03h3.776c-.203-.855-.973-1.494-1.891-1.494v-.002z\"/></svg>" },
+  github:{ name:"GitHub", logo:"<svg viewBox=\"0 0 24 24\"><path fill=\"#181717\" d=\"M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12\"/></svg>" },
+  zendesk:{ name:"Zendesk", logo:"<svg viewBox=\"0 0 24 24\"><path fill=\"#03363D\" d=\"M12.914 2.904V16.29L24 2.905H12.914zM0 2.906C0 5.966 2.483 8.45 5.543 8.45s5.542-2.484 5.543-5.544H0zm11.086 4.807L0 21.096h11.086V7.713zm7.37 7.84c-3.063 0-5.542 2.48-5.542 5.543H24c0-3.06-2.48-5.543-5.543-5.543z\"/></svg>" },
+  outlook:{ name:"Outlook", logo:"<svg viewBox=\"0 0 24 24\"><path fill=\"#0078D4\" d=\"M7.88 12.04q0 .45-.11.87-.1.41-.33.74-.22.33-.58.52-.37.2-.87.2t-.85-.2q-.35-.21-.57-.55-.22-.33-.33-.75-.1-.42-.1-.86t.1-.87q.1-.43.34-.76.22-.34.59-.54.36-.2.87-.2t.86.2q.35.21.57.55.22.34.31.77.1.43.1.88zM24 12v9.38q0 .46-.33.8-.33.32-.8.32H7.13q-.46 0-.8-.33-.32-.33-.32-.8V18H1q-.41 0-.7-.3-.3-.29-.3-.7V7q0-.41.3-.7Q.58 6 1 6h6.5V2.55q0-.44.3-.75.3-.3.75-.3h12.9q.44 0 .75.3.3.3.3.75V10.85l1.24.72h.01q.1.07.18.18.07.12.07.25zm-6-8.25v3h3v-3zm0 4.5v3h3v-3zm0 4.5v1.83l3.05-1.83zm-5.25-9v3h3.75v-3zm0 4.5v3h3.75v-3zm0 4.5v2.03l2.41 1.5 1.34-.8v-2.73zM9 3.75V6h2l.13.01.12.04v-2.3zM5.98 15.98q.9 0 1.6-.3.7-.32 1.19-.86.48-.55.73-1.28.25-.74.25-1.61 0-.83-.25-1.55-.24-.71-.71-1.24t-1.15-.83q-.68-.3-1.55-.3-.92 0-1.64.3-.71.3-1.2.85-.5.54-.75 1.3-.25.74-.25 1.63 0 .85.26 1.56.26.72.74 1.23.48.52 1.17.81.69.3 1.56.3zM7.5 21h12.39L12 16.08V17q0 .41-.3.7-.29.3-.7.3H7.5zm15-.13v-7.24l-5.9 3.54Z\"/></svg>" },
   // HR = the HR app's own icon from the side nav (there is no brand logo for it).
   hr:{ name:"HR", logo:'<svg viewBox="0 0 24 24" fill="none" stroke="#525252" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">'+ICONS.hr+'</svg>' }
 };
@@ -9898,7 +9981,7 @@ const SET = {
   name:'Agata Tonik', email:'at@tonik.com',
   // Account status per connection id: 'on' (Connected), 'stopped' (Stopped syncing) or absent (Not connected).
   acc:{ gmail:'on', gcal:'on', hubspot:'stopped' },
-  perms:{},                                        // the person's own permissions per connection id (see setPerms); absent = the ceiling
+  perms:{},                                        // the person's own choices per connection id (see setStorePerms); absent = following the max
   ch:{ whatsapp:false, telegram:false },
   mem:[ { id:1, t:'Prefers short summaries with the decision first', src:'From Chat · 2 Sep' },
         { id:2, t:'Works in British English',                       src:'From Chat · 2 Sep' },
@@ -9916,45 +9999,66 @@ const setCard = rows => '<section class="home-card set-card">'+rows+'</section>'
 const setIn = (attr, val, ph) => '<div class="field set-field"><input type="text" '+attr+' value="'+rtEsc(val)+'"'+(ph ? ' placeholder="'+ph+'"' : '')+'></div>';
 const setPrimary = label => '<button type="button" class="home-btn home-btn--primary" data-set-save disabled>'+label+'</button>';
 
-// The connections switched on for any of my teams (a team that turned one off in Team settings does not count), and the teams that use it.
-function setUsedIn(t){
-  const on = SET_TEAMS.filter(n => (t.teams.includes('All teams') || t.teams.includes(n)) && !tsOff(n).has(t.id));
-  if(!on.length) return '';   // none of my teams uses it (also the case when I am in no team)
-  return t.teams.includes('All teams') && on.length === SET_TEAMS.length ? 'All teams' : on.join(', ');
-}
-const setAccTools = () => ADM_TOOLS.filter(t => setUsedIn(t));
+// The teams of mine that use a connection: the "Used by" switch in Team settings is on (a team that turned one off does not count). The old
+// `teams` field on connections (from the removed "Available to") is not used any more. A connection is listed when at least one of my teams
+// uses it; with no team at all, every company connection is listed (and the max is the admin's level).
+const setUsedInList = t => SET_TEAMS.filter(n => !tsOff(n).has(t.id));
+const setAccTools = () => SET_TEAMS.length ? ADM_TOOLS.filter(t => setUsedInList(t).length) : ADM_TOOLS.slice();
 /* Connection drawer (2026-10-30, on request): the same drawer as Team settings (tsToolPanelHTML), for the person's own account. The ceiling is what
-   admins allow for the whole company, lowered further by anything the person's teams chose in Team settings (TS_PERMS). The person can only choose
-   the same or less, never more: each permission offers its ceiling value and the ones below it, and only the levels that fit under it are offered.
-   The choice starts equal to the ceiling and is kept per connection in SET.perms (SIMULATED: in memory, it changes nothing else on the page).
-   It is clamped to the ceiling every time it is read. */
+   admins allow for the whole company, lowered further by what the person's teams chose in Team settings. With several teams the HIGHEST wins,
+   permission by permission (a team that follows the admin counts as the admin's level). The person can only choose the same or less, never more:
+   each permission offers its ceiling value and the ones below it, and only the levels that fit under it are offered.
+   The same inheritance as the team drawer (agreed 5 Nov): a person FOLLOWS their max until they change something. SET.perms holds only the
+   person's own choices (no entry = following); opening a drawer never writes; setStorePerms stores a choice and drops it when it equals the max.
+   When the max goes down below the person's choice, the clamp is stored (tsSettle), so it stays lower if the max goes up again. Reads clamp too
+   (SIMULATED: in memory, it changes nothing else on the page). */
 function setCeil(t){
-  const ceil = admToolPerms(t).slice();
-  SET_TEAMS.forEach(n => { const p = TS_PERMS[n+':'+t.id]; if(p) p.forEach((v, i) => { if(TS_RANK[v] < TS_RANK[ceil[i]]) ceil[i] = v; }); });
-  return ceil;
+  const ceil = admToolPerms(t).slice(), teams = setUsedInList(t);
+  if(!teams.length) return ceil;   // no team: the admin's level
+  const eff = teams.map(n => tsEffective(n, t, ceil));
+  return ceil.map((_, i) => eff.reduce((best, p) => TS_RANK[p[i]] > TS_RANK[best] ? p[i] : best, 'Blocked'));
 }
-function setPerms(t){
-  const ceil = setCeil(t);
-  SET.perms[t.id] = (SET.perms[t.id] || ceil).map((v, i) => TS_RANK[v] <= TS_RANK[ceil[i]] ? v : ceil[i]);
-  return SET.perms[t.id];
+const setPerms = t => { const max = setCeil(t), own = SET.perms[t.id]; return own ? tsClamp(own, max) : max; };   // a fresh copy: use setStorePerms to change it
+function setStorePerms(t, perms){
+  const max = setCeil(t), next = tsClamp(perms, max);
+  if(next.every((v, i) => v === max[i])) delete SET.perms[t.id]; else SET.perms[t.id] = next;   // equal to the max = follow again
+}
+function setReset(t){ delete SET.perms[t.id]; }   // back to following the max
+// The person's own level for the table, the max in words for the tooltip, and the drawer subtitle naming the max and where it comes from.
+const setLevel = t => admToolLevelOf(setPerms(t));
+const setMaxTip = t => { const l = admToolLevelOf(setCeil(t)); return l === 'Custom' ? 'Max: custom settings' : 'Max '+l; };
+function setMaxSource(t){
+  const admin = admToolPerms(t), max = setCeil(t), lvl = admToolLevelOf(max), teams = setUsedInList(t);
+  const word = perms => { const l = admToolLevelOf(perms); return l === 'Custom' ? 'custom settings' : l; };
+  const says = (who) => lvl === 'Custom' ? 'Max: custom settings set by '+who+'.' : 'Max '+lvl+', set by '+who+'.';
+  const eff = teams.map(n => ({ n, p:tsEffective(n, t, admin) }));
+  const same = (a, b) => a.every((v, i) => v === b[i]);
+  const list = a => a.length < 2 ? a.join('') : a.slice(0, -1).join(', ')+' and '+a[a.length - 1];
+  if(!eff.length) return says('admins');   // no team: the admin's level
+  if(eff.every(x => same(x.p, eff[0].p))) return says(same(eff[0].p, admin) ? 'admins' : list(eff.map(x => x.n)));   // one source (or several that agree)
+  // Teams differ. If one of them equals the combined max, the higher one applies; if none does, the max is built from several.
+  if(eff.some(x => same(x.p, max))) return (lvl === 'Custom' ? 'Max: custom. ' : 'Max '+lvl+'. ')+eff.map(x => x.n+' allows '+word(x.p)).join(', ')+'. The higher one applies.';
+  return 'Max: custom (combined from '+list(teams)+').';
 }
 function setToolPanelHTML(t){
   const ceil = setCeil(t), perms = setPerms(t);
   const offered = ADM_LEVELS.map(l => l[0]).filter(n => tsFits(ADM_PERM_PRESETS[n], ceil));
   return '<div class="rt-panel__head adm-head">'+
       '<span class="rt-panel__who">'+admLogo(t)+'<span class="rt-panel__titles"><span class="rt-panel__title">What Mira can do in '+t.name+'</span>'+
-        '<span class="rt-panel__sub">On your account, up to what admins allow.</span></span></span>'+
+        '<span class="rt-panel__sub">'+setMaxSource(t)+'</span></span></span>'+
       '<span class="rt-panel__actions"><button type="button" class="rt-panel__close" data-rt-close aria-label="Close panel">'+svg('close',2)+'</button></span>'+
     '</div>'+
     '<div class="rt-panel__body"><div class="adm-drawer">'+
       '<section class="adm-drawer__sec" aria-label="What Mira can do in '+t.name+'">'+
         (offered.length ? admLevelCardsHTML('set-tool', admToolLevelOf(perms), offered) : '')+
+        (SET.perms[t.id] ? '<button type="button" class="home-link" data-set-tool-reset style="display:block;margin:0 0 16px">Reset to max level</button>' : '')+   // only once the person has lowered something
         admPermEditorHTML('set-tool', perms, null, null, false, ceil)+'</section>'+
     '</div></div>';
 }
 function wireSetToolPanel(host, t){
-  host.querySelectorAll('[data-set-tool-level]').forEach(b => b.addEventListener('click', () => { SET.perms[t.id] = ADM_PERM_PRESETS[b.dataset.setToolLevel].slice(); admRefresh(); }));
-  host.querySelectorAll('[data-set-tool-perm]').forEach(b => b.addEventListener('click', () => { setPerms(t)[+b.dataset.setToolPerm] = b.dataset.v; admRefresh(); }));
+  host.querySelectorAll('[data-set-tool-level]').forEach(b => b.addEventListener('click', () => { setStorePerms(t, ADM_PERM_PRESETS[b.dataset.setToolLevel]); admRefresh(); }));
+  host.querySelectorAll('[data-set-tool-reset]').forEach(b => b.addEventListener('click', () => { setReset(t); admRefresh(); }));
+  host.querySelectorAll('[data-set-tool-perm]').forEach(b => b.addEventListener('click', () => { const next = setPerms(t); next[+b.dataset.setToolPerm] = b.dataset.v; setStorePerms(t, next); admRefresh(); }));
 }
 function setAccountsHTML(){
   const tools = setAccTools();
@@ -9964,13 +10068,15 @@ function setAccountsHTML(){
   } else {
     const status = id => SET.acc[id] === 'on' ? '<span class="home-badge home-badge--ok">Connected</span>'
       : SET.acc[id] === 'stopped' ? '<span class="home-badge home-badge--risk">Stopped syncing</span>' : '<span class="home-badge home-badge--neutral">Not connected</span>';
+    // The same badge as Team settings: my actual level, "Max <level>" on hover. Not connected: an en dash.
+    const level = t => '<td><div class="ts-level">'+(SET.acc[t.id] ? '<span class="home-badge home-badge--neutral" title="'+setMaxTip(t)+'">'+setLevel(t)+'</span>' : '–')+'</div></td>';
     const action = t => SET.acc[t.id] === 'on' ? '<button type="button" class="home-btn" data-set-disc="'+t.id+'">Disconnect</button>'
       : '<button type="button" class="home-btn" data-set-conn="'+t.id+'">'+(SET.acc[t.id] === 'stopped' ? 'Reconnect' : 'Connect')+'</button>';
-    body = '<div class="in-tablewrap"><table class="in-table"><thead><tr><th>Connection</th><th>Status</th><th></th></tr></thead><tbody>'+
+    body = '<div class="adm-split"><section class="adm-col adm-col--table adm-col--conn" aria-label="Connections"><div class="in-tablewrap"><table class="in-table"><thead><tr><th>Connection</th><th>Mira’s autonomy level</th><th>Status</th><th></th></tr></thead><tbody>'+
       // A connection that is not connected has no drawer: no hover Open button, the row is not clickable. (Stopped syncing still opens it.)
-      tools.map(t => SET.acc[t.id] ? '<tr class="is-clickable'+(t.id === admToolOpen ? ' is-selected' : '')+'" tabindex="0" data-set-open="'+t.id+'"><td><div class="in-firstcell">'+admLogo(t)+'<span class="in-name">'+t.name+'</span>'+inOpenBtn()+'</div></td><td>'+status(t.id)+'</td><td class="set-act">'+action(t)+'</td></tr>'
-        : '<tr><td><div class="in-firstcell">'+admLogo(t)+'<span class="in-name">'+t.name+'</span></div></td><td>'+status(t.id)+'</td><td class="set-act">'+action(t)+'</td></tr>').join('')+
-      '</tbody></table></div>';
+      tools.map(t => SET.acc[t.id] ? '<tr class="is-clickable'+(t.id === admToolOpen ? ' is-selected' : '')+'" tabindex="0" data-set-open="'+t.id+'"><td><div class="in-firstcell">'+admLogo(t)+'<span class="in-name">'+t.name+'</span>'+inOpenBtn()+'</div></td>'+level(t)+'<td>'+status(t.id)+'</td><td class="set-act">'+action(t)+'</td></tr>'
+        : '<tr><td><div class="in-firstcell">'+admLogo(t)+'<span class="in-name">'+t.name+'</span></div></td>'+level(t)+'<td>'+status(t.id)+'</td><td class="set-act">'+action(t)+'</td></tr>').join('')+
+      '</tbody></table></div></section>'+admLevelsAsideHTML()+'</div>';
   }
   return '<div class="adm">'+setHead('Connections', 'Connect your accounts so Mira can work with them. You see the tools your teams use.')+body+'</div>';
 }
@@ -11037,7 +11143,7 @@ const NOTIFS = [
    workspace). It keeps running on the OWNER's data access, and Can view means filter + manual refresh only. */
 NOTIFS.push({ id:'n-dshare', kind:'dshare', from:'Aga', routine:'Pipeline overview', perm:'view', when:'Just now', state:'pending',
   dash:{ label:'Pipeline overview', role:'viewOnly', sharedBy:'Aga', pins:[ { insightId:'key-numbers', size:'L' }, { insightId:'quotes-by-status', size:'S' } ] } });
-const notifPending = () => NOTIFS.filter(n => n.state === 'pending').length;
+const notifPending = () => NOTIFS.filter(n => n.state === 'pending' || n.unread).length;   // waiting for an answer, or not seen yet (information notifications)
 function syncBellDot(){
   const bell = document.querySelector('[data-notif-bell]');
   if(!bell) return;
@@ -11046,6 +11152,9 @@ function syncBellDot(){
   else if(!notifPending() && d) d.remove();
 }
 function notifItemHTML(n){
+  // An admin changed a connection's level: information only (no Accept or Decline). SIMULATED: really it goes to the heads of the teams that use it.
+  if(n.kind === 'ceiling') return '<div class="notif__item" data-nid="'+n.id+'">'+shareAva({name:n.from}, true)+'<div class="notif__body"><div class="notif__text">'+rtEsc(n.text)+'</div>'+
+    '<div class="notif__meta"><span class="home-badge home-badge--neutral">'+rtEsc(n.team)+'</span>'+n.when+'</div><div class="notif__hint">'+rtEsc(n.hint)+'</div></div></div>';
   const text = n.kind === 'share' || n.kind === 'dshare'
     ? '<b>'+n.from+'</b> shared <b>'+n.routine+'</b> with you'
     : '<b>'+n.from+'</b> sent you a copy of <b>'+n.routine+'</b>';
@@ -11074,6 +11183,7 @@ function openNotifPanel(bell){
     p.innerHTML = '<div class="notif__head">Notifications<span class="notif__count">'+(k ? k+' new' : 'All caught up')+'</span></div>'+NOTIFS.map(notifItemHTML).join('');
   };
   draw();
+  NOTIFS.forEach(n => { delete n.unread; }); syncBellDot();   // information notifications count as seen once the panel has been opened
   const r = bell.getBoundingClientRect();
   const collapsed = !!bell.closest('.sidebar.is-collapsed');
   p.style.top = Math.max(8, r.bottom + 8)+'px';
