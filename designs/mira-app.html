@@ -3589,8 +3589,8 @@ function admHead(title, action){
    Other decisions: Archive does not exist; there is ONE way out, "Disable in <company>" (history stays, restorable, no hard
    delete in the UI). Clicking a person or a team opens a drawer (the existing right side panel, see updateRtPanel). The setup
    gaps are rendered with the existing .dc-banner. All data is placeholder and lives in memory only (a reload resets it). */
-// Name used in "Disable in <company>". Placeholder: the real organisation name comes from the account.
-const ADM_COMPANY = 'Organization';
+// Name used in "Disable in <company>". Placeholder: the real company name comes from the account.
+const ADM_COMPANY = 'Tonik';
 let admPeopleView = 'members';   // 'members' | 'teams' (tabs)
 // Every filter is multi-select: a Set of the ticked values, empty = the filter is off.
 let admStatus = new Set(['Active','Invited']);   // status pills: any of 'Active' | 'Invited' | 'Disabled'. Default: Active and Invited, so disabled people are hidden until Disabled is ticked
@@ -3623,15 +3623,15 @@ const ADM_TEAMS = [
 // One per person for now. It is shaped as a synced group on purpose: later this becomes a list of synced groups (an array of { name, source })
 // that can be added to teams. SIMULATED: nothing is really synced; only Maya and Lena have one in the sample data.
 const ADM_MEMBERS = [
-  { id:'anna',   name:'Anna Novak',   mail:'anna@company.com',   role:'Admin',  teams:[],                                    status:'Active',  since:'Oct 2026', routines:2, tasks:5 },
-  { id:'tom',    name:'Tom Reyes',    mail:'tom@company.com',    role:'Member', teams:['Operations','Customer projects'],    status:'Active',  since:'Oct 2026', routines:3, tasks:7 },
-  { id:'maya',   name:'Maya Klein',   mail:'maya@company.com',   role:'Member', teams:['Sales','Customer projects'],         status:'Active',  since:'Oct 2026', routines:4, tasks:9, dept:{ name:'Sales', source:'Microsoft Entra ID' } },
-  { id:'jonas',  name:'Jonas Okafor', mail:'jonas@company.com',  role:'Member', teams:['Sales'],                             status:'Active',  since:'Oct 2026', routines:1, tasks:3 },
-  { id:'lena',   name:'Lena Berg',    mail:'lena@company.com',   role:'Member', teams:['Finance'],                           status:'Active',  since:'Oct 2026', routines:2, tasks:4, dept:{ name:'Finance', source:'Microsoft Entra ID' } },
-  { id:'priya',  name:'Priya Shah',   mail:'priya@company.com',  role:'Member', teams:['Operations'],                        status:'Invited', invitedDays:9,  routines:0, tasks:0 },
-  { id:'noah',   name:'Noah Fischer', mail:'noah@company.com',   role:'Member', teams:['Operations'],                        status:'Invited', invitedDays:12, routines:0, tasks:0 },
-  { id:'daniel', name:'Daniel Wu',    mail:'daniel@company.com', role:'Member', teams:['Sales'],                             status:'Invited', invitedDays:2,  routines:0, tasks:0 },
-  { id:'eva',    name:'Eva Costa',    mail:'eva@company.com',    role:'Member', teams:['Finance'],                           status:'Disabled', since:'Oct 2026', routines:0, tasks:0 },
+  { id:'anna',   name:'Anna Novak',   mail:'anna@tonik.com',   role:'Admin',  teams:[],                                    status:'Active',  since:'Oct 2026', routines:2, tasks:5 },
+  { id:'tom',    name:'Tom Reyes',    mail:'tom@tonik.com',    role:'Member', teams:['Operations','Customer projects'],    status:'Active',  since:'Oct 2026', routines:3, tasks:7 },
+  { id:'maya',   name:'Maya Klein',   mail:'maya@tonik.com',   role:'Member', teams:['Sales','Customer projects'],         status:'Active',  since:'Oct 2026', routines:4, tasks:9, dept:{ name:'Sales', source:'Microsoft Entra ID' } },
+  { id:'jonas',  name:'Jonas Okafor', mail:'jonas@tonik.com',  role:'Member', teams:['Sales'],                             status:'Active',  since:'Oct 2026', routines:1, tasks:3 },
+  { id:'lena',   name:'Lena Berg',    mail:'lena@tonik.com',   role:'Member', teams:['Finance'],                           status:'Active',  since:'Oct 2026', routines:2, tasks:4, dept:{ name:'Finance', source:'Microsoft Entra ID' } },
+  { id:'priya',  name:'Priya Shah',   mail:'priya@tonik.com',  role:'Member', teams:['Operations'],                        status:'Invited', invitedDays:9,  routines:0, tasks:0 },
+  { id:'noah',   name:'Noah Fischer', mail:'noah@tonik.com',   role:'Member', teams:['Operations'],                        status:'Invited', invitedDays:12, routines:0, tasks:0 },
+  { id:'daniel', name:'Daniel Wu',    mail:'daniel@tonik.com', role:'Member', teams:['Sales'],                             status:'Invited', invitedDays:2,  routines:0, tasks:0 },
+  { id:'eva',    name:'Eva Costa',    mail:'eva@tonik.com',    role:'Member', teams:['Finance'],                           status:'Disabled', since:'Oct 2026', routines:0, tasks:0 },
 ];
 // Status -> existing badge colour: Active = green, Invited = info blue, Disabled = neutral grey.
 const ADM_STATUS_BADGE = { Active:'home-badge--ok', Invited:'home-badge--info', Disabled:'home-badge--neutral' };
@@ -3884,11 +3884,12 @@ function admDialog(o, onYes){
 }
 
 /* Invite people / Restore access: the Share modal in invite mode (no tabs, emails in the field, Admin or Member instead of the
-   permission, an "Invite" button, nothing under the field). Restore access opens it with the person already in the field, so
-   restoring is simply inviting them again (they come back as Invited, as the remove dialog says). SIMULATED: no email is sent. */
+   permission, an "Invite" button, nothing under the field). Restore access opens it with the person already in the field and a
+   "Send invitation" button, so restoring is simply inviting them again (they come back as Invited with their teams and role, as the
+   Disable dialog and the drawer say). SIMULATED: no email is sent. */
 function admInviteModal(restore){
   openShareModal({
-    invite:true, title: restore ? 'Restore access' : 'Invite people', noun:'people', goLabel:'Invite', tabs:['share'],
+    invite:true, title: restore ? 'Restore access' : 'Invite people', noun:'people', goLabel: restore ? 'Send invitation' : 'Invite', tabs:['share'],
     perms:[ { id:'Admin', label:'Admin', sub:'Manages people, connections and rules' },
             { id:'Member', label:'Member', sub:'Uses Mira within the limits set by admins' } ],
     defaultPerm: restore ? restore.role : 'Member',
@@ -3918,7 +3919,7 @@ function admRemoveDialog(m){
   const owns = m.routines + m.tasks > 0;
   admDialog({
     title:'Disable '+m.name+' in '+ADM_COMPANY+'?',
-    text: 'They’ll lose access to '+ADM_COMPANY+'. To bring them back, you’ll need to invite them again.',
+    text: 'They’ll lose access to '+ADM_COMPANY+'. You can restore it later: they’ll get a new invitation, and their history, teams and role are kept.',
     confirm:'Disable', danger:true
   }, pick => {
     const to = owns && def ? def : null;   // no picker any more: their routines and tasks go to the default person
@@ -4243,7 +4244,7 @@ function admMemberPanelHTML(m){
   // The single exit: one full-width filled red button, no section heading and no card (as in the wireframe). Disabled people get a
   // short Access card with Restore access instead (the wireframe does not cover that state).
   const leaving = removed
-    ? '<div class="adm-drawer__removed"><div class="adm-row__name">Disabled in '+ADM_COMPANY+'</div><div class="adm-row__meta">Can’t sign in. History is kept. Restoring brings the access back.</div>'+
+    ? '<div class="adm-drawer__removed"><div class="adm-row__name">Disabled in '+ADM_COMPANY+'</div><div class="adm-row__meta">Can’t sign in. History is kept. Restoring access sends them a new invitation.</div>'+
         '<button type="button" class="home-btn adm-drawer__wide" data-adm-act="restore">Restore access</button></div>'
     : '<div class="adm-drawer__exit"><button type="button" class="home-btn home-btn--danger adm-drawer__wide" data-adm-act="remove">Disable in '+ADM_COMPANY+'</button></div>';
   return '<div class="rt-panel__head adm-head">'+
@@ -4306,7 +4307,7 @@ let admToolsTab = 'tools';          // 'tools' | 'channels' ('By team' is hidden
 /* Channels tab state (2026-10-30), from the Channels wireframe. Slack is installed ONCE for the company, by an admin (Uninstall asks first;
    once uninstalled the card offers Install). WhatsApp and Telegram are one switch: allowed or not (each person connects their own).
    SIMULATED: nothing is really installed or disconnected. */
-const ADM_CHANNELS = { slack:{ on:true, workspace:'organization.slack.com' }, personal:true };
+const ADM_CHANNELS = { slack:{ on:true, workspace:'tonik.slack.com' }, personal:true };
 // WhatsApp has no logo asset in the app: this is a simple stand-in (green speech bubble with a handset), to be replaced by the real asset.
 const ADM_WHATSAPP_LOGO = '<svg viewBox="0 0 24 24"><path fill="#25D366" d="M12 0C5.4 0 0 5.4 0 12c0 2.1.6 4.2 1.6 6L0 24l6.2-1.6c1.8 1 3.8 1.5 5.8 1.5 6.6 0 12-5.4 12-12S18.6 0 12 0z"/><path fill="none" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" d="M17.4 14.9v1.6a1 1 0 0 1-1.1 1 9.9 9.9 0 0 1-4.3-1.5 9.7 9.7 0 0 1-3-3 9.9 9.9 0 0 1-1.5-4.3 1 1 0 0 1 1-1.1h1.6a1 1 0 0 1 1 .9c.1.5.2.9.4 1.4a1 1 0 0 1-.2 1l-.7.7a8 8 0 0 0 3 3l.7-.7a1 1 0 0 1 1-.2c.5.2.9.3 1.4.4a1 1 0 0 1 .9 1z"/></svg>';
 function admChannelsHTML(){
@@ -4743,6 +4744,13 @@ function admToolNotify(t, impact, next){
   });
   syncBellDot();
 }
+// Removing a connection tells the heads of the teams that used it: same kind and look as the level changes above, but information only
+// (no link, the connection is gone). SIMULATED like admToolNotify: everything lands in this bell, labelled with its team. The admin who removed it is not told.
+function admToolRemovedNotify(t, teams){
+  teams.forEach((tm, k) => NOTIFS.splice(k, 0, { id:'n-ceil-'+(++admCeilSeq)+'-'+k, kind:'ceiling', from:'Admins', team:tm.name,
+    text:'Admins removed '+t.name+'.', hint:tm.name+' routines that use it have stopped.', when:'Just now', state:'info', unread:true }));
+  syncBellDot();
+}
 let admCeilSeq = 0;
 function admToolPanelHTML(t){
   const perms = admToolPerms(t);
@@ -4768,8 +4776,17 @@ function wireAdmToolPanel(host, t){
   };
   host.querySelectorAll('[data-adm-tool-level]').forEach(b => b.addEventListener('click', () => apply(ADM_PERM_PRESETS[b.dataset.admToolLevel].slice())));
   host.querySelectorAll('[data-adm-tool-perm]').forEach(b => b.addEventListener('click', () => { const next = admToolPerms(t).slice(); next[+b.dataset.admToolPerm] = b.dataset.v; apply(next); }));
+  // Remove asks first (the existing danger confirmation). Only the dialog's Remove removes it and closes the drawer; Cancel keeps both.
   host.querySelector('[data-adm-tool-remove]').addEventListener('click', () => {
-    ADM_TOOLS = ADM_TOOLS.filter(x => x.id !== t.id); admToolOpen = null; shareToast(t.name+' removed'); admRefresh();
+    rtConfirm({
+      title:'Remove '+t.name+' from '+ADM_COMPANY+'?',
+      text:'Mira won’t be able to use '+t.name+' anywhere in '+ADM_COMPANY+', and routines that use it will stop working. You can add it again from the catalog.',
+      confirm:'Remove', danger:true
+    }, () => {
+      const teams = ADM_TEAMS.filter(tm => !tsOff(tm.name).has(t.id));   // the teams that were using it (not switched off in Team settings)
+      ADM_TOOLS = ADM_TOOLS.filter(x => x.id !== t.id); admToolOpen = null; shareToast(t.name+' removed');
+      admToolRemovedNotify(t, teams); admRefresh();
+    });
   });
 }
 
@@ -10817,12 +10834,12 @@ const SHARE_TEAMS = [
 ];
 /* People can come from any team — the picker is not limited to the current workspace. */
 const SHARE_PEOPLE = [
-  { id:'p-craig', email:'craig.miller@company.com', name:'Craig Miller',  first:'Craig', team:'Sales Team' },
-  { id:'p-maria', email:'maria.lopez@company.com', name:'Maria Lopez',   first:'Maria', team:'Sales Team' },
-  { id:'p-tom',   email:'tom.becker@company.com', name:'Tom Becker',    first:'Tom',   team:'Ops team' },
-  { id:'p-jonas', email:'jonas.weber@company.com', name:'Jonas Weber',   first:'Jonas', team:'Ops team' },
-  { id:'p-anna',  email:'anna.kowalska@company.com', name:'Anna Kowalska', first:'Anna',  team:'Leadership' },
-  { id:'p-priya', email:'priya.nair@company.com', name:'Priya Nair',    first:'Priya', team:'Leadership' },
+  { id:'p-craig', email:'craig.miller@tonik.com', name:'Craig Miller',  first:'Craig', team:'Sales Team' },
+  { id:'p-maria', email:'maria.lopez@tonik.com', name:'Maria Lopez',   first:'Maria', team:'Sales Team' },
+  { id:'p-tom',   email:'tom.becker@tonik.com', name:'Tom Becker',    first:'Tom',   team:'Ops team' },
+  { id:'p-jonas', email:'jonas.weber@tonik.com', name:'Jonas Weber',   first:'Jonas', team:'Ops team' },
+  { id:'p-anna',  email:'anna.kowalska@tonik.com', name:'Anna Kowalska', first:'Anna',  team:'Leadership' },
+  { id:'p-priya', email:'priya.nair@tonik.com', name:'Priya Nair',    first:'Priya', team:'Leadership' },
 ];
 const shareInitials = n => n.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
 const shareAva = (o, big) => '<span class="share-ava'+(big ? ' share-ava--lg' : '')+'">'+(o.members ? svg('users',2) : shareInitials(o.name))+'</span>';

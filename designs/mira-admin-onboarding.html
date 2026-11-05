@@ -262,7 +262,7 @@
 <script type="text/babel" data-presets="react">
 const {useState,useMemo,useRef} = React;
 const h = React.createElement;
-const COMPANY = "Acme"; // placeholder — real company name comes from signup; falls back to "your company"
+const COMPANY = "Tonik"; // placeholder — real company name comes from signup; falls back to "your company"
 
 const I = {
   search:<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>,
@@ -452,19 +452,19 @@ function StepTools({selected,setSelected,perms,setPerms,openCustomize,onContinue
   return h("div",{className:"fade"},
     h("div",{className:"stepeyebrow"},"Step 1 of 3"),
     h("h1",null,"What can Mira use at ",(COMPANY||"your company"),"?"),
-    h("p",{className:"lede"},"Choose the tools people may connect, and the most Mira can do in each. Each person still decides how much Mira does on their own account, within these limits."),
+    h("p",{className:"lede"},"Choose the connections people may use, and the most Mira can do in each. Each person still decides how much Mira does on their own account, within these limits."),
 
     selectedTools.length>0 && h(React.Fragment,null,
       h("div",{className:"minilabel",style:{marginTop:"2px"}},"Selected"),
       h("div",{className:"grid",style:{marginBottom:"18px"}}, selectedTools.map(tile))),
 
     h("div",{className:"search"}, I.search,
-      h("input",{placeholder:"Search 500+ tools, e.g. FreeAgent",value:q,onChange:e=>setQ(e.target.value)})),
+      h("input",{placeholder:"Search 500+ connections, e.g. FreeAgent",value:q,onChange:e=>setQ(e.target.value)})),
     ql
       ? h(React.Fragment,null,
           h("div",{className:"minilabel"}, suggested.length+" result"+(suggested.length!==1?"s":"")),
           suggested.length===0
-            ? h("div",{className:"reassure"}, "No tools match that search.")
+            ? h("div",{className:"reassure"}, "No connections match that search.")
             : h("div",{className:"grid"}, suggested.map(tile)))
       : (suggested.length>0 && h(React.Fragment,null,
           h("div",{className:"minilabel"}, "Suggested"),
@@ -473,7 +473,7 @@ function StepTools({selected,setSelected,perms,setPerms,openCustomize,onContinue
     h("div",{className:"reassure"}, I.shield, "By default, Mira reads and drafts. Nothing leaves ",(COMPANY||"your company")," without your approval."),
 
     h("div",{className:"nav"},
-      selected.length===0 && h("span",{className:"hint"},"Choose at least one tool to continue"),
+      selected.length===0 && h("span",{className:"hint"},"Choose at least one connection to continue"),
       h("button",{className:"btn btn-dark",disabled:selected.length===0,onClick:onContinue},"Continue")));
 }
 
@@ -631,7 +631,7 @@ function StepAccount({selected,channels,acct,setAcct,onBack,onAddTools,onFinish,
     h("div",{className:"minilabel",style:{marginTop:"18px"}},"What Mira learns from"),
     mailTools.length>0
       ? h("div",{className:"cgrid"}, mailTools.map(mailRow))
-      : h("div",{className:"reassure"}, I.shield, "No email in your company tools yet. ",
+      : h("div",{className:"reassure"}, I.shield, "No email in your company connections yet. ",
           h("button",{className:"linkbtn",onClick:onAddTools},"Add Gmail or Outlook")),
 
     h("div",{className:"nav"},
@@ -661,7 +661,7 @@ function Done({result,onRestart}){
 }
 
 /* ======================= SHELL ======================= */
-const STEPS=["Tools","Channels","Your account"];
+const STEPS=["Connections","Channels","Your account"];
 function Stepper({step}){
   return h("div",{className:"stepper"},
     STEPS.map((s,i)=> h(React.Fragment,{key:s},
