@@ -1555,6 +1555,7 @@ button.home-addbtn.is-open:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_)
 .home-fact__value--bad{color:var(--c-error)}
 .home-badge--source{cursor:pointer;font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace}
 .home-badge--source:hover{border-color:var(--c-border-strong);color:var(--c-text)}
+.home-badge--source.is-selected{border-color:var(--c-brand-purple);background:#faf7fe;color:var(--c-text)}   /* CHANGE (2026-11-16): the source chip whose entry is open in the side panel; same selected look as .adm-row.is-active */
 /* Sources modal (opened from the source badge): dimmed backdrop + centred white panel. */
 .home-modal{position:fixed;inset:0;z-index:1000;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(17,17,17,.32)}
 .home-modal__panel{width:100%;max-width:600px;max-height:88vh;overflow:auto;background:#fff;border-radius:16px;padding:20px 24px 20px;box-shadow:0 12px 32px rgba(136,85,210,.14)}
@@ -2866,12 +2867,6 @@ const MODES = {
 
 /* sample chat titles (placeholder data) */
 const CHATS = [
-  // CHANGE (2026-11-16): Company knowledge (member side). One canned conversation whose answer carries source chips (`kn` = entry ids, see knSourcesHTML);
-  // a chip opens the entry in a read-only side panel. SIMULATED: Mira's answer is written out here, not computed from the entries.
-  { id:'c-kn', title:'Client dinner expenses', group:'Today', conv:{ id:'ckn', naming:false, entries:[
-    { role:'user', text:'Can I expense a dinner with a client from Acme?' },
-    { role:'mira', kind:'text', kn:['kn2','kn9'],
-      html:'Yes. Client dinners are reimbursed up to $60 per person and alcohol isn’t covered. Send the receipt within 30 days. Because you work in Sales, you can also charge it to the client entertainment budget, as long as you stay within your quarterly limit.' } ] } },
   { id:'c1', title:'Weekly standup summary',    group:'Today' },
   { id:'c2', title:'Draft launch announcement', group:'Today' },
   { id:'c3', title:'Competitor research notes', group:'Previous 7 days' },
@@ -5255,21 +5250,19 @@ function wireAdmGovernance(c){
    - Team settings -> Knowledge (`ts-knowledge`): the active team's entries only, no grouping and no Managed by column.
    Both open the same ENTRY PAGE (`renderKnEntry`): editable title, body, Scope and Topic, autosaved (no Save, no Undo). The breadcrumb follows where
    the page was opened from (`knFrom`), not the role. Members (and heads reading other entries) read entries from the SOURCE CHIPS under Mira's
-   answers in chat, which open a read-only side panel (`knPanelHTML`); "Report as outdated" in that panel sends a `report` suggestion.
+   answers in chat (a `cvAsk` branch for expense questions), which open a read-only side panel (`knPanelHTML`) with no actions.
    STATES of an entry: live (no badge), review (a Mira suggestion: `suggestion.kind` 'new' or 'change', shown as a diff; "Add entry ->
-   Upload a file" also makes one, a `new` with `file:true`, banner "Mira drafted this from ...", Approve or Reject). There is no draft state. A live entry can
-   also carry a `report` suggestion (a reader said it is outdated): no diff, Resolve or Dismiss, Mira keeps using it, and lists show the same "To review"
-   badge. A report reaches the managers through the bell (NOTIFS kind `knreport`, action Open), not Needs you; Needs you only holds Mira's suggestions,
-   and not the ones from a file (the user just made those and is looking at them).
+   Upload a file" also makes one, a `new` with `file:true`, banner "Mira drafted this from ...", Approve or Reject). There is no draft state. Needs you only holds Mira's suggestions,
+   and not the ones from a file (the user just made those and is looking at them). "Report as outdated" is not built (removed on request, 2026-11-16).
    ROLES: the prototype user is an Admin in every workspace, so the head and member variants cannot be reached by role; the member panel is reached
    by the chat chips, and the head's list by Team settings -> Knowledge in Sales (`KN_IS_ADMIN` / `knCanManage` keep the read-only path in the code).
    Reused: admHead, the .wl-tabs (All | Needs review), .wl-toolbar, admMultiDdHTML, searchBoxHTML, .wl-newtask with a .wl-ddmenu, .in-table with tr.in-divider, .home-badge, .dc-banner (entry page only),
    .ind-crumb, ddPillHTML, admDrawerSec, rtConfirm, the rt-panel side panel and its composer. NEW CSS: only the two diff rules (.kn-del, .kn-add).
    Only mentioned in the spec, not built: version history, conflict detection between levels, review-by-date, "gaps", a browsable list for members.
    SIMULATED: all entries are placeholder data in memory (a reload resets them), nothing reaches Mira's answers, files are not uploaded, nobody is
-   notified when something is approved or reported (only a toast). */
+   notified when something is approved (only a toast). */
 const KN_USER = 'Agata';                 // the person using the prototype: shown in the edit stamp and as the approver
-const KN_USER_FULL = 'Agata Tonik';      // ...and as the author of a report
+const KN_USER_FULL = 'Agata Tonik';      // ...and as the head the user could be (see knCanManage)
 const KN_IS_ADMIN = true;                // SIMULATED: the prototype user is an Admin in every workspace
 const KN_TOPICS = ['HR','Finance','Pricing','Process','IT','Brand'];
 // `removed` of a change suggestion is a piece of text that really sits in a body paragraph; the body always holds the LIVE text, the suggestion is laid over it.
@@ -5280,14 +5273,13 @@ let KN_ENTRIES = [
           'Unused days carry over until 31 March. Sick leave does not count against your leave days; tell your manager on the first day.'],
     sources:[{ name:'Leave_policy_2026.pdf', where:'Google Drive' }],
     editedBy:'Anna Novak', editedAt:'28 Oct', status:'live', suggestion:null },
-  { id:'kn2', title:'Expenses and client entertainment', scope:'Company', topic:'Finance',
-    body:['Employees can expense meals with clients when the meal has a clear business purpose. Client dinners are reimbursed up to $60 per person. Alcohol is not reimbursed.',
-          'Submit receipts within 30 days in the expenses app. Anything above $500 needs approval from your head of team before you spend it.'],
+  // CHANGE (2026-11-16): this entry is live (no review suggestion) and managed by the Head of Finance, because Mira's answer in chat quotes it ($80),
+  // which an entry waiting for review must not be. `managedBy` is the existing choice "Admins or a team's head".
+  { id:'kn2', title:'Expenses and client entertainment', scope:'Company', topic:'Finance', managedBy:'Finance',
+    body:['Employees can expense meals with clients when the meal has a clear business purpose. Client dinners are reimbursed up to $80 per person. Alcohol is not reimbursed.',
+          'Add the client’s name and the reason when you submit the expense, and submit receipts within 30 days in the expenses app. Anything above $500 needs approval from your head of team before you spend it.'],
     sources:[{ name:'Expenses_policy_2026.pdf', where:'Google Drive' }],
-    editedBy:'Lena Berg', editedAt:'3 Nov', status:'review',
-    suggestion:{ kind:'change', from:'a chat in Finance',
-      removed:'Client dinners are reimbursed up to $60 per person.',
-      added:'Client dinners are reimbursed up to $80 per person, and the client’s company must be named on the receipt.' } },
+    editedBy:'Lena Berg', editedAt:'3 Nov', status:'live', suggestion:null },
   { id:'kn3', title:'Working hours and remote work', scope:'Company', topic:'HR',
     body:['Core hours are 10:00 to 15:00 in your own time zone; the rest of the day is flexible. You can work remotely up to three days a week.',
           'Tell your team in advance when you will be away from your desk during core hours.'],
@@ -5317,9 +5309,9 @@ let KN_ENTRIES = [
           'Leads with no budget and no timeline go to the nurture list; leads with both get a discovery call.'],
     sources:[{ name:'Sales_playbook.docx', where:'Google Drive' }], editedBy:'Maya Klein', editedAt:'9 Oct', status:'live', suggestion:null },
   { id:'kn9', title:'Client entertainment budget', scope:'Sales', topic:'Finance',
-    body:['Each account executive has $2,500 per quarter for client dinners and events. Spending above it needs the Head of Sales’ approval.',
+    body:['Client dinners and events count toward the Sales team’s monthly entertainment budget of $1,500. Spending above it needs the Head of Sales’ approval.',
           'Log every event with the client name and the people who came, so Finance can match it to the receipt.'],
-    sources:[], author:'Maya Klein', editedBy:'Maya Klein', editedAt:'1 Nov', status:'live', suggestion:null },
+    sources:[], author:'Maya Klein', editedBy:'Maya Klein', editedAt:'30 Oct', status:'live', suggestion:null },
   // ---- Other teams ----
   { id:'kn10', title:'Month-end close checklist', scope:'Finance', topic:'Process',
     body:['Close the books on the third working day. Reconcile bank accounts first, then accruals, then intercompany balances.',
@@ -5367,17 +5359,20 @@ const knHead = scope => { const t = admTeam(scope); return t && t.head ? t.head 
 const knManagerTeam = e => { const m = e.managedBy !== undefined ? e.managedBy : e.scope; return m === 'Company' || m === 'Admins' ? null : m; };
 const knManagedBy = e => { const t = knManagerTeam(e); return t && knHead(t) ? 'Head of '+t : 'Admins'; };
 const knMgrLabel = m => { const t = m === 'Admins' ? null : m; return t && knHead(t) ? 'Head of '+t : 'Admins'; };   // a role only, no name (2026-11-16, on request)
-const knIsReport = e => Boolean(e.suggestion && e.suggestion.kind === 'report');
-const knNeedsReview = e => e.status === 'review' || knIsReport(e);   // a report shows the same "To review" badge, although the entry stays live
+const knNeedsReview = e => e.status === 'review';
 // Whether the user may edit an entry: admins always; a head only in their own team. Reaching the read-only page is not possible in the prototype.
 const knCanManage = e => KN_IS_ADMIN || knHead(knManagerTeam(e) || '') === KN_USER_FULL;
 // Where an entry comes from, never empty (2026-11-16, on request): a file shows its name and place (Home source badge), an entry written by hand says
 // "Written by <person>", and one Mira wrote from a conversation says "Chat in <team>": plain text with no link, because a chat may be private.
 function knSourceHTML(e){
   if(e.sources.length) return '<div style="display:flex;gap:6px;flex-wrap:wrap">'+e.sources.map(f =>
-    '<span class="home-badge home-badge--source" style="margin-top:0;cursor:default">'+svg('document',2)+rtEsc(f.name+' · '+f.where)+'</span>').join('')+'</div>';
+    '<span class="home-badge home-badge--source" style="margin-top:0;cursor:default;max-width:100%;white-space:normal;height:auto;min-height:22px;overflow-wrap:anywhere">'+svg('document',2)+rtEsc(f.name+' · '+f.where)+'</span>').join('')+'</div>';
   return '<span>'+rtEsc(e.chat ? 'Chat in '+e.chat : 'Written by '+(e.author || e.editedBy))+'</span>';
 }
+// A property is one row of two columns: the label (drawer section look) on the left, its value beside it (2026-11-16, on request).
+// Used by the entry page (values are dropdowns) and by the read-only side panel (values are plain text).
+const knProp = (label, value) => '<section class="adm-drawer__sec" style="flex-direction:row;align-items:center;gap:16px;padding:10px 0" aria-label="'+label+'">'+
+  '<div class="adm-drawer__head" style="flex:0 0 140px"><h2 class="adm-label" style="font-size:13px">'+label+'</h2></div><div style="min-width:0;font-size:13px">'+value+'</div></section>';
 const knStamp = e => (e.stampVerb || 'Last edited')+' by '+e.editedBy+' · '+e.editedAt;
 const knParas = el => { const p = el.innerText.replace(/\r/g, '').split(/\n+/).map(s => s.trim()).filter(Boolean); return p.length ? p : ['']; };
 function knBadge(e){
@@ -5396,12 +5391,7 @@ function knApprove(e){
   if(e.suggestion && e.suggestion.kind === 'change') e.body = e.body.map(p => p.split(e.suggestion.removed).join(e.suggestion.added));
   e.suggestion = null; e.status = 'live'; e.editedBy = KN_USER; e.editedAt = 'just now'; e.stampVerb = 'Approved';
 }
-const knRemove = e => { KN_ENTRIES = KN_ENTRIES.filter(x => x !== e); knClearNotifs(e.id); };
-// A report's bell notification goes away once the report is answered (Resolve, Dismiss) or the entry is deleted.
-function knClearNotifs(id){
-  for(let i = NOTIFS.length - 1; i >= 0; i--) if(NOTIFS[i].kind === 'knreport' && NOTIFS[i].entry === id) NOTIFS.splice(i, 1);
-  syncBellDot();
-}
+const knRemove = e => { KN_ENTRIES = KN_ENTRIES.filter(x => x !== e); };
 
 // "Add entry": a button with a small menu (Write an entry / Upload a file). Drawn twice (toolbar and empty state), wired once per page.
 function knAddHTML(){
@@ -5419,7 +5409,7 @@ function knRowsHTML(team){
   if(!rows.length){
     const none = knF.tab === 'review' && !knF.query.trim() && !knF.scope.size && !knF.topic.size;   // the Needs review tab with nothing in it
     return '<tr><td colspan="'+cols+'"><div class="rt-empty"><div class="rt-empty__title">'+(none ? 'Nothing to review' : 'No entries match')+'</div>'+
-      '<p class="rt-empty__text">'+(none ? 'Mira’s suggestions and reports of outdated entries will show up here.' : 'Try another search or clear the filters.')+'</p></div></td></tr>';
+      '<p class="rt-empty__text">'+(none ? 'Mira’s suggestions will show up here.' : 'Try another search or clear the filters.')+'</p></div></td></tr>';
   }
   const row = e => '<tr class="is-clickable" tabindex="0" data-kn-open="'+e.id+'"><td><div class="in-firstcell"><span class="in-name">'+rtEsc(e.title || 'Untitled entry')+'</span>'+inOpenBtn()+'</div></td>'+
     '<td>'+e.topic+'</td>'+(team ? '' : '<td>'+knManagedBy(e)+'</td>')+'<td>'+e.editedAt+'</td><td>'+knBadge(e)+'</td></tr>';
@@ -5441,7 +5431,7 @@ function knListHTML(team){
       '<div class="rt-empty__actions">'+(team ? '' : '<button type="button" class="rt-empty__btn" data-kn-connect>Connect a source</button>')+knAddHTML()+'</div></div>';
   }
   const filters = (team ? knF.topic.size : knF.scope.size + knF.topic.size);
-  // Two tabs, the same underline tabs as People | Teams: All and Needs review (entries with a Mira suggestion or a report).
+  // Two tabs, the same underline tabs as People | Teams: All and Needs review (entries with a Mira suggestion).
   const tab = (id, label) => '<button type="button" class="wl-tab'+(knF.tab === id ? ' is-active' : '')+'" data-kn-tab="'+id+'">'+label+'</button>';   // no icons (2026-11-16, on request)
   return '<div class="wl-tabsrow"><nav class="wl-tabs">'+tab('all', 'All')+tab('review', 'Needs review')+'</nav></div>'+
     '<div class="wl-toolbar"><div class="wl-toolbar__left"><div class="wl-pillgroup">'+
@@ -5568,14 +5558,10 @@ function renderKnEntry(){
   const bBtn = (attr, label, on) => '<button type="button" class="dc-banner__btn'+(on ? ' dc-banner__btn--on' : '')+'" '+attr+'>'+label+'</button>';
   let state = '';
   if(e.status === 'review' && s) state = banner(s.kind === 'new' ? 'Mira drafted this from '+rtEsc(s.from)+'. It isn’t used until approved.' : 'Mira suggested this change from '+rtEsc(s.from)+'. It isn’t used until approved.', bBtn('data-kn-approve', 'Approve', true)+bBtn('data-kn-reject', 'Reject'));
-  else if(knIsReport(e)) state = banner(rtEsc(s.from.replace(/^a report by /, ''))+' reported this as outdated: “'+rtEsc(s.note)+'”', bBtn('data-kn-resolve', 'Resolve', true)+bBtn('data-kn-dismiss', 'Dismiss'));
   const pill = (key, value, options) => canEdit && KN_IS_ADMIN
     ? ddPillHTML({ key:key, label:'', value:value, itemsHTML:options.map(o => ddItem(o, o === value)).join('') }).replace('class="wl-ddpill"', 'class="wl-ddpill" style="font-size:13px"') : '<span>'+value+'</span>';   // 13px like the labels
   const mgr = knManagerTeam(e) && knHead(knManagerTeam(e)) ? knManagerTeam(e) : 'Admins';   // 'Admins' or a team name (a team without a head falls back to Admins)
   const src = knSourceHTML(e);
-  // A property is one row of two columns: the label (drawer section look) on the left, its value beside it (2026-11-16, on request).
-  const prop = (label, value) => '<section class="adm-drawer__sec" style="flex-direction:row;align-items:center;gap:16px;padding:10px 0" aria-label="'+label+'">'+
-    '<div class="adm-drawer__head" style="flex:0 0 140px"><h2 class="adm-label" style="font-size:13px">'+label+'</h2></div><div style="min-width:0;font-size:13px">'+value+'</div></section>';
   const crumb = team
     ? '<button type="button" class="home-link" data-kn-back>Team knowledge</button><span>/</span><span data-kn-crumb>'+rtEsc(title)+'</span>'
     : '<button type="button" class="home-link" data-kn-back>Company knowledge</button><span>/</span><span data-kn-crumb>'+rtEsc(title)+'</span>';
@@ -5588,9 +5574,9 @@ function renderKnEntry(){
     state+
     '<h1 class="wl__title" contenteditable="'+canEdit+'" data-kn-title style="outline:none;margin-bottom:20px">'+rtEsc(e.title)+'</h1>'+
     '<div class="adm-drawer" style="margin-bottom:20px">'+
-      prop('Applies to', pill('knscope', knApplies(e.scope), knScopes().map(knApplies)))+   // Topic has no row on the page (removed on request)
-      prop('Managed by', pill('knmgr', knMgrLabel(mgr), ['Admins'].concat(ADM_TEAMS.filter(t => t.head).map(t => t.name)).map(knMgrLabel)))+
-      prop('Source', src)+   // no Origin row (removed on request): Source says where the entry comes from
+      knProp('Applies to', pill('knscope', knApplies(e.scope), knScopes().map(knApplies)))+   // Topic has no row on the page (removed on request)
+      knProp('Managed by', pill('knmgr', knMgrLabel(mgr), ['Admins'].concat(ADM_TEAMS.filter(t => t.head).map(t => t.name)).map(knMgrLabel)))+
+      knProp('Source', src)+   // no Origin row (removed on request): Source says where the entry comes from
     '</div>'+
     '<div data-kn-bodywrap style="font-size:14px;line-height:1.55;color:var(--c-text)">'+knBodyHTML(e, canEdit)+'</div>'+
     (canEdit && !(e.status === 'review' && s && s.kind === 'new') ? '<div style="margin-top:32px"><button type="button" class="home-link" style="color:var(--c-error)" data-kn-delete>Delete entry</button></div>' : '')+
@@ -5629,8 +5615,6 @@ function wireKnEntry(c){
     if(e.suggestion.kind === 'new'){ knRemove(e); knOpen = null; renderContent(); shareToast('Suggestion rejected'); }   // a new entry that nobody wanted is deleted
     else { e.suggestion = null; e.status = 'live'; renderContent(); shareToast('Change rejected. The old text stays'); }   // a change is dropped, the old text stays
   });
-  on('[data-kn-resolve]', () => { e.suggestion = null; knClearNotifs(e.id); renderContent(); shareToast('Marked as resolved'); });   // the entry was live all along
-  on('[data-kn-dismiss]', () => { e.suggestion = null; knClearNotifs(e.id); renderContent(); shareToast('Report dismissed'); });
   on('[data-kn-delete]', () => rtConfirm({ title:'Delete “'+(e.title || 'Untitled entry')+'”?', text:'Mira will stop using it. This can’t be undone.', confirm:'Delete', danger:true },
     () => { knRemove(e); knOpen = null; renderContent(); shareToast('Entry deleted'); }));
 }
@@ -5642,58 +5626,29 @@ function wireKnEntry(c){
 function knSourcesHTML(msg){
   if(!msg.kn) return '';
   return '<div class="nr__chips">'+msg.kn.map(knEntry).filter(Boolean).map(e =>
-    '<button type="button" class="home-badge home-badge--source" data-kn-src="'+e.id+'">'+svg('document',2)+rtEsc(e.title+(e.scope !== 'Company' ? ' · '+e.scope : ''))+'</button>').join('')+'</div>';
+    '<button type="button" class="home-badge home-badge--source'+(knPanel && knPanel.id === e.id ? ' is-selected' : '')+'" data-kn-src="'+e.id+'" aria-pressed="'+Boolean(knPanel && knPanel.id === e.id)+'">'+svg('document',2)+rtEsc(e.title+(e.scope !== 'Company' ? ' · '+e.scope : ''))+'</button>').join('')+'</div>';
 }
-function knPanelHTML(e){
+// CHANGE (2026-11-16): the entry is read-only: the same property rows as the entry page with plain text instead of dropdowns, and the body, with nothing at the
+// end, with NO actions (a preview, not another chat; "Report as outdated" was removed on request). It eases in when opened (.rt-view--enter). Used in two places:
+//  - the full-screen chat (Ask Mira tab): a chip opens it in the right side panel, titled in the panel header;
+//  - the side-panel chat (floating Ask Mira button): a chip SWITCHES the panel from the chat to the entry (`back` = true: a "Back to chat" header, the title
+//    moves into the body). The parts carry `data-pg-entry-part` so pgWirePanel can remove them and bring the chat back.
+function knPanelHTML(e, back){
   const p = 'style="margin:0;font-size:14px;line-height:1.55;color:var(--c-text)"';
-  const busy = Boolean(e.suggestion);
-  return '<div class="rt-panel__head"><span class="rt-panel__who"><span class="rt-panel__title">'+rtEsc(e.title)+'</span></span>'+rtPanelActionsHTML(false)+'</div>'+
-    '<div class="rt-panel__body" data-kn-pbody>'+
-      '<p class="adm-sub" style="margin:0">'+rtEsc([e.scope, e.topic, 'Managed by '+knManagedBy(e), 'Updated '+e.editedAt].join(' · '))+'</p>'+
-      e.body.map(t => '<p '+p+'>'+rtEsc(t)+'</p>').join('')+
-      admDrawerSec('Source', knSourceHTML(e))+
-      '<div data-kn-actions style="display:flex;align-items:center;gap:16px">'+
-        (busy ? '<span class="adm-sub" style="margin:0">Waiting for review.</span>' : '<button type="button" class="home-btn" data-kn-report>Report as outdated</button>')+
-        (knCanManage(e) ? '<button type="button" class="home-link" data-kn-open-entry>Open entry</button>' : '')+
+  const tag = back ? ' data-pg-entry-part' : '';
+  const head = back
+    ? '<div class="rt-panel__head rt-view--enter"'+tag+'><span class="rt-panel__who"><button type="button" class="home-link" data-pg-back style="display:inline-flex;align-items:center;gap:6px">'+
+        '<span style="display:inline-flex;width:16px;height:16px">'+svg('arrowleft',2)+'</span>Back to chat</button></span>'+rtPanelActionsHTML(false)+'</div>'
+    : '<div class="rt-panel__head rt-view--enter"><span class="rt-panel__who"><span class="rt-panel__title">'+rtEsc(e.title)+'</span></span>'+rtPanelActionsHTML(false)+'</div>';
+  return head+
+    '<div class="rt-panel__body rt-view--enter" data-kn-pbody'+tag+'>'+
+      (back ? '<div class="rt-panel__title" style="white-space:normal">'+rtEsc(e.title)+'</div>' : '')+
+      '<div class="adm-drawer">'+
+        knProp('Applies to', rtEsc(knApplies(e.scope)))+knProp('Managed by', rtEsc(knManagedBy(e)))+knProp('Source', knSourceHTML(e))+
       '</div>'+
-    '</div>'+
-    '<div class="rt-panel__foot" data-kn-pfoot hidden><form class="composer" onsubmit="return false">'+
-      '<input class="composer__input" type="text" placeholder="Message Mira…"><button type="submit" class="composer__send" aria-label="Send">'+svg('arrowup',2)+'</button></form></div>';
+      e.body.map(t => '<p '+p+'>'+rtEsc(t)+'</p>').join('')+
+    '</div>';
 }
-function wireKnPanel(host, e){
-  const body = host.querySelector('[data-kn-pbody]'), foot = host.querySelector('[data-kn-pfoot]'), input = foot.querySelector('input');
-  const alive = () => host.isConnected && host.contains(body);   // a timer may fire after the panel was closed or replaced
-  const toEnd = () => { body.scrollTop = body.scrollHeight; };
-  const say = html => { const d = body.querySelector(':scope > .mira-typing'); if(d) d.remove(); body.insertAdjacentHTML('beforeend', html); toEnd(); };
-  const mira = text => '<div class="nr__bubble">'+text+'</div>';
-  const oe = host.querySelector('[data-kn-open-entry]');
-  if(oe) oe.addEventListener('click', () => knOpenAdmin(e.id));
-  const rep = host.querySelector('[data-kn-report]');
-  if(!rep) return;
-  rep.addEventListener('click', () => {
-    host.querySelector('[data-kn-actions]').hidden = true;
-    body.insertAdjacentHTML('beforeend', MIRA_TYPING); toEnd();
-    setTimeout(() => { if(!alive()) return; say(mira('What’s out of date?')); foot.hidden = false; input.focus(); }, MIRA_TYPING_MS);
-  });
-  foot.querySelector('form').addEventListener('submit', ev => {
-    ev.preventDefault();
-    const text = input.value.trim(); if(!text) return;
-    input.value = ''; foot.hidden = true;
-    say('<div class="nr__user">'+rtEsc(text)+'</div>'+MIRA_TYPING);
-    setTimeout(() => {
-      if(!alive()) return;
-      const to = knManagedBy(e) === 'Admins' ? 'admins' : 'the '+knManagedBy(e);
-      // SIMULATED: nobody receives the report; the entry just gets the suggestion, which its managers see as "To review".
-      e.suggestion = { kind:'report', from:'a report by '+KN_USER_FULL, note:text };
-      // The managers hear about it in the bell, with an Open action (SIMULATED: the prototype user is the admin, so it lands in their own bell).
-      NOTIFS.unshift({ id:'n-kn-'+(++knSeq), kind:'knreport', from:KN_USER_FULL, entry:e.id, team:e.scope, note:text, when:'Just now', state:'info', unread:true });
-      syncBellDot();
-      say(mira('Thanks, I’ve sent this to '+to+'. “'+rtEsc(e.title)+'” stays in use until it’s updated.'));
-      shareToast('Sent to '+to);
-    }, MIRA_TYPING_MS);
-  });
-}
-
 /* ORPHANED (2026-11-16): the title-only placeholder of Company knowledge; renderAdmKnowledge replaced it. Kept in case another page needs a title-only stub. */
 function renderAdmSoon(title){
   // CHANGE (2026-10-29): Company knowledge (no wireframe yet) shows only its header; the "Coming soon"
@@ -6623,9 +6578,7 @@ function updateRtPanel(){
       // Expand: continue this routine's chat full screen, in the Ask Mira tab.
       const expand = host.querySelector('[data-rt-expand]');
       if(expand && !pgOpen && !finding && !drafting && !bundling) expand.addEventListener('click', () => rtOpenFullChat(rtOpenRoutine));
-      if(knP){
-        wireKnPanel(host, knP);   // the chat's source panel: report as outdated
-      } else if(admGOpen){
+      if(admGOpen){
         wireAdmGovProviderPanel(host, admGOpen);   // the Governance provider drawer
       } else if(admMOpen){
         wireAdmMiraPanel(host, admMOpen);   // the Mira plugin / preset drawer
@@ -9060,16 +9013,16 @@ function pgPanelHTML(st){
 function pgWirePanel(host, st){
   const reveal = host.querySelector('.rt-reveal'), body = host.querySelector('.rt-panel__body');
   const toEnd = () => { body.scrollTop = body.scrollHeight; };
-  const user = text => { reveal.querySelectorAll('.nr__chips').forEach(x => x.remove());   // suggestions go away once the conversation starts
+  const user = text => { reveal.querySelectorAll('.nr__chips:not(:has([data-kn-src]))').forEach(x => x.remove());   // (source chips stay: they are sources, not suggestions)   // suggestions go away once the conversation starts
     st.log.push({ role:'user', text }); reveal.insertAdjacentHTML('beforeend', '<div class="nr__user">'+rtEsc(text)+'</div>'); toEnd(); };
   /* Mira types for a moment, then `html` (+ optional chips) appears; skipped if this chat was closed meanwhile. */
-  const say = (html, chips, after) => {
+  const say = (html, chips, after, kn) => {
     reveal.insertAdjacentHTML('beforeend', MIRA_TYPING); toEnd();
     setTimeout(() => {
       if(pgChat !== st || !reveal.isConnected) return;
       const dots = reveal.querySelector(':scope > .mira-typing'); if(dots) dots.remove();
-      st.log.push({ role:'mira', kind:'text', html });
-      reveal.insertAdjacentHTML('beforeend', miraMsg({ text:html, chips:chips || [] })); toEnd();
+      st.log.push({ role:'mira', kind:'text', html, kn });
+      reveal.insertAdjacentHTML('beforeend', miraMsg({ text:html, chips:chips || [] })+(kn ? knSourcesHTML({ kn }) : '')); toEnd();
       if(after) after();
     }, MIRA_TYPING_MS);
   };
@@ -9085,9 +9038,23 @@ function pgWirePanel(host, st){
       render();   // the panel keeps its key, so this conversation stays open
     });
   };
+  // CHANGE (2026-11-16): Company knowledge in the side-panel chat. A question about expenses or a dinner gets a scripted text answer (no insight card) with two
+  // source chips (`kn` = entry ids). A chip switches the panel from the chat to the entry (showEntry); "Back to chat" brings the chat back with its scroll
+  // position. No modal and no second panel. Works in every workspace. SIMULATED: the answer is written out, not computed from the entries.
+  const parts = () => [...host.children].filter(x => !x.hasAttribute('data-pg-entry-part'));
+  let chatScroll = 0;
+  const dropEntry = () => host.querySelectorAll(':scope > [data-pg-entry-part]').forEach(x => x.remove());
+  const showEntry = id => {
+    const ent = knEntry(id); if(!ent) return;
+    chatScroll = body.scrollTop; dropEntry();
+    parts().forEach(x => { x.hidden = true; });
+    host.insertAdjacentHTML('beforeend', knPanelHTML(ent, true));   // eases in (.rt-view--enter)
+  };
+  const showChat = () => { dropEntry(); parts().forEach(x => { x.hidden = false; }); body.scrollTop = chatScroll; };
   const text = t => {
     user(t);
-    if(st.dash && /\b(add|chart|graph|show me)\b/i.test(t) && !/usd/i.test(t) && !/filter/i.test(t)) addChart(t);
+    if(/expens|dinner/i.test(t)) say('Yes, up to $80 per person. Add the client’s name and the reason when you submit it. In Sales, client dinners also count toward the team’s monthly entertainment budget.', null, null, ['kn2','kn9']);
+    else if(st.dash && /\b(add|chart|graph|show me)\b/i.test(t) && !/usd/i.test(t) && !/filter/i.test(t)) addChart(t);
     else if(/filter/i.test(t) && st.dash) offerFilters();
     else if(/\badd\b|\bchart\b/i.test(t)) say('Tell me which dashboard it is for, or open one and ask me there.');
     else say('Give me a moment, I’m looking at it.');
@@ -9099,6 +9066,9 @@ function pgWirePanel(host, st){
   };
   host.addEventListener('click', e => {
     if(pgChat !== st) return;   // #rtPanel is reused: handlers of earlier chats stay quiet
+    const ks = e.target.closest('[data-kn-src]'); if(ks){ showEntry(ks.dataset.knSrc); return; }
+    if(e.target.closest('[data-pg-back]')){ showChat(); return; }
+    if(e.target.closest('[data-pg-entry-part] [data-rt-close]')){ pgChat = null; render(); return; }   // the entry header's own close (the chat's is wired by updateRtPanel)
     if(e.target.closest('[data-pg-ctx-x]')){
       st.ctx = null; st.dash = null; st.fix = null;   // general chat: no page context from here on
       host.querySelector('[data-pg-ctx]').remove();
@@ -9905,7 +9875,13 @@ function cvStart(text){
 function cvAsk(conv, text){
   cvUser(conv, text);
   const m = CV_DATE.exec(text);
-  if(m) cvReply(conv, () => ({ role:'mira', kind:'text',   // a one-off fact: an answer, not an insight, so no Pin
+  // CHANGE (2026-11-16): Company knowledge, sources in Mira's answers. A question about expenses or a dinner gets a text answer (no insight card, no Pin)
+  // that carries the knowledge entries it used (`kn` = entry ids, drawn as source chips by knSourcesHTML). It works in every workspace, Personal included:
+  // Mira uses the Company entries plus the entries of every team the person is in, so a Sales entry can be a source there.
+  // SIMULATED: the answer is written out here, it is not computed from the entries.
+  if(/expens|dinner/i.test(text)) cvReply(conv, () => ({ role:'mira', kind:'text', kn:['kn2','kn9'],
+    html:'Yes, up to $80 per person. Add the client’s name and the reason when you submit it. In Sales, client dinners also count toward the team’s monthly entertainment budget.' }));
+  else if(m) cvReply(conv, () => ({ role:'mira', kind:'text',   // a one-off fact: an answer, not an insight, so no Pin
     html:'You issued 14 invoices '+(/yesterday/i.test(m[0]) ? '' : 'on ')+rtEsc(m[0])+', worth SAR 212,400 in total.' }));
   else cvReply(conv, () => ({ role:'mira', kind:'answer', insight:cvPickInsight(text), base:null, done:false }));
 }
@@ -9962,7 +9938,8 @@ function wireCv(c, conv){
     const m = e.target.closest('[data-cv-menu]');   // the caret (or the whole chip when there is no default) opens the other places
     if(m){ const dd = m.closest('.wl-dd'), menu = dd.querySelector('.wl-ddmenu'); menu.hidden = !menu.hidden; dd.querySelector('.nr__chip__caret').setAttribute('aria-expanded', !menu.hidden); return; }
     const b = e.target.closest('[data-cv-act]'); if(b){ cvAct(conv, b); return; }
-    const k = e.target.closest('[data-kn-src]'); if(k){ knPanel = { id:k.dataset.knSrc, ver:(knPanel ? knPanel.ver : 0) + 1 }; updateRtPanel(); }   // a source chip: the read-only entry panel
+    const k = e.target.closest('[data-kn-src]'); if(k){ knPanel = { id:k.dataset.knSrc, ver:(knPanel ? knPanel.ver : 0) + 1 }; updateRtPanel();
+      c.querySelectorAll('[data-kn-src]').forEach(x => { const on = x === k; x.classList.toggle('is-selected', on); x.setAttribute('aria-pressed', on); }); }   // a source chip: the read-only entry panel
   });
   const onDown = e => {
     if(!c.isConnected){ document.removeEventListener('mousedown', onDown); return; }
@@ -11698,7 +11675,7 @@ NOTIFS.push({ id:'n-dshare', kind:'dshare', from:'Aga', routine:'Pipeline overvi
 /* Maya (Sales) asks for more in Gmail. SIMULATED: really this reaches the admins when someone sends a request from Team settings. `perm` is the
    index of the permission (ADM_PERM_GROUPS order): 5 = "Sending emails inside the company". Clicking it opens a confirmation (see notifAskReview). */
 NOTIFS.push({ id:'n-ask-maya', kind:'permask', from:'Maya', team:'Sales', tool:'gmail', perm:5, ask:'send emails', when:'10 min ago', state:'pending' });
-const notifPending = () => NOTIFS.filter(n => n.state === 'pending' || n.unread).length;   // waiting for an answer, or not seen yet (information notifications)
+const notifPending = () => NOTIFS.filter(n => (n.state === 'pending' || n.unread)).length;   // waiting for an answer, or not seen yet (information notifications)
 function syncBellDot(){
   const bell = document.querySelector('[data-notif-bell]');
   if(!bell) return;
@@ -11714,14 +11691,6 @@ function notifItemHTML(n){
       '<div class="notif__meta"><span class="home-badge home-badge--neutral">'+rtEsc(n.team)+'</span>'+n.when+'</div>'+
       '<div class="notif__hint">Let Mira '+rtEsc(n.ask)+' from '+rtEsc(t ? t.name : n.tool)+' for '+rtEsc(n.team)+'.</div>'+
       '<div class="notif__actions"><button type="button" class="home-btn" data-notif-act="review" data-id="'+n.id+'">Review</button></div></div></div>';
-  }
-  // Company knowledge: someone reported an entry as outdated. Information with an Open action (the entry's page); it goes away once the report is resolved.
-  if(n.kind === 'knreport'){
-    const ent = knEntry(n.entry);
-    return '<div class="notif__item" data-nid="'+n.id+'">'+shareAva({name:n.from}, true)+'<div class="notif__body"><div class="notif__text"><b>'+rtEsc(n.from)+'</b> reported <b>'+rtEsc(ent ? ent.title : 'an entry')+'</b> as outdated</div>'+
-      '<div class="notif__meta"><span class="home-badge home-badge--neutral">'+rtEsc(n.team)+'</span>'+n.when+'</div>'+
-      '<div class="notif__hint">“'+rtEsc(n.note)+'”</div>'+
-      '<div class="notif__actions"><button type="button" class="home-btn" data-notif-act="knopen" data-id="'+n.id+'">Open</button></div></div></div>';
   }
   // An admin changed a connection's level: information only (no Accept or Decline). SIMULATED: really it goes to the heads of the teams that use it.
   if(n.kind === 'ceiling') return '<div class="notif__item" data-nid="'+n.id+'">'+shareAva({name:n.from}, true)+'<div class="notif__body"><div class="notif__text">'+rtEsc(n.text)+'</div>'+
@@ -11765,7 +11734,6 @@ function openNotifPanel(bell){
     const b = e.target.closest('[data-notif-act]');
     if(!b) return;
     const n = NOTIFS.find(x => x.id === b.dataset.id);
-    if(b.dataset.notifAct === 'knopen'){ close(); if(knEntry(n.entry)) knOpenAdmin(n.entry); return; }   // a report: open the entry's page
     if(b.dataset.notifAct === 'accept' && n.kind === 'dshare'){
       // The dashboard joins the sidebar list of the workspace the user is in, and opens on it.
       n.state = 'accepted';
