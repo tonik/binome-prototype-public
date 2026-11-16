@@ -1770,9 +1770,18 @@ button.adm-row:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){border-radi
 .adm-preset.is-on{border-color:var(--c-brand-purple);background:#f5f0fc}
 .adm-preset__t{font-weight:600;font-size:14.5px;color:var(--c-text)}
 .adm-preset__d{font-size:11.5px;line-height:1.35;color:var(--c-copy)}
+/* Option B max box (2026-11-16, from the wireframe): the top of the Team settings and person connection drawers. Same grey and radius as the
+   "The three levels" aside (--c-bg, 10px), with the mono section label. Level cards above the max are disabled, dimmed like every other disabled control. */
+.adm-maxbox{background:var(--c-bg);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.45;color:var(--c-copy);margin-bottom:6px}
+.adm-maxbox .home-link{font-size:inherit}   /* "Ask for more" is as big as the sentence before it (13px), not the link's own size */
+.adm-maxbox__v{font-weight:600;color:var(--c-text)}
+.adm-preset:disabled{opacity:.4;cursor:not-allowed}
+.adm-preset:disabled:hover{border-color:var(--c-border-strong)}
 .adm-preset__note{font-size:12.5px;color:var(--c-copy);margin-top:8px}
 button.adm-preset:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){border-radius:10px !important}
-.adm-pgl{font-family:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px;font-weight:500;letter-spacing:.06em;color:var(--c-copy);text-transform:uppercase;padding-bottom:9px;border-bottom:1px solid var(--c-border);margin-bottom:6px}
+/* 2026-11-16 (revised, on request): Reading / Creating / Sending and approving look like the column headers of the tables (.in-table th): 12px,
+   medium, --c-muted, the page font (no mono, no capitals), with the hairline under them. */
+.adm-pgl{font-size:12px;font-weight:var(--fw-medium);color:var(--c-muted);padding-bottom:10px;border-bottom:1px solid var(--c-border);margin-bottom:6px}
 .adm-prow{display:flex;align-items:center;gap:10px;padding:8px 0}
 .adm-prow__l{flex:1 1 auto;min-width:0;font-size:14px;color:var(--c-text)}
 .adm-pset{display:flex;gap:4px;flex:0 0 auto}
@@ -1865,7 +1874,9 @@ button.adm-pseg:not(.ms-tab):not(.wl-tab):not(.wl-view__item):not(#_){border-rad
 .adm-drawer__sec:last-child{border-bottom:0;padding-bottom:0}
 .rt-panel__body:has(> .adm-drawer){padding-top:20px}
 .adm-drawer__head{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
-.adm-drawer__head .adm-label{margin:0}
+/* 2026-11-16, on request: drawer section titles ("Levels allowed for Sales", "Max level for everyone", ...) use the same type as the table column
+   headers and the permission group labels (.adm-pgl): the page font, no capitals, no letter spacing. Form labels elsewhere (.adm-label) stay mono. */
+.adm-drawer__head .adm-label{margin:0;font-family:inherit;text-transform:none;letter-spacing:normal}
 .adm-drawer__pickers{display:flex;gap:8px;flex-wrap:wrap}
 .adm-drawer__line{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .adm-drawer__line > .home-btn,.adm-drawer__line > .home-link{flex:0 0 auto;white-space:nowrap}
@@ -4543,8 +4554,8 @@ function wireTeamSettings(c){
    and permissions are the CEILING, and the team can only choose the same or less.
    - Level cards: only the levels that fit under the ceiling. Operator offers Operator, Assistant and Observer; Assistant offers Assistant and
      Observer; Observer offers only Observer. A Custom company level offers the levels whose every permission fits under it (maybe none).
-   - Permissions: each row offers its ceiling value and the ones below it (Allowed > Ask > Blocked), so a permission the company has on Ask
-     shows only Blocked and Ask.
+   - Permissions: each row always shows Blocked, Ask and Allowed (2026-11-16); the values above the ceiling are disabled with the hover
+     note "Admins set the max to Ask.", so a permission the company has on Ask shows Allowed greyed out.
    INHERITANCE (agreed 5 Nov). A team FOLLOWS the admin's level for a connection, up or down, until it changes something. TS_PERMS holds only
    the teams' own choices ("<team>:<connection id>" -> one value per permission): no entry = following. Opening a drawer never writes. A choice is
    stored only by tsStorePerms, and dropped again when the TEAM sets it equal to the ceiling (the team goes back to following). When the admin
@@ -4576,9 +4587,18 @@ function tsSettle(t){
   Object.keys(TS_PERMS).filter(k => k.endsWith(':'+t.id)).forEach(k => { TS_PERMS[k] = tsClamp(TS_PERMS[k], ceil); });
   if(SET.perms[t.id]) SET.perms[t.id] = tsClamp(SET.perms[t.id], setCeil(t));
 }
+// The max box at the top of the Team settings and person drawers (2026-11-16, option B in the wireframes). It has no title (removed on request): one
+// sentence, "<Level> is set by <who>.". `by` = who set it ("admins", "your team"). At the top level there is nothing to ask for, so the sentence and the "Ask for more" link are left out.
+// "Ask for more" opens the Mira side panel, the same as the banner's "Request with Mira" (nothing is sent: SIMULATED).
+function tsMaxBoxHTML(ceil, by, ns){
+  const lvl = admToolLevelOf(ceil);
+  return '<div class="adm-maxbox"><span class="adm-maxbox__v">'+lvl+'</span> is set by '+by+'. '+
+    (lvl === 'Operator' ? 'This is the highest level.' : 'Greyed options are above it. <button type="button" class="home-link" data-'+ns+'-more>Ask for more</button>')+'</div>';
+}
 function tsToolPanelHTML(team, t){
   const ceil = admToolPerms(t), perms = tsToolPerms(team, t);
-  const offered = ADM_LEVELS.map(l => l[0]).filter(n => tsFits(ADM_PERM_PRESETS[n], ceil));
+  const names = ADM_LEVELS.map(l => l[0]), offered = names.filter(n => tsFits(ADM_PERM_PRESETS[n], ceil));
+  const locked = names.filter(n => !offered.includes(n));   // above the admins' max: shown disabled, not left out (2026-11-16)
   return '<div class="rt-panel__head adm-head">'+
       '<span class="rt-panel__who">'+admLogo(t)+'<span class="rt-panel__titles"><span class="rt-panel__title">What Mira can do in '+t.name+'</span>'+
         '</span></span>'+   // no subtitle: the section title says whose levels these are
@@ -4586,8 +4606,9 @@ function tsToolPanelHTML(team, t){
     '</div>'+
     '<div class="rt-panel__body"><div class="adm-drawer">'+
       // The title belongs to the level cards: with a Custom max no level fits, so there are no cards and no title (just the permissions).
+      tsMaxBoxHTML(ceil, 'admins', 'ts-tool')+
       admDrawerSec(offered.length ? 'Levels allowed for '+team.name : '',
-        (offered.length ? admLevelCardsHTML('ts-tool', admToolLevelOf(perms), offered, true) : '')+
+        (offered.length ? admLevelCardsHTML('ts-tool', admToolLevelOf(perms), null, true, locked) : '')+
         (tsHasOwn(team, t) ? '<button type="button" class="home-link" data-ts-tool-reset style="display:block;margin:0 0 16px">Reset to max level</button>' : '')+   // only once the team has lowered something
         admPermEditorHTML('ts-tool', perms, null, null, false, ceil))+
     '</div></div>';
@@ -4596,6 +4617,7 @@ function wireTsToolPanel(host, team, t){
   host.querySelectorAll('[data-ts-tool-level]').forEach(b => b.addEventListener('click', () => {
     tsStorePerms(team, t, ADM_PERM_PRESETS[b.dataset.tsToolLevel]); admRefresh();
   }));
+  host.querySelectorAll('[data-ts-tool-more]').forEach(b => b.addEventListener('click', () => pgOpenPanel()));   // like "Request with Mira"
   host.querySelectorAll('[data-ts-tool-reset]').forEach(b => b.addEventListener('click', () => { tsReset(team, t); admRefresh(); }));
   host.querySelectorAll('[data-ts-tool-perm]').forEach(b => b.addEventListener('click', () => {
     const next = tsToolPerms(team, t); next[+b.dataset.tsToolPerm] = b.dataset.v; tsStorePerms(team, t, next); admRefresh();
@@ -4610,8 +4632,8 @@ const ADM_PERM_GROUPS = [
   ['Reading',               [['Emails and threads'], ['Contacts'], ['Attachments']]],
   ['Creating',              [['Draft replies'], ['Labels and filters']]],
   ['Sending and approving', [['Sending emails inside the company'],
-                             ['Sending emails outside the company', 'Goes outside the company, so it always needs approval.'],
-                             ['Forwarding externally', 'Goes outside the company, so it always needs approval.']]],
+                             ['Sending emails outside the company', ''],
+                             ['Forwarding externally', '']]],
 ];
 // One value per permission, in the order of ADM_PERM_GROUPS (3 reading, 2 creating, 3 sending).
 const ADM_PERM_PRESETS = {
@@ -4636,22 +4658,29 @@ const ADM_PERM_EXT = [6, 7];   // the two sending rows that leave the company: t
 // (Blocked / Ask / Allowed), purple when selected. A level that matches no preset is "Custom": no card is selected and a note says so.
 // `only` (optional, Team settings 2026-10-30): names of the levels to offer; the others are left out. Default = all three.
 // `noNote` (the three connection drawers, 2026-11-06) leaves out the "Custom settings. Pick a level to reset." line; the Add connection modal keeps it.
-function admLevelCardsHTML(ns, access, only, noNote){
+function admLevelCardsHTML(ns, access, only, noNote, locked){   // `locked` (2026-11-16): names of cards shown disabled (above the max) instead of left out
   // With fewer than three cards (Team settings) the grid gets that many equal columns, so the cards stretch across the full width.
   const shown = ADM_LEVELS.filter(l => !only || only.includes(l[0]));
-  return '<div class="adm-drawer__levels" style="grid-template-columns:repeat('+shown.length+',minmax(0,1fr))">'+shown.map(l => '<button type="button" class="adm-preset'+(access===l[0]?' is-on':'')+'" data-'+ns+'-level="'+l[0]+'" aria-pressed="'+(access===l[0])+'">'+
+  return '<div class="adm-drawer__levels" style="grid-template-columns:repeat('+shown.length+',minmax(0,1fr))">'+shown.map(l => '<button type="button" class="adm-preset'+(access===l[0]?' is-on':'')+'" data-'+ns+'-level="'+l[0]+'" aria-pressed="'+(access===l[0])+'"'+(locked && locked.includes(l[0]) ? ' disabled' : '')+'>'+
     '<span class="adm-preset__t">'+l[0]+'</span><span class="adm-preset__d">'+l[1]+'</span></button>').join('')+'</div>'+
     (access === 'Custom' && !noNote ? '<div class="adm-preset__note">Custom settings. Pick a level to reset.</div>' : '');
 }
 // `groups` and `ext` default to Gmail's groups and the two locked external-sending rows, so the connection drawer and the Add connection modal are
 // unchanged. The Mira plugin drawer (2026-10-30) passes its own capability groups and no locked rows.
-// `max` (optional, Team settings 2026-10-30): one ceiling value per permission; only that value and the ones below it (Allowed > Ask > Blocked) are offered.
-function admPermEditorHTML(ns, perms, groups, ext, off, max){   // `off` (optional) disables every button: the plugin drawer passes it while the plugin is turned off
+// `max` (optional, Team settings 2026-10-30): one ceiling value per permission; the values above it (Allowed > Ask > Blocked) are shown disabled (2026-11-16).
+function admPermEditorHTML(ns, perms, groups, ext, off, max, maxBy){   // `off` (optional) disables every button: the plugin drawer passes it while the plugin is turned off
   let i = 0;
   groups = groups || ADM_PERM_GROUPS; ext = ext || ADM_PERM_EXT;
   return groups.map(g => '<div class="adm-drawer__perms"><div class="adm-pgl">'+g[0]+'</div>'+g[1].map(p => {
     const idx = i++, locked = ext.includes(idx);
-    const seg = ['Blocked','Ask','Allowed'].filter(v => !max || TS_RANK[v] <= TS_RANK[max[idx]]).map(v => '<button type="button" class="adm-pseg'+(perms[idx]===v?' is-on':'')+'" data-'+ns+'-perm="'+idx+'" data-v="'+v+'"'+(off ? ' disabled' : locked && v === 'Allowed' ? ' disabled title="Goes outside the company, so it always needs approval."' : '')+'><span class="adm-pradio"></span>'+v+'</button>').join('');
+    // 2026-11-16, on request: all three values are ALWAYS shown. A value above the ceiling (`max`) is not left out any more, it is shown
+    // disabled with a hover note saying who capped it ("Admins set the max to Ask."), so the person sees what exists and why they cannot pick it.
+    // `maxBy` (optional) returns the name of whoever set the ceiling for row `idx`; the default is "Admins".
+    const seg = ['Blocked','Ask','Allowed'].map(v => {
+      const over = max && TS_RANK[v] > TS_RANK[max[idx]];   // above the ceiling: visible but not pickable
+      const note = over ? ' title="'+(maxBy ? maxBy(idx) : 'Admins')+' set the max to '+max[idx]+'."' : locked && v === 'Allowed' ? ' title="Goes outside the company, so it always needs approval."' : '';   // fixed rule, not a ceiling: the hover is the only place it is explained (the rows have no subtitle)
+      return '<button type="button" class="adm-pseg'+(perms[idx]===v?' is-on':'')+'" data-'+ns+'-perm="'+idx+'" data-v="'+v+'"'+(off || over || (locked && v === 'Allowed') ? ' disabled' : '')+note+'><span class="adm-pradio"></span>'+v+'</button>';
+    }).join('');
     return '<div class="adm-prow"><span class="adm-prow__l">'+p[0]+(p[1] ? '<div class="adm-row__meta">'+p[1]+'</div>' : '')+'</span><div class="adm-pset" role="radiogroup" aria-label="'+p[0]+'">'+seg+'</div></div>';
   }).join('')+'</div>').join('');
 }
@@ -10003,7 +10032,7 @@ const setAccTools = () => SET_TEAMS.length ? ADM_TOOLS.filter(t => setUsedInList
 /* Connection drawer (2026-10-30, on request): the same drawer as Team settings (tsToolPanelHTML), for the person's own account. The ceiling is what
    admins allow for the whole company, lowered further by what the person's teams chose in Team settings. With several teams the HIGHEST wins,
    permission by permission (a team that follows the admin counts as the admin's level). The person can only choose the same or less, never more:
-   each permission offers its ceiling value and the ones below it, and only the levels that fit under it are offered.
+   each permission shows all three values (those above it disabled), and only the levels that fit under it are offered.
    The same inheritance as the team drawer (agreed 5 Nov): a person FOLLOWS their max until they change something. SET.perms holds only the
    person's own choices (no entry = following); opening a drawer never writes; setStorePerms stores a choice and drops it when it equals the max.
    When the max goes down below the person's choice, the clamp is stored (tsSettle), so it stays lower if the max goes up again. Reads clamp too
@@ -10039,21 +10068,27 @@ function setMaxSource(t){
 }
 function setToolPanelHTML(t){
   const ceil = setCeil(t), perms = setPerms(t);
-  const offered = ADM_LEVELS.map(l => l[0]).filter(n => tsFits(ADM_PERM_PRESETS[n], ceil));
+  const names = ADM_LEVELS.map(l => l[0]), offered = names.filter(n => tsFits(ADM_PERM_PRESETS[n], ceil));
+  const locked = names.filter(n => !offered.includes(n));   // above the max: shown disabled (2026-11-16)
+  const admin = admToolPerms(t), byAdmins = ceil.every((v, k) => v === admin[k]);   // the max is the admins' unless a team of the person lowered it
   return '<div class="rt-panel__head adm-head">'+
       '<span class="rt-panel__who">'+admLogo(t)+'<span class="rt-panel__titles"><span class="rt-panel__title">What Mira can do in '+t.name+'</span>'+
         '</span></span>'+   // no max line: the section title says whose levels these are (setMaxSource is orphaned)
       '<span class="rt-panel__actions"><button type="button" class="rt-panel__close" data-rt-close aria-label="Close panel">'+svg('close',2)+'</button></span>'+
     '</div>'+
     '<div class="rt-panel__body"><div class="adm-drawer">'+
+      tsMaxBoxHTML(ceil, byAdmins ? 'admins' : 'your team', 'set-tool')+
       admDrawerSec(offered.length ? 'Levels allowed for you' : '',   // no cards (a Custom max) = no title
-        (offered.length ? admLevelCardsHTML('set-tool', admToolLevelOf(perms), offered, true) : '')+
+        (offered.length ? admLevelCardsHTML('set-tool', admToolLevelOf(perms), null, true, locked) : '')+
         (SET.perms[t.id] ? '<button type="button" class="home-link" data-set-tool-reset style="display:block;margin:0 0 16px">Reset to max level</button>' : '')+   // only once the person has lowered something
-        admPermEditorHTML('set-tool', perms, null, null, false, ceil))+
+        admPermEditorHTML('set-tool', perms, null, null, false, ceil,
+          // the person's max is the admin's value unless a team of theirs lowered it: then the team is the one who capped it
+          i => ceil[i] === admToolPerms(t)[i] ? 'Admins' : 'Your team'))+
     '</div></div>';
 }
 function wireSetToolPanel(host, t){
   host.querySelectorAll('[data-set-tool-level]').forEach(b => b.addEventListener('click', () => { setStorePerms(t, ADM_PERM_PRESETS[b.dataset.setToolLevel]); admRefresh(); }));
+  host.querySelectorAll('[data-set-tool-more]').forEach(b => b.addEventListener('click', () => pgOpenPanel()));
   host.querySelectorAll('[data-set-tool-reset]').forEach(b => b.addEventListener('click', () => { setReset(t); admRefresh(); }));
   host.querySelectorAll('[data-set-tool-perm]').forEach(b => b.addEventListener('click', () => { const next = setPerms(t); next[+b.dataset.setToolPerm] = b.dataset.v; setStorePerms(t, next); admRefresh(); }));
 }
