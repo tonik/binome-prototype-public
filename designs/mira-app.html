@@ -5268,7 +5268,7 @@ const KN_IS_ADMIN = true;                // SIMULATED: the prototype user is an 
 // `removed` of a change suggestion is a piece of text that really sits in a body paragraph; the body always holds the LIVE text, the suggestion is laid over it.
 let KN_ENTRIES = [
   // ---- Company ----
-  { id:'kn1', title:'Leave and time off', scope:'Company',
+  { id:'kn1', title:'Leave and time off', type:'Policy', scope:'Company',
     body:['Full-time employees have 26 days of paid leave a year, plus public holidays. Leave is booked in the HR app and approved by your manager.',
           'Unused days carry over until 31 March. Sick leave does not count against your leave days; tell your manager on the first day.'],
     sources:[{ name:'Leave_policy_2026.pdf', where:'Google Drive' }],
@@ -5278,7 +5278,7 @@ let KN_ENTRIES = [
       added:'Unused days carry over until 30 April.' } },
   // CHANGE (2026-11-16): this entry is live (no review suggestion), because Mira's answer in chat quotes it ($80), which an entry waiting for review must not be.
   // It applies to everyone, so it is managed by Admins.
-  { id:'kn2', title:'Expenses and client entertainment', scope:'Company',
+  { id:'kn2', title:'Expenses and client entertainment', type:'Policy', scope:'Company',
     body:['Employees can expense meals with clients when the meal has a clear business purpose. Client dinners are reimbursed up to $80 per person. Alcohol is not reimbursed.',
           'Add the client’s name and the reason when you submit the expense, and submit receipts within 30 days in the expenses app. Anything above $500 needs approval from your head of team before you spend it.'],
     sources:[{ name:'Expenses_policy_2026.pdf', where:'Google Drive' }],
@@ -5289,51 +5289,51 @@ let KN_ENTRIES = [
       removed:'Anything above $500 needs approval from your head of team before you spend it.',
       added:'Anything above $1,000 needs approval from your head of team before you spend it.' },
     reports:[{ by:'Jonas Okafor', text:'The client dinner limit went up to $100 per person last month.', when:'25 min ago' }] },
-  { id:'kn3', title:'Working hours and remote work', scope:'Company',
+  { id:'kn3', title:'Working hours and remote work', type:'Policy', scope:'Company',
     body:['Core hours are 10:00 to 15:00 in your own time zone; the rest of the day is flexible. You can work remotely up to three days a week.',
           'Tell your team in advance when you will be away from your desk during core hours.'],
     sources:[], author:'Anna Novak', editedBy:'Anna Novak', editedAt:'14 Oct', status:'review',
     suggestion:{ kind:'change', from:'a chat in Operations',   // CHANGE (2026-11-17): seed suggestion for the grouped bell notification
       removed:'You can work remotely up to three days a week.',
       added:'You can work remotely up to four days a week.' } },
-  { id:'kn4', title:'Security and passwords', scope:'Company',
+  { id:'kn4', title:'Security and passwords', type:'Policy', scope:'Company',
     body:['Use the company password manager and two-factor authentication for every work account. Never share a password in chat or email.',
           'Report a lost laptop or phone to IT within one hour. Admins can reset two-factor authentication from People.'],
     sources:[{ name:'Security_basics.pdf', where:'Google Drive' }], editedBy:'Anna Novak', editedAt:'2 Oct', status:'live', suggestion:null },
-  { id:'kn5', title:'Tone of voice with clients', scope:'Company',
+  { id:'kn5', title:'Tone of voice with clients', type:'Guideline', scope:'Company',
     body:['Write the way you would speak to a colleague you respect: clear, warm and direct. Answer the question first, then add detail.',
           'Avoid jargon and exclamation marks. Use the client’s name and keep promises small and specific.'],
     sources:[{ name:'Brand_guidelines', where:'Notion' }], editedBy:'Anna Novak', editedAt:'19 Sep', status:'live', suggestion:null },
   // ---- Sales ----
-  { id:'kn6', title:'Discount rules', scope:'Sales',
+  { id:'kn6', title:'Discount rules', type:'Policy', scope:'Sales',
     body:['Discounts up to 10% can be offered without approval. Anything above that needs a sign-off from the Head of Sales before the quote is sent.',
           'Never discount the onboarding fee. Multi-year deals can get an extra 3% on the licence price.'],
     sources:[{ name:'Sales_pricing_sheet', where:'Google Drive' }], editedBy:'Maya Klein', editedAt:'30 Oct', status:'review',
     suggestion:{ kind:'change', from:'a chat in Sales',
       removed:'Discounts up to 10% can be offered without approval.',
       added:'Discounts up to 15% can be offered without approval on deals under $20,000.' } },
-  { id:'kn7', title:'Handing a deal over to Customer projects', scope:'Sales',
+  { id:'kn7', title:'Handing a deal over to Customer projects', type:'Process', scope:'Sales',
     body:['When a deal is signed, create the project in the project tool and add the signed contract, the scope and the main contact.',
           'Book the internal handover call within two working days and introduce the client to their project lead by email.'],
     sources:[], chat:'Sales', editedBy:'Maya Klein', editedAt:'21 Oct', status:'live', suggestion:null },
-  { id:'kn8', title:'Qualifying an inbound lead', scope:'Sales',
+  { id:'kn8', title:'Qualifying an inbound lead', type:'Process', scope:'Sales',
     body:['Reply to every inbound lead within one working day. Ask about the problem, the timeline and who decides before you offer a call.',
           'Leads with no budget and no timeline go to the nurture list; leads with both get a discovery call.'],
     sources:[{ name:'Sales_playbook.docx', where:'Google Drive' }], editedBy:'Maya Klein', editedAt:'9 Oct', status:'live', suggestion:null },
-  { id:'kn9', title:'Client entertainment budget', scope:'Sales',
+  { id:'kn9', title:'Client entertainment budget', type:'Reference', scope:'Sales',
     body:['Client dinners and events count toward the Sales team’s monthly entertainment budget of $1,500. Spending above it needs the Head of Sales’ approval.',
           'Log every event with the client name and the people who came, so Finance can match it to the receipt.'],
     sources:[], author:'Maya Klein', editedBy:'Maya Klein', editedAt:'30 Oct', status:'live', suggestion:null },
   // ---- Other teams ----
-  { id:'kn10', title:'Month-end close checklist', scope:'Finance',
+  { id:'kn10', title:'Month-end close checklist', type:'Process', scope:'Finance',
     body:['Close the books on the third working day. Reconcile bank accounts first, then accruals, then intercompany balances.',
           'Post the checklist result in the finance channel and lock the period once the Head of Finance signs it off.'],
     sources:[], author:'Lena Berg', editedBy:'Lena Berg', editedAt:'31 Oct', status:'live', suggestion:null },
-  { id:'kn11', title:'Supplier onboarding', scope:'Operations',
+  { id:'kn11', title:'Supplier onboarding', type:'Process', scope:'Operations',
     body:['Every new supplier needs a signed agreement, a tax form and a bank confirmation before the first order.',
           'Operations checks the documents, then adds the supplier to the purchasing system and tells Finance.'],
     sources:[], author:'Tom Reyes', editedBy:'Tom Reyes', editedAt:'17 Oct', status:'live', suggestion:null },
-  { id:'kn12', title:'Kick-off checklist', scope:'Customer projects',
+  { id:'kn12', title:'Kick-off checklist', type:'Process', scope:'Customer projects',
     body:['Hold the kick-off within a week of signing. Confirm the goal, the deliverables, the dates and who approves what.',
           'Send the client a one-page summary the same day and agree on a weekly check-in.'],
     sources:[{ name:'Project kick-off', where:'Notion' }], editedBy:'Mira', editedAt:'2 h ago', stampVerb:'Drafted', status:'review',
@@ -5344,14 +5344,14 @@ let KN_ENTRIES = [
 const knUploadDraft = name => {
   const title = name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim().replace(/^./, c => c.toUpperCase()) || 'Uploaded entry';
   return /travel/i.test(name)
-    ? { title, body:['Book travel through the company account and choose the cheaper fare when the time difference is under two hours.',
+    ? { title, type:'Policy', body:['Book travel through the company account and choose the cheaper fare when the time difference is under two hours.',
         'Claim expenses within 30 days and attach a receipt for each item. Trips above $1,500 need approval from your head of team first.'] }
-    : { title, body:['Mira read '+name+' and drafted this entry from it. Check the details before approving.',
+    : { title, type:/checklist|process|onboarding|handover/i.test(name) ? 'Process' : 'Reference', body:['Mira read '+name+' and drafted this entry from it. Check the details before approving.',
         'Edit anything that is wrong or missing; the entry is not used until someone approves it.'] };
 };
 let knSeq = 100;
 // Filters live at module level so they survive a re-render. `scope` holds the ticked "Applies to" labels and is only used by the Admin Panel list.
-const knF = { scope:new Set(), tab:'all', query:'' };   // `tab`: 'all' or 'review' (the two tabs above the table)
+const knF = { scope:new Set(), type:new Set(), tab:'all', query:'' };   // `tab`: 'all' or 'review' (the two tabs above the table)
 let knReopen = null;        // dropdown to reopen after a re-render, so several options can be ticked in a row
 let knOpen = null;          // id of the entry whose page is open (null = the list)
 let knFrom = 'admin';       // 'admin' (Admin Panel) or 'team' (Team settings): only decides the breadcrumb and where Back goes
@@ -5359,6 +5359,11 @@ let knPanel = null;         // { id, ver }: the read-only side panel opened from
 let knTimer = null;         // debounce of the edit stamp (autosave)
 let knEnter = false;        // the next entry page eases in (set when an entry is OPENED, not on a redraw after Approve or a dropdown change)
 
+// CHANGE (2026-11-17): TYPE says what an entry is FOR (not its subject; never a team name). One value from a fixed list that is the same for every company
+// (set by Binome, not editable per company). Policy: rules people must follow. Guideline: the recommended way, not binding. Process: steps across people or
+// teams. Reference: facts to look up. Mira sets it on every entry she drafts; an entry written by hand starts as Policy. Admins change it on any entry, heads on
+// the entries they manage (`knCanManage`). Members never see it (the chat side panel, `knPanelHTML`, has no Type row).
+const KN_TYPES = ['Policy', 'Guideline', 'Process', 'Reference'];
 const knEntry = id => KN_ENTRIES.find(e => e.id === id);
 const knScopes = () => ['Company'].concat(ADM_TEAMS.map(t => t.name));
 // "Applies to" says the scope in plain words: the whole company, or one team. The data still stores 'Company' or the team's name.
@@ -5392,8 +5397,9 @@ function knVisible(team){
   const order = e => knScopes().indexOf(e.scope);   // Everyone at Tonik first, then the teams in People's order
   return KN_ENTRIES.filter(e =>
     (team ? e.scope === team.name : (!knF.scope.size || knF.scope.has(knApplies(e.scope)))) &&
+    (team || !knF.type.size || knF.type.has(e.type)) &&   // the Type filter exists only in the Admin Panel
     (knF.tab !== 'review' || knNeedsReview(e)) &&
-    (!q || (e.title+' '+knApplies(e.scope)).toLowerCase().includes(q)))
+    (!q || (e.title+' '+knApplies(e.scope)+' '+e.type).toLowerCase().includes(q)))
     .sort((a, b) => order(a) - order(b) || a.title.localeCompare(b.title));
 }
 function knApprove(e){
@@ -5422,14 +5428,14 @@ const knAddMenuHTML = () =>
 // The tbody. A flat list: Everyone at Tonik first, then the teams in People's order, then by title (`knVisible` sorts). The Admin Panel has an Applies to
 // column; Team settings shows only this team's entries, so it has none.
 function knRowsHTML(team){
-  const rows = knVisible(team), cols = team ? 3 : 4;
+  const rows = knVisible(team), cols = team ? 4 : 5;
   if(!rows.length){
-    const none = knF.tab === 'review' && !knF.query.trim() && !knF.scope.size;   // the Needs review tab with nothing in it
+    const none = knF.tab === 'review' && !knF.query.trim() && !knF.scope.size && !knF.type.size;   // the Needs review tab with nothing in it
     return '<tr><td colspan="'+cols+'"><div class="rt-empty"><div class="rt-empty__title">'+(none ? 'Nothing to review' : 'No entries match')+'</div>'+
       '<p class="rt-empty__text">'+(none ? 'Mira’s suggestions will show up here.' : 'Try another search or clear the filters.')+'</p></div></td></tr>';
   }
   return rows.map(e => '<tr class="is-clickable" tabindex="0" data-kn-open="'+e.id+'"><td><div class="in-firstcell"><span class="in-name">'+rtEsc(e.title || 'Untitled entry')+'</span>'+inOpenBtn()+'</div></td>'+
-    (team ? '' : '<td>'+rtEsc(knApplies(e.scope))+'</td>')+'<td>'+e.editedAt+'</td><td>'+knBadge(e)+'</td></tr>').join('');
+    (team ? '' : '<td>'+rtEsc(knApplies(e.scope))+'</td>')+'<td>'+rtEsc(e.type)+'</td><td>'+e.editedAt+'</td><td>'+knBadge(e)+'</td></tr>').join('');
 }
 // The list (toolbar, banner, table, or the empty state). `team` = the team of Team settings, or null for the Admin Panel.
 function knListHTML(team){
@@ -5439,15 +5445,15 @@ function knListHTML(team){
       '<p class="rt-empty__text">Connect a source and Mira will suggest what to keep, or write the first entry yourself.</p>'+
       '<div class="rt-empty__actions">'+(team ? '' : '<button type="button" class="rt-empty__btn" data-kn-connect>Connect a source</button>')+knAddHTML()+'</div></div>';
   }
-  const filters = team ? 0 : knF.scope.size;
+  const filters = team ? 0 : knF.scope.size+knF.type.size;
   // Two tabs, the same underline tabs as People | Teams: All and Needs review (entries with a Mira suggestion).
   const tab = (id, label) => '<button type="button" class="wl-tab'+(knF.tab === id ? ' is-active' : '')+'" data-kn-tab="'+id+'">'+label+'</button>';   // no icons (2026-11-16, on request)
   return '<div class="wl-tabsrow"><nav class="wl-tabs">'+tab('all', 'All')+tab('review', 'Needs review')+'</nav></div>'+
     '<div class="wl-toolbar"><div class="wl-toolbar__left">'+
-      (team ? '' : '<div class="wl-pillgroup">'+admMultiDdHTML('knscope', 'Applies to', knScopes().map(knApplies), knF.scope)+'</div>'+clearFiltersHTML(filters, 'data-kn-clearf'))+   // Team settings has no filter: it is already one team
+      (team ? '' : '<div class="wl-pillgroup">'+admMultiDdHTML('knscope', 'Applies to', knScopes().map(knApplies), knF.scope)+admMultiDdHTML('kntype', 'Type', KN_TYPES, knF.type)+'</div>'+clearFiltersHTML(filters, 'data-kn-clearf'))+   // Team settings has no filter: it is already one team
       '</div>'+
       '<div class="wl-toolbar__right">'+searchBoxHTML('Search knowledge')+knAddHTML()+'</div></div>'+
-    '<div class="in-tablewrap"><table class="in-table in-table--know"><thead><tr><th>Entry</th>'+(team ? '' : '<th>Applies to</th>')+'<th>Updated</th><th>Status</th></tr></thead>'+
+    '<div class="in-tablewrap"><table class="in-table in-table--know"><thead><tr><th>Entry</th>'+(team ? '' : '<th>Applies to</th>')+'<th>Type</th><th>Updated</th><th>Status</th></tr></thead>'+
       '<tbody data-kn-body>'+knRowsHTML(team)+'</tbody></table></div>';
 }
 function renderAdmKnowledge(){
@@ -5462,7 +5468,7 @@ function wireKnList(c, team){
     if(knF.query){ input.value = knF.query; search.classList.add('is-open','has-value'); search.querySelector('.wl-search__btn').setAttribute('aria-expanded','true'); input.removeAttribute('tabindex'); }
     input.addEventListener('input', () => { knF.query = input.value; c.querySelector('[data-kn-body]').innerHTML = knRowsHTML(team); wireRows(); });   // rows only while typing, so the box keeps its focus
   }
-  [['knscope', knF.scope]].forEach(([key, set]) => {
+  [['knscope', knF.scope], ['kntype', knF.type]].forEach(([key, set]) => {
     wireMultiDropdown(c, key, val => {
       if(val === '__clear__') set.clear(); else set.has(val) ? set.delete(val) : set.add(val);
       knReopen = key; renderContent();
@@ -5470,7 +5476,7 @@ function wireKnList(c, team){
   });
   knReopen = null;
   const cf = c.querySelector('[data-kn-clearf]');
-  if(cf) cf.addEventListener('click', () => { knF.scope.clear(); renderContent(); });
+  if(cf) cf.addEventListener('click', () => { knF.scope.clear(); knF.type.clear(); renderContent(); });
   c.querySelectorAll('[data-kn-tab]').forEach(b => b.addEventListener('click', () => { knF.tab = b.dataset.knTab; renderContent(); }));
   const cn = c.querySelector('[data-kn-connect]');
   if(cn) cn.addEventListener('click', () => setActive('adv-tools'));   // Connections & channels
@@ -5493,7 +5499,8 @@ function wireKnList(c, team){
     menu.addEventListener('click', ev => {
       if(ev.target.closest('[data-kn-write]')){
         const scope = team ? team.name : knF.scope.size === 1 ? knScopeOf([...knF.scope][0]) : 'Company';
-        const e = { id:'kn'+(++knSeq), title:'New entry', scope, body:[''], sources:[], author:KN_USER_FULL,
+        const e = { id:'kn'+(++knSeq), title:'New entry', type:'Policy', scope,   // CHANGE (2026-11-17): an entry written by hand starts as Policy
+          body:[''], sources:[], author:KN_USER_FULL,
           editedBy:KN_USER, editedAt:'just now', status:'live', suggestion:null };
         KN_ENTRIES.push(e); close(); knShow(e.id, team ? 'team' : 'admin', true);
       } else if(ev.target.closest('[data-kn-upload]')){
@@ -5508,8 +5515,8 @@ function wireKnList(c, team){
             if(!menu.isConnected) return;   // the user went elsewhere meanwhile
             const d = knUploadDraft(file.name);
             const scope = team ? team.name : knF.scope.size === 1 ? knScopeOf([...knF.scope][0]) : 'Company';
-            const e = { id:'kn'+(++knSeq), title:d.title, scope, body:d.body, sources:[{ name:file.name, where:'Uploaded by '+KN_USER_FULL }],
-              editedBy:'Mira', editedAt:'just now', status:'review', stampVerb:'Drafted', suggestion:{ kind:'new', from:file.name, file:true } };   // a file becomes a suggestion to approve, like any other Mira entry
+            const e = { id:'kn'+(++knSeq), title:d.title, type:d.type, scope, body:d.body, sources:[{ name:file.name, where:'Uploaded by '+KN_USER_FULL }],
+              editedBy:'Mira', editedAt:'just now', status:'review', stampVerb:'Drafted', suggestion:{ kind:'new', from:file.name, file:true } };   // Mira's choice of Type is in the draft   // a file becomes a suggestion to approve, like any other Mira entry
             KN_ENTRIES.push(e); knShow(e.id, team ? 'team' : 'admin');
           }, MIRA_TYPING_MS);
         });
@@ -5535,7 +5542,7 @@ function knShow(id, from, focusTitle){
 function knOpenAdmin(id, tab){
   knPanel = null;
   if(activeMode !== 'advanced'){ prevAppId = activeId; activeMode = 'advanced'; }
-  if(tab){ knF.tab = tab; knF.scope.clear(); knF.query = ''; }
+  if(tab){ knF.tab = tab; knF.scope.clear(); knF.type.clear(); knF.query = ''; }
   activeId = 'adv-knowledge'; knOpen = id || null; knFrom = 'admin'; knEnter = true;
   render(); animateSidebar('adv');
 }
@@ -5582,6 +5589,9 @@ function renderKnEntry(){
   }
   const pill = (key, value, options) => canEdit && KN_IS_ADMIN
     ? ddPillHTML({ key:key, label:'', value:value, itemsHTML:options.map(o => ddItem(o, o === value)).join('') }).replace('class="wl-ddpill"', 'class="wl-ddpill" style="font-size:13px"') : '<span>'+value+'</span>';   // 13px like the labels
+  // Type uses the same pill as Applies to, but is editable by everyone who may edit the entry (`canEdit`), not only admins. In review it shows Mira's choice and can change before Approve.
+  const typePill = canEdit
+    ? ddPillHTML({ key:'kntype', label:'', value:e.type, itemsHTML:KN_TYPES.map(o => ddItem(o, o === e.type)).join('') }).replace('class="wl-ddpill"', 'class="wl-ddpill" style="font-size:13px"') : '<span>'+rtEsc(e.type)+'</span>';
   const src = knSourceHTML(e);
   const crumb = team
     ? '<button type="button" class="home-link" data-kn-back>Team knowledge</button><span>/</span><span data-kn-crumb>'+rtEsc(title)+'</span>'
@@ -5596,6 +5606,7 @@ function renderKnEntry(){
     '<h1 class="wl__title" contenteditable="'+canEdit+'" data-kn-title style="outline:none;margin-bottom:20px">'+rtEsc(e.title)+'</h1>'+
     '<div class="adm-drawer" style="margin-bottom:20px">'+
       knProp('Applies to', pill('knscope', knApplies(e.scope), knScopes().map(knApplies)))+
+      knProp('Type', typePill)+   // CHANGE (2026-11-17): under Applies to; a dropdown for anyone who can edit the entry (admins, heads of their own team), plain text otherwise
       knProp('Managed by', rtEsc(knManagedBy(e)))+   // derived from Applies to, read-only text
       knProp('Source', src)+   // no Origin row (removed on request): Source says where the entry comes from
     '</div>'+
@@ -5626,6 +5637,7 @@ function wireKnEntry(c){
   if(added) added.addEventListener('input', () => { e.suggestion.added = added.textContent; touch(); });   // in review only the highlighted new text is editable
   wireDropdownPills(c, (key, val) => {
     if(key === 'knscope') e.scope = knScopeOf(val);   // Managed by follows on its own
+    if(key === 'kntype') e.type = val;   // autosaves like the other properties: the stamp below is updated
     e.editedBy = KN_USER; e.editedAt = 'just now'; e.stampVerb = '';
     renderContent();   // the page redraws (Managed by follows Applies to)
   });
