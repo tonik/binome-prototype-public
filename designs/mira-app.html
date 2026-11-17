@@ -5616,8 +5616,9 @@ function renderKnEntry(){
     ? '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px">'+
         (eds.length ? eds.map(n => '<span class="share-chip"><span class="share-ava">'+shareInitials(n)+'</span>'+rtEsc(n)+
           '<button type="button" class="share-chip__x" data-kn-ed-rm="'+rtEsc(n)+'" aria-label="Remove '+rtEsc(n)+' as an editor">'+svg('close',2.4)+'</button></span>').join('')
-          : '<span style="color:var(--c-muted)">None</span>')+
-        '<button type="button" class="home-link" data-kn-ed-add>Add</button></div>'
+          : '')+
+        // CHANGE (2026-11-17, on request): the manager sees "+ Add" (13px) instead of "None", and the same link after the names when there are editors.
+        '<button type="button" class="home-link" data-kn-ed-add style="font-size:13px">'+'+ Add'+'</button></div>'
     : eds.length ? rtEsc(eds.join(', ')) : '<span style="color:var(--c-muted)">None</span>';
   const crumb = team
     ? '<button type="button" class="home-link" data-kn-back>Team knowledge</button><span>/</span><span data-kn-crumb>'+rtEsc(title)+'</span>'
