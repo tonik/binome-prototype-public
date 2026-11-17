@@ -2497,6 +2497,7 @@ button:not(.ms-tab):not(.wl-tab):not(.wl-view__item){border-radius:999px !import
 .share-ava svg{width:12px;height:12px}
 .share-ava--lg{width:28px;height:28px;font-size:12px}
 .share-ava--lg svg{width:15px;height:15px}
+.share-ava img{width:100%;height:100%;border-radius:50%;display:block}   /* CHANGE (2026-11-17): Mira's orb as the avatar of a knowledge notification in the bell */
 .share-modal .wl-tabsrow{margin:8px 0 16px}
 .share-modal .home-modal__head + .share-combo{margin-top:16px}   /* no tab row */
 /* Input + permission pill + primary button on one row; the suggestions dropdown hangs under the whole row */
@@ -5271,18 +5272,30 @@ let KN_ENTRIES = [
     body:['Full-time employees have 26 days of paid leave a year, plus public holidays. Leave is booked in the HR app and approved by your manager.',
           'Unused days carry over until 31 March. Sick leave does not count against your leave days; tell your manager on the first day.'],
     sources:[{ name:'Leave_policy_2026.pdf', where:'Google Drive' }],
-    editedBy:'Anna Novak', editedAt:'28 Oct', status:'live', suggestion:null },
+    editedBy:'Anna Novak', editedAt:'28 Oct', status:'review',
+    suggestion:{ kind:'change', from:'a chat in Operations',   // CHANGE (2026-11-17): a seed suggestion for the grouped bell notification
+      removed:'Unused days carry over until 31 March.',
+      added:'Unused days carry over until 30 April.' } },
   // CHANGE (2026-11-16): this entry is live (no review suggestion), because Mira's answer in chat quotes it ($80), which an entry waiting for review must not be.
   // It applies to everyone, so it is managed by Admins.
   { id:'kn2', title:'Expenses and client entertainment', scope:'Company',
     body:['Employees can expense meals with clients when the meal has a clear business purpose. Client dinners are reimbursed up to $80 per person. Alcohol is not reimbursed.',
           'Add the client’s name and the reason when you submit the expense, and submit receipts within 30 days in the expenses app. Anything above $500 needs approval from your head of team before you spend it.'],
     sources:[{ name:'Expenses_policy_2026.pdf', where:'Google Drive' }],
-    editedBy:'Lena Berg', editedAt:'3 Nov', status:'live', suggestion:null },
+    editedBy:'Lena Berg', editedAt:'3 Nov', status:'review',
+    // CHANGE (2026-11-17): the entry now carries a change suggestion (about the approval limit, not the $80 Mira quotes, which is still the live text) and
+    // one report, so the bell has both a suggestion and a report for it. The suggestion is the third one of the admin's grouped notification.
+    suggestion:{ kind:'change', from:'a chat in Finance',
+      removed:'Anything above $500 needs approval from your head of team before you spend it.',
+      added:'Anything above $1,000 needs approval from your head of team before you spend it.' },
+    reports:[{ by:'Jonas Okafor', text:'The client dinner limit went up to $100 per person last month.', when:'25 min ago' }] },
   { id:'kn3', title:'Working hours and remote work', scope:'Company',
     body:['Core hours are 10:00 to 15:00 in your own time zone; the rest of the day is flexible. You can work remotely up to three days a week.',
           'Tell your team in advance when you will be away from your desk during core hours.'],
-    sources:[], author:'Anna Novak', editedBy:'Anna Novak', editedAt:'14 Oct', status:'live', suggestion:null },
+    sources:[], author:'Anna Novak', editedBy:'Anna Novak', editedAt:'14 Oct', status:'review',
+    suggestion:{ kind:'change', from:'a chat in Operations',   // CHANGE (2026-11-17): seed suggestion for the grouped bell notification
+      removed:'You can work remotely up to three days a week.',
+      added:'You can work remotely up to four days a week.' } },
   { id:'kn4', title:'Security and passwords', scope:'Company',
     body:['Use the company password manager and two-factor authentication for every work account. Never share a password in chat or email.',
           'Report a lost laptop or phone to IT within one hour. Admins can reset two-factor authentication from People.'],
@@ -5389,6 +5402,13 @@ function knApprove(e){
   e.suggestion = null; e.status = 'live'; e.editedBy = KN_USER; e.editedAt = 'just now'; e.stampVerb = 'Approved';
 }
 const knRemove = e => { KN_ENTRIES = KN_ENTRIES.filter(x => x !== e); };
+// CHANGE (2026-11-17): Resolve or Dismiss on the Reported banner closes EVERY report on the entry and marks all of their bell notifications done.
+function knCloseReports(e, outcome){
+  e.reports = [];
+  NOTIFS.forEach(n => { if(n.kind === 'knreport' && n.entry === e.id) n.outcome = outcome; });
+  syncBellDot(); renderContent();
+  shareToast(outcome === 'resolved' ? 'Marked as resolved' : 'Report dismissed');
+}
 
 // "Add entry": a button with a small menu (Write an entry / Upload a file). Drawn twice (toolbar and empty state), wired once per page.
 function knAddHTML(){
@@ -5511,10 +5531,21 @@ function knShow(id, from, focusTitle){
   }
 }
 // From anywhere (Home "Review", the chat panel's "Open entry"): the Admin Panel's page for the entry. Back to app returns to where the user was.
-function knOpenAdmin(id){
+// CHANGE (2026-11-17): `tab` ('review') opens the list on that tab with the filters and search cleared (id = null); used by the bell's Review button.
+function knOpenAdmin(id, tab){
   knPanel = null;
   if(activeMode !== 'advanced'){ prevAppId = activeId; activeMode = 'advanced'; }
-  activeId = 'adv-knowledge'; knOpen = id; knFrom = 'admin'; knEnter = true;
+  if(tab){ knF.tab = tab; knF.scope.clear(); knF.query = ''; }
+  activeId = 'adv-knowledge'; knOpen = id || null; knFrom = 'admin'; knEnter = true;
+  render(); animateSidebar('adv');
+}
+// The head's way in: Team settings, Team knowledge, in the workspace the head is already in. UNREACHABLE in the prototype (the user is an Admin, so
+// head notifications are never shown), kept so the bell's Review / Open has a path for a head.
+function knOpenTeam(id, tab){
+  knPanel = null;
+  if(activeMode !== 'team'){ prevAppId = activeId; activeMode = 'team'; }
+  if(tab){ knF.tab = tab; knF.query = ''; }
+  activeId = 'ts-knowledge'; knOpen = id || null; knFrom = 'team'; knEnter = true;
   render(); animateSidebar('adv');
 }
 function knBodyHTML(e, canEdit){
@@ -5537,10 +5568,18 @@ function renderKnEntry(){
   if(!e){ knOpen = null; return null; }
   const team = knFrom === 'team', canEdit = knCanManage(e), s = e.suggestion;
   const title = e.title || 'Untitled entry';
-  const banner = (text, btns) => '<div class="dc-banner" role="status" style="margin-bottom:20px"><div><div class="dc-banner__title">'+text+'</div></div><div class="dc-banner__btns">'+btns+'</div></div>';
+  const banner = (text, btns, sub) => '<div class="dc-banner" role="status" style="margin-bottom:20px"><div><div class="dc-banner__title">'+text+'</div>'+(sub ? '<div class="dc-banner__text">'+sub+'</div>' : '')+'</div><div class="dc-banner__btns">'+btns+'</div></div>';
   const bBtn = (attr, label, on) => '<button type="button" class="dc-banner__btn'+(on ? ' dc-banner__btn--on' : '')+'" '+attr+'>'+label+'</button>';
   let state = '';
   if(e.status === 'review' && s) state = banner(s.kind === 'new' ? 'Mira drafted this from '+rtEsc(s.from)+'. It isn’t used until approved.' : 'Mira suggested this change from '+rtEsc(s.from)+'. It isn’t used until approved.', bBtn('data-kn-approve', 'Approve', true)+bBtn('data-kn-reject', 'Reject'));
+  // CHANGE (2026-11-17): the Reported banner (under the review banner when both apply). It shows the LATEST report with the person's words, and "+N more
+  // reports" when there are several. Resolve and Dismiss both close every report on the entry (see knCloseReports).
+  const rp = e.reports && e.reports.length ? e.reports : null;
+  if(rp){
+    const last = rp[rp.length - 1], more = rp.length - 1;
+    state += banner(rtEsc(last.by)+' reported this entry as outdated', bBtn('data-kn-resolve', 'Resolve', true)+bBtn('data-kn-dismiss', 'Dismiss'),
+      '“'+rtEsc(last.text)+'”'+(more ? ' · +'+more+' more report'+(more > 1 ? 's' : '') : ''));
+  }
   const pill = (key, value, options) => canEdit && KN_IS_ADMIN
     ? ddPillHTML({ key:key, label:'', value:value, itemsHTML:options.map(o => ddItem(o, o === value)).join('') }).replace('class="wl-ddpill"', 'class="wl-ddpill" style="font-size:13px"') : '<span>'+value+'</span>';   // 13px like the labels
   const src = knSourceHTML(e);
@@ -5591,11 +5630,13 @@ function wireKnEntry(c){
     renderContent();   // the page redraws (Managed by follows Applies to)
   });
   const on = (sel, fn) => { const b = c.querySelector(sel); if(b) b.addEventListener('click', fn); };
-  on('[data-kn-approve]', () => { knApprove(e); renderContent(); shareToast('Approved. Mira can use it now'); });
+  on('[data-kn-approve]', () => { knApprove(e); renderContent(); syncBellDot(); shareToast('Approved. Mira can use it now'); });   // syncBellDot: the bell's suggestion notification may now be done
   on('[data-kn-reject]', () => {
-    if(e.suggestion.kind === 'new'){ knRemove(e); knOpen = null; renderContent(); shareToast('Suggestion rejected'); }   // a new entry that nobody wanted is deleted
-    else { e.suggestion = null; e.status = 'live'; renderContent(); shareToast('Change rejected. The old text stays'); }   // a change is dropped, the old text stays
+    if(e.suggestion.kind === 'new'){ knRemove(e); knOpen = null; renderContent(); syncBellDot(); shareToast('Suggestion rejected'); }   // a new entry that nobody wanted is deleted
+    else { e.suggestion = null; e.status = 'live'; renderContent(); syncBellDot(); shareToast('Change rejected. The old text stays'); }   // a change is dropped, the old text stays
   });
+  on('[data-kn-resolve]', () => knCloseReports(e, 'resolved'));
+  on('[data-kn-dismiss]', () => knCloseReports(e, 'dismissed'));
   on('[data-kn-delete]', () => rtConfirm({ title:'Delete “'+(e.title || 'Untitled entry')+'”?', text:'Mira will stop using it. This can’t be undone.', confirm:'Delete', danger:true },
     () => { knRemove(e); knOpen = null; renderContent(); shareToast('Entry deleted'); }));
 }
@@ -7593,16 +7634,10 @@ const HOME_NEEDS = [
 ];
 // Items shown for a workspace: private cards (scope:'personal') only appear in Personal;
 // the team workspaces show just the shared ones.
-/* CHANGE (2026-11-16): Company knowledge. Every entry waiting for review (a Mira suggestion, not a report) is a "Needs you" item for the person who
-   manages its scope: an admin sees all of them, in every workspace (a head would see only their team's, `knCanManage`). The items are derived on every
-   render (nothing is pushed into HOME_NEEDS), so approving or rejecting an entry removes its item. */
-function knNeedsItems(){
-  return KN_ENTRIES.filter(e => e.status === 'review' && e.suggestion && !e.suggestion.file && knCanManage(e)).map(e => ({
-    kn:e.id, title:e.suggestion.kind === 'new' ? 'Review a new entry: '+e.title : 'Review Mira’s change to '+e.title,
-    source:'From '+e.suggestion.from, actions:[{ label:'Review', primary:true, attr:'data-kn-review-entry="'+e.id+'"' }] }));
-}
-const homeNeedsFor = ws => HOME_NEEDS.filter(it => ws === 'personal' || it.scope !== 'personal').concat(knNeedsItems());
-const homeSrcKey = it => it.kn ? 'kn:'+it.kn : HOME_NEEDS.indexOf(it);   // data-home-source: an index into HOME_NEEDS, or the entry of a knowledge item
+/* CHANGE (2026-11-17): the Company knowledge review items ("Review Mira's change to ...", "Review a new entry: ...") are no longer here: they moved to the
+   bell (kinds `knsugg` and `knreport` in NOTIFS). Every other Needs you item is unchanged. */
+const homeNeedsFor = ws => HOME_NEEDS.filter(it => ws === 'personal' || it.scope !== 'personal');
+const homeSrcKey = it => HOME_NEEDS.indexOf(it);   // data-home-source: an index into HOME_NEEDS
 // "Keep an eye on": things Mira noticed. `links` are the underlined text actions.
 const HOME_WATCH = [
   { title:'3 deals quiet for 14 days', body:'Follow-ups drafted for each owner.', links:['Nudge owners'] },
@@ -8238,8 +8273,7 @@ function wireHome(c){
   });
   // Source badge opens a modal. Closes on X, backdrop click or Escape. Body is a placeholder.
   c.querySelectorAll('[data-home-source]').forEach(b =>
-    b.addEventListener('click', () => b.dataset.homeSource.startsWith('kn:') ? knOpenAdmin(b.dataset.homeSource.slice(3)) : openSourceModal(HOME_NEEDS[+b.dataset.homeSource].modal)));
-  c.querySelectorAll('[data-kn-review-entry]').forEach(b => b.addEventListener('click', () => knOpenAdmin(b.dataset.knReviewEntry)));   // Company knowledge: Review opens the entry's page
+    b.addEventListener('click', () => openSourceModal(HOME_NEEDS[+b.dataset.homeSource].modal)));
   const done = c.querySelector('[data-home-done]');
   const list = c.querySelector('.home-donelist');
   if(done && list){
@@ -11656,7 +11690,37 @@ NOTIFS.push({ id:'n-dshare', kind:'dshare', from:'Aga', routine:'Pipeline overvi
 /* Maya (Sales) asks for more in Gmail. SIMULATED: really this reaches the admins when someone sends a request from Team settings. `perm` is the
    index of the permission (ADM_PERM_GROUPS order): 5 = "Sending emails inside the company". Clicking it opens a confirmation (see notifAskReview). */
 NOTIFS.push({ id:'n-ask-maya', kind:'permask', from:'Maya', team:'Sales', tool:'gmail', perm:5, ask:'send emails', when:'10 min ago', state:'pending' });
-const notifPending = () => NOTIFS.filter(n => (n.state === 'pending' || n.unread)).length;   // waiting for an answer, or not seen yet (information notifications)
+/* CHANGE (2026-11-17): Company knowledge in the bell. SIMULATED, in memory. Two kinds, both sent to whoever manages the entry (`to`: 'Admins' or
+   'Head of <Team>', the entry's `knManagedBy`):
+   - `knsugg` (Mira's suggestions), GROUPED: `items` = [{ id, kind:'new'|'change', title }] of the entries. While the notification is unread, a new
+     suggestion for the same recipient is added to it (count updates, time resets, it moves to the top); once read, the next one starts a new notification.
+     The count never shrinks. It is done when every entry in it has been approved or rejected (derived, see knNotifDone). Avatar: Mira's orb. One button:
+     Review (one suggestion: that entry's page; more than one: the list on its Needs review tab). There is no Accept / Decline: a change must be read first.
+   - `knreport` (a person reported an entry as outdated), one per report: `entry`, `by`. Open goes to the entry page, whose Reported banner has Resolve and
+     Dismiss; either closes every report on the entry and marks all their notifications done (`outcome`).
+   Neither has a description line. The prototype user is an Admin and cannot switch role, so only the 'Admins' ones are shown (notifMine); the head ones
+   are seeded but never visible. Nothing in the prototype creates a suggestion while it runs; knNotifySuggestion is how one would arrive, and seeds the data. */
+let knNotifSeq = 0;
+const isKnNotif = n => n.kind === 'knsugg' || n.kind === 'knreport';
+const knNotifDone = n => n.kind === 'knsugg'
+  ? n.items.every(i => { const e = knEntry(i.id); return !e || !e.suggestion; })   // gone (a rejected new entry) or no suggestion left
+  : Boolean(n.outcome);
+// Whether the bell of the prototype user shows it: the user is an Admin; a head's notifications belong to the head only.
+const notifMine = n => !isKnNotif(n) || (n.to === 'Admins' ? KN_IS_ADMIN : knHead(n.to.replace('Head of ', '')) === KN_USER_FULL);   // a head's own, not an admin's
+function knNotifySuggestion(e){
+  const to = knManagedBy(e), item = { id:e.id, kind:e.suggestion.kind, title:e.title };
+  const open = NOTIFS.find(n => n.kind === 'knsugg' && n.to === to && n.unread);
+  if(open){
+    if(!open.items.some(i => i.id === e.id)) open.items.push(item);
+    open.when = 'Just now'; NOTIFS.splice(NOTIFS.indexOf(open), 1); NOTIFS.unshift(open);
+  } else NOTIFS.unshift({ id:'n-knsugg-'+(++knNotifSeq), kind:'knsugg', to, items:[item], when:'Just now', unread:true });
+}
+// Seeds: the admin gets ONE grouped notification (Expenses, Leave, Working hours), the head of Sales a single change, the head of Customer projects a new
+// entry. Members get nothing.
+['kn6', 'kn12', 'kn2', 'kn1', 'kn3'].forEach(id => knNotifySuggestion(knEntry(id)));
+NOTIFS.forEach(n => { if(n.kind === 'knsugg') n.when = n.to === 'Admins' ? '5 min ago' : '1 hour ago'; });
+// (2026-11-17, on request: the seeded report notification for Jonas Okafor was removed; the `knreport` kind and the entry's own report still work.)
+const notifPending = () => NOTIFS.filter(notifMine).filter(n => (n.state === 'pending' || n.unread || (isKnNotif(n) && !knNotifDone(n)))).length;   // waiting for an answer, or not seen yet (information notifications)
 function syncBellDot(){
   const bell = document.querySelector('[data-notif-bell]');
   if(!bell) return;
@@ -11672,6 +11736,26 @@ function notifItemHTML(n){
       '<div class="notif__meta"><span class="home-badge home-badge--neutral">'+rtEsc(n.team)+'</span>'+n.when+'</div>'+
       '<div class="notif__hint">Let Mira '+rtEsc(n.ask)+' from '+rtEsc(t ? t.name : n.tool)+' for '+rtEsc(n.team)+'.</div>'+
       '<div class="notif__actions"><button type="button" class="home-btn" data-notif-act="review" data-id="'+n.id+'">Review</button></div></div></div>';
+  }
+  // Company knowledge (see the block above NOTIFS). The same item as the others: avatar, title with bold names, grey type badge, time, buttons. No description.
+  if(isKnNotif(n)){
+    const done = knNotifDone(n), kn = '<span class="home-badge home-badge--neutral">Knowledge</span>';
+    let ava, text, btn, tail;
+    if(n.kind === 'knsugg'){
+      const one = n.items.length === 1 ? n.items[0] : null;
+      ava = '<span class="share-ava share-ava--lg"><img src="'+MIRA_AVATAR+'" alt=""></span>';   // Mira's orb, as on her messages
+      text = !one ? '<b>Mira</b> made '+n.items.length+' suggestions for <b>Company knowledge</b>'
+        : one.kind === 'new' ? '<b>Mira</b> drafted a new entry: <b>'+rtEsc(one.title)+'</b>' : '<b>Mira</b> suggested a change to <b>'+rtEsc(one.title)+'</b>';
+      btn = 'Review'; tail = 'Reviewed';
+    } else {
+      const e = knEntry(n.entry);
+      ava = shareAva({name:n.by}, true);
+      text = '<b>'+rtEsc(n.by)+'</b> reported <b>'+rtEsc(e ? e.title : 'an entry')+'</b> as outdated';
+      btn = 'Open'; tail = n.outcome === 'dismissed' ? 'Dismissed' : 'Resolved';
+    }
+    return '<div class="notif__item" data-nid="'+n.id+'">'+ava+'<div class="notif__body"><div class="notif__text">'+text+'</div><div class="notif__meta">'+kn+n.when+'</div>'+
+      (done ? '<div class="notif__done'+(tail === 'Dismissed' ? '' : ' notif__done--ok')+'">'+(tail === 'Dismissed' ? '' : svg('check',2.25))+tail+'</div>'
+            : '<div class="notif__actions"><button type="button" class="home-btn home-btn--primary" data-notif-act="kn" data-id="'+n.id+'">'+btn+'</button></div>')+'</div></div>';
   }
   // An admin changed a connection's level: information only (no Accept or Decline). SIMULATED: really it goes to the heads of the teams that use it.
   if(n.kind === 'ceiling') return '<div class="notif__item" data-nid="'+n.id+'">'+shareAva({name:n.from}, true)+'<div class="notif__body"><div class="notif__text">'+rtEsc(n.text)+'</div>'+
@@ -11701,7 +11785,7 @@ function openNotifPanel(bell){
   p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', 'Notifications');
   const draw = () => {
     const k = notifPending();
-    p.innerHTML = '<div class="notif__head">Notifications<span class="notif__count">'+(k ? k+' new' : 'All caught up')+'</span></div>'+NOTIFS.map(notifItemHTML).join('');
+    p.innerHTML = '<div class="notif__head">Notifications<span class="notif__count">'+(k ? k+' new' : 'All caught up')+'</span></div>'+NOTIFS.filter(notifMine).map(notifItemHTML).join('');
   };
   draw();
   NOTIFS.forEach(n => { delete n.unread; }); syncBellDot();   // information notifications count as seen once the panel has been opened
@@ -11715,6 +11799,7 @@ function openNotifPanel(bell){
     const b = e.target.closest('[data-notif-act]');
     if(!b) return;
     const n = NOTIFS.find(x => x.id === b.dataset.id);
+    if(b.dataset.notifAct === 'kn'){ close(); notifKnOpen(n); return; }
     if(b.dataset.notifAct === 'accept' && n.kind === 'dshare'){
       // The dashboard joins the sidebar list of the workspace the user is in, and opens on it.
       n.state = 'accepted';
@@ -11739,6 +11824,14 @@ function openNotifPanel(bell){
   document.addEventListener('mousedown', onDown);
   document.addEventListener('keydown', onKey);
   document.body.appendChild(p);
+}
+// Review / Open of a knowledge notification. More than one suggestion always goes to the list (Needs review tab); one suggestion or a report goes to the
+// entry's page. An admin goes to the Admin Panel, a head to Team settings, Team knowledge.
+function notifKnOpen(n){
+  const admin = n.to === 'Admins', id = n.kind === 'knreport' ? n.entry : n.items[0].id;
+  if(n.kind === 'knsugg' && n.items.length > 1){ admin ? knOpenAdmin(null, 'review') : knOpenTeam(null, 'review'); return; }
+  if(!knEntry(id)){ shareToast('That entry is gone'); return; }
+  admin ? knOpenAdmin(id) : knOpenTeam(id);
 }
 // The confirmation for a permission request (the existing rtConfirm, with Decline / Approve). Approve sets that permission to Allowed for the
 // whole company (the connection's own permissions, so its level follows: Gmail becomes Custom). Either answer clears the request.
