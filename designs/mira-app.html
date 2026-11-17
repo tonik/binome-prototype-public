@@ -187,6 +187,7 @@ body.nav-e .account-menu__ws + .account-menu__sep{display:none}
 .sidebar.is-collapsed .adv-back{justify-content:center;padding-left:0;padding-right:0;gap:0}
 .sidebar.is-collapsed .navlink__label,
 .sidebar.is-collapsed .navlink__badge,
+.sidebar.is-collapsed .navlink .home-badge,   /* the Proposal tag of Knowledge */
 .sidebar.is-collapsed .navlink__chev,
 .sidebar.is-collapsed .adv-back > span:not(.adv-back__icon),
 .sidebar.is-collapsed .adv-sectlabel,
@@ -2763,7 +2764,7 @@ const svg = (name, w=1.7) =>
   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="'+w+'" stroke-linecap="round" stroke-linejoin="round">'+(ICONS[name]||'')+'</svg>';
 
 /* ---- Reusable link component ---- */
-function makeLink({ id, label, icon, active=false, badge=null, avatar=false, mock=false, chevron=null, dim=false }){
+function makeLink({ id, label, icon, active=false, badge=null, avatar=false, mock=false, chevron=null, dim=false, tag=null }){
   const el = document.createElement('button');
   el.type = 'button';
   el.className = 'navlink' + (active ? ' is-active' : '') + (avatar ? ' navlink--avatar' : '') + (dim ? ' navlink--dim' : '');
@@ -2774,6 +2775,7 @@ function makeLink({ id, label, icon, active=false, badge=null, avatar=false, moc
   el.innerHTML =
     '<span class="navlink__icon">'+iconHTML+'</span>'+
     '<span class="navlink__label">'+label+'</span>'+
+    (tag ? '<span class="home-badge home-badge--neutral">'+tag+'</span>' : '')+   // CHANGE (2026-11-17): the grey tag next to a nav label (Knowledge: Proposal)
     (badge!=null ? '<span class="navlink__badge">'+badge+'</span>' : '')+
     (chevron!=null ? '<span class="navlink__chev'+(chevron ? ' is-open' : '')+'">'+svg('chevdown',2.2)+'</span>' : '');
   if(mock) el.disabled = true;   // shown in the nav, goes nowhere
@@ -2787,6 +2789,9 @@ const NAV = [
   { id:'tasks',       label:'Tasks',       icon:'worklist' },
   { id:'routines',    label:'Routines',    icon:'repeat' },
   { id:'insights',    label:'Insights',    icon:'insights' },
+  // CHANGE (2026-11-17, on request): Knowledge, below Insights (and its dashboard list). `tag` draws a grey tag next to the label (the existing neutral home-badge).
+  // PROPOSAL: a temporary tab to show a client; delete this line (and the 'knowledge' branch of renderContent) to remove it.
+  { id:'knowledge',   label:'Knowledge',   icon:'book', tag:'Proposal' },
   { type:'group', id:'apps', label:'Apps', items:[
     { id:'pricing', label:'Pricing', icon:'pricing' },
     { id:'hr',      label:'HR',      icon:'hr' },
@@ -3555,6 +3560,13 @@ function renderContent(){
     c.className = 'content';
     c.innerHTML = renderAdmGovernance();
     wireAdmGovernance(c);
+  } else if(activeId === 'knowledge'){
+    // CHANGE (2026-11-17, on request): the Knowledge tab of the main navigation (a PROPOSAL, see NAV). In a team workspace (where the user is an Admin) it is the
+    // same page as Admin Panel -> Company knowledge; in Personal it lists only the entries the user is an editor of (see knMineView).
+    c.className = 'content';
+    const kp = knOpen ? renderKnEntry() : null;
+    c.innerHTML = kp || (knMineView() ? renderKnMine() : renderAdmKnowledge());
+    if(kp) wireKnEntry(c); else wireKnList(c, null);
   } else if(activeId === 'adv-knowledge'){
     // CHANGE (2026-11-16): built (table of entries grouped by scope); was a title only (renderAdmSoon, now orphaned).
     // CHANGE (2026-11-16): rebuilt from the Company Brain spec: the list, or an entry's page while one is open (knOpen).
@@ -5254,7 +5266,7 @@ function wireAdmGovernance(c){
    answers in chat (a `cvAsk` branch for expense questions), which open a read-only side panel (`knPanelHTML`) with no actions.
    STATES of an entry: live (no badge), review (a Mira suggestion: `suggestion.kind` 'new' or 'change', shown as a diff; "Add entry ->
    Upload a file" also makes one, a `new` with `file:true`, banner "Mira drafted this from ...", Approve or Reject). There is no draft state. Needs you only holds Mira's suggestions,
-   and not the ones from a file (the user just made those and is looking at them). "Report as outdated" is not built (removed on request, 2026-11-16).
+   and not the ones from a file (the user just made those and is looking at them). There is no "Report as outdated" (removed on request, 2026-11-16, and every trace of reports removed 2026-11-17).
    ROLES: the prototype user is an Admin in every workspace, so the head and member variants cannot be reached by role; the member panel is reached
    by the chat chips, and the head's list by Team settings -> Knowledge in Sales (`KN_IS_ADMIN` / `knCanManage` keep the read-only path in the code).
    Reused: admHead, the .wl-tabs (All | Needs review), .wl-toolbar, admMultiDdHTML, searchBoxHTML, .wl-newtask with a .wl-ddmenu, .in-table, .home-badge, .dc-banner (entry page only),
@@ -5269,6 +5281,7 @@ const KN_IS_ADMIN = true;                // SIMULATED: the prototype user is an 
 let KN_ENTRIES = [
   // ---- Company ----
   { id:'kn1', title:'Leave and time off', type:'Policy', scope:'Company',
+    editors:['Agata Tonik'],   // CHANGE (2026-11-17): the prototype user is an editor here (matches the seeded bell item), so Knowledge in Personal shows this entry
     body:['Full-time employees have 26 days of paid leave a year, plus public holidays. Leave is booked in the HR app and approved by your manager.',
           'Unused days carry over until 31 March. Sick leave does not count against your leave days; tell your manager on the first day.'],
     sources:[{ name:'Leave_policy_2026.pdf', where:'Google Drive' }],
@@ -5283,12 +5296,13 @@ let KN_ENTRIES = [
           'Add the client’s name and the reason when you submit the expense, and submit receipts within 30 days in the expenses app. Anything above $500 needs approval from your head of team before you spend it.'],
     sources:[{ name:'Expenses_policy_2026.pdf', where:'Google Drive' }],
     editedBy:'Lena Berg', editedAt:'3 Nov', status:'review',
-    // CHANGE (2026-11-17): the entry now carries a change suggestion (about the approval limit, not the $80 Mira quotes, which is still the live text) and
-    // one report, so the bell has both a suggestion and a report for it. The suggestion is the third one of the admin's grouped notification.
+    editors:['Lena Berg'],   // CHANGE (2026-11-17): the seed for the Editors row of the entry page (names, see knIsEditor)
+    // CHANGE (2026-11-17): the entry now carries a change suggestion (about the approval limit, not the $80 Mira quotes, which is still the live text).
+    // The suggestion is the third one of the admin's grouped notification. (Its seeded report, "Jonas Okafor reported this entry as outdated", was removed
+    // on request together with the whole reporting feature.)
     suggestion:{ kind:'change', from:'a chat in Finance',
       removed:'Anything above $500 needs approval from your head of team before you spend it.',
-      added:'Anything above $1,000 needs approval from your head of team before you spend it.' },
-    reports:[{ by:'Jonas Okafor', text:'The client dinner limit went up to $100 per person last month.', when:'25 min ago' }] },
+      added:'Anything above $1,000 needs approval from your head of team before you spend it.' } },
   { id:'kn3', title:'Working hours and remote work', type:'Policy', scope:'Company',
     body:['Core hours are 10:00 to 15:00 in your own time zone; the rest of the day is flexible. You can work remotely up to three days a week.',
           'Tell your team in advance when you will be away from your desk during core hours.'],
@@ -5375,6 +5389,17 @@ const knHead = scope => { const t = admTeam(scope); return t && t.head ? t.head 
 const knManagedBy = e => e.scope !== 'Company' && knHead(e.scope) ? 'Head of '+e.scope : 'Admins';
 // Whether the user may edit an entry: admins always; a head only in their own team. Reaching the read-only page is not possible in the prototype.
 const knCanManage = e => KN_IS_ADMIN || (e.scope !== 'Company' && knHead(e.scope) === KN_USER_FULL);
+// CHANGE (2026-11-17): EDITORS. A list of names in `e.editors` (an entry without the field has none). Whoever MANAGES the entry (`knCanManage`) adds and removes them.
+// An editor may change the title and the body only (Type is static for them too, changed on request 2026-11-17): not Applies to, Managed by or Editors, not delete the entry. They DO see Mira's review banner with the same copy and
+// Approve / Reject buttons as admins (on request). The prototype user is an Admin, so the editor-only view is coded but cannot be reached by role.
+const knIsEditor = e => (e.editors || []).indexOf(KN_USER_FULL) >= 0;
+const knCanEdit = e => knCanManage(e) || knIsEditor(e);   // title and body
+// Who can be picked as an editor: an entry that applies to a team -> only the people in that team; one that applies to everyone -> anyone in the company
+// (disabled people are not listed, as in Add people).
+const knEditorPool = e => e.scope === 'Company' ? ADM_MEMBERS.filter(x => x.status !== 'Disabled') : admTeamMembers(e.scope);
+// CHANGE (2026-11-17): the Knowledge tab in the main navigation. In the Personal workspace it is the EDITOR view: only entries the user is an editor of, opened
+// with knFrom 'mine' (title, body and Type editable; every other property read-only; no Add entry, no review tabs, no Delete). Elsewhere it is the admin page.
+const knMineView = () => activeId === 'knowledge' && activeWorkspace === 'personal';
 const knNeedsReview = e => e.status === 'review';
 // Where an entry comes from, never empty (2026-11-16, on request): a file shows its name and place (Home source badge), an entry written by hand says
 // "Written by <person>", and one Mira wrote from a conversation says "Chat in <team>": plain text with no link, because a chat may be private.
@@ -5398,7 +5423,8 @@ function knVisible(team){
   return KN_ENTRIES.filter(e =>
     (team ? e.scope === team.name : (!knF.scope.size || knF.scope.has(knApplies(e.scope)))) &&
     (team || !knF.type.size || knF.type.has(e.type)) &&   // the Type filter exists only in the Admin Panel
-    (knF.tab !== 'review' || knNeedsReview(e)) &&
+    (knF.tab !== 'review' || knNeedsReview(e) || knMineView()) &&   // the editor view has no tabs, so a leftover Needs review tab must not filter it
+    (!knMineView() || knIsEditor(e)) &&
     (!q || (e.title+' '+knApplies(e.scope)+' '+e.type).toLowerCase().includes(q)))
     .sort((a, b) => order(a) - order(b) || a.title.localeCompare(b.title));
 }
@@ -5408,14 +5434,6 @@ function knApprove(e){
   e.suggestion = null; e.status = 'live'; e.editedBy = KN_USER; e.editedAt = 'just now'; e.stampVerb = 'Approved';
 }
 const knRemove = e => { KN_ENTRIES = KN_ENTRIES.filter(x => x !== e); };
-// CHANGE (2026-11-17): Resolve or Dismiss on the Reported banner closes EVERY report on the entry and marks all of their bell notifications done.
-function knCloseReports(e, outcome){
-  e.reports = [];
-  NOTIFS.forEach(n => { if(n.kind === 'knreport' && n.entry === e.id) n.outcome = outcome; });
-  syncBellDot(); renderContent();
-  shareToast(outcome === 'resolved' ? 'Marked as resolved' : 'Report dismissed');
-}
-
 // "Add entry": a button with a small menu (Write an entry / Upload a file). Drawn twice (toolbar and empty state), wired once per page.
 function knAddHTML(){
   return '<div class="wl-dd" data-kn-addwrap><button type="button" class="wl-newtask" data-kn-add aria-haspopup="menu" aria-expanded="false"><span class="wl-newtask__icon">'+svg('plus',2)+'</span>Add entry</button>'+
@@ -5439,8 +5457,10 @@ function knRowsHTML(team){
 }
 // The list (toolbar, banner, table, or the empty state). `team` = the team of Team settings, or null for the Admin Panel.
 function knListHTML(team){
-  const inScope = KN_ENTRIES.filter(e => !team || e.scope === team.name);
+  const mine = knMineView();   // the editor view: only the entries the user edits
+  const inScope = KN_ENTRIES.filter(e => (!team || e.scope === team.name) && (!mine || knIsEditor(e)));
   if(!inScope.length){
+    if(mine) return '<div class="rt-empty"><div class="rt-empty__title">Nothing to edit yet</div><p class="rt-empty__text">Entries show up here when someone adds you as an editor.</p></div>';
     return '<div class="rt-empty"><div class="rt-empty__title">Mira hasn’t found anything yet</div>'+
       '<p class="rt-empty__text">Connect a source and Mira will suggest what to keep, or write the first entry yourself.</p>'+
       '<div class="rt-empty__actions">'+(team ? '' : '<button type="button" class="rt-empty__btn" data-kn-connect>Connect a source</button>')+knAddHTML()+'</div></div>';
@@ -5448,13 +5468,16 @@ function knListHTML(team){
   const filters = team ? 0 : knF.scope.size+knF.type.size;
   // Two tabs, the same underline tabs as People | Teams: All and Needs review (entries with a Mira suggestion).
   const tab = (id, label) => '<button type="button" class="wl-tab'+(knF.tab === id ? ' is-active' : '')+'" data-kn-tab="'+id+'">'+label+'</button>';   // no icons (2026-11-16, on request)
-  return '<div class="wl-tabsrow"><nav class="wl-tabs">'+tab('all', 'All')+tab('review', 'Needs review')+'</nav></div>'+
+  return (mine ? '' : '<div class="wl-tabsrow"><nav class="wl-tabs">'+tab('all', 'All')+tab('review', 'Needs review')+'</nav></div>')+   // editors cannot review, so no tabs for them
     '<div class="wl-toolbar"><div class="wl-toolbar__left">'+
       (team ? '' : '<div class="wl-pillgroup">'+admMultiDdHTML('knscope', 'Applies to', knScopes().map(knApplies), knF.scope)+admMultiDdHTML('kntype', 'Type', KN_TYPES, knF.type)+'</div>'+clearFiltersHTML(filters, 'data-kn-clearf'))+   // Team settings has no filter: it is already one team
       '</div>'+
-      '<div class="wl-toolbar__right">'+searchBoxHTML('Search knowledge')+knAddHTML()+'</div></div>'+
+      '<div class="wl-toolbar__right">'+searchBoxHTML('Search knowledge')+(mine ? '' : knAddHTML())+'</div></div>'+
     '<div class="in-tablewrap"><table class="in-table in-table--know"><thead><tr><th>Entry</th>'+(team ? '' : '<th>Applies to</th>')+'<th>Type</th><th>Updated</th><th>Status</th></tr></thead>'+
       '<tbody data-kn-body>'+knRowsHTML(team)+'</tbody></table></div>';
+}
+function renderKnMine(){
+  return '<div class="adm"><header class="wl__head"><h1 class="wl__title">Knowledge</h1><p class="wl__subtitle">Entries you can edit.</p></header>'+knListHTML(null)+'</div>';
 }
 function renderAdmKnowledge(){
   return '<div class="adm">'+admHead('Company knowledge')+knListHTML(null)+'</div>';
@@ -5482,7 +5505,7 @@ function wireKnList(c, team){
   if(cn) cn.addEventListener('click', () => setActive('adv-tools'));   // Connections & channels
   const wireRows = () => {
     c.querySelectorAll('[data-kn-open]').forEach(tr => {
-      tr.addEventListener('click', () => knShow(tr.dataset.knOpen, team ? 'team' : 'admin'));
+      tr.addEventListener('click', () => knShow(tr.dataset.knOpen, team ? 'team' : knMineView() ? 'mine' : 'admin'));
       tr.addEventListener('keydown', e => { if(e.key === 'Enter' && e.target === tr) tr.click(); });
     });
   };
@@ -5573,29 +5596,32 @@ function knBodyHTML(e, canEdit){
 function renderKnEntry(){
   const e = knEntry(knOpen);
   if(!e){ knOpen = null; return null; }
-  const team = knFrom === 'team', canEdit = knCanManage(e), s = e.suggestion;
+  const team = knFrom === 'team', canManage = knCanManage(e) && knFrom !== 'mine', canEdit = knCanEdit(e), s = e.suggestion;   // CHANGE (2026-11-17): managing and editing are now two rights
   const title = e.title || 'Untitled entry';
   const banner = (text, btns, sub) => '<div class="dc-banner" role="status" style="margin-bottom:20px"><div><div class="dc-banner__title">'+text+'</div>'+(sub ? '<div class="dc-banner__text">'+sub+'</div>' : '')+'</div><div class="dc-banner__btns">'+btns+'</div></div>';
   const bBtn = (attr, label, on) => '<button type="button" class="dc-banner__btn'+(on ? ' dc-banner__btn--on' : '')+'" '+attr+'>'+label+'</button>';
   let state = '';
-  if(e.status === 'review' && s) state = banner(s.kind === 'new' ? 'Mira drafted this from '+rtEsc(s.from)+'. It isn’t used until approved.' : 'Mira suggested this change from '+rtEsc(s.from)+'. It isn’t used until approved.', bBtn('data-kn-approve', 'Approve', true)+bBtn('data-kn-reject', 'Reject'));
-  // CHANGE (2026-11-17): the Reported banner (under the review banner when both apply). It shows the LATEST report with the person's words, and "+N more
-  // reports" when there are several. Resolve and Dismiss both close every report on the entry (see knCloseReports).
-  const rp = e.reports && e.reports.length ? e.reports : null;
-  if(rp){
-    const last = rp[rp.length - 1], more = rp.length - 1;
-    state += banner(rtEsc(last.by)+' reported this entry as outdated', bBtn('data-kn-resolve', 'Resolve', true)+bBtn('data-kn-dismiss', 'Dismiss'),
-      '“'+rtEsc(last.text)+'”'+(more ? ' · +'+more+' more report'+(more > 1 ? 's' : '') : ''));
-  }
-  const pill = (key, value, options) => canEdit && KN_IS_ADMIN
+  if(e.status === 'review' && s) state = banner(s.kind === 'new' ? 'Mira drafted this from '+rtEsc(s.from)+'. It isn’t used until approved.' : 'Mira suggested this change from '+rtEsc(s.from)+'. It isn’t used until approved.', bBtn('data-kn-approve', 'Approve', true)+bBtn('data-kn-reject', 'Reject'));   // CHANGE (2026-11-17, on request): editors see the same banner, copy and buttons as admins
+  // (2026-11-17, on request: the Reported banner and the whole "report as outdated" feature were removed from the app.)
+  const pill = (key, value, options) => canManage && KN_IS_ADMIN
     ? ddPillHTML({ key:key, label:'', value:value, itemsHTML:options.map(o => ddItem(o, o === value)).join('') }).replace('class="wl-ddpill"', 'class="wl-ddpill" style="font-size:13px"') : '<span>'+value+'</span>';   // 13px like the labels
-  // Type uses the same pill as Applies to, but is editable by everyone who may edit the entry (`canEdit`), not only admins. In review it shows Mira's choice and can change before Approve.
-  const typePill = canEdit
+  // Type uses the same pill as Applies to, but is editable only by whoever MANAGES the entry (`canManage`); editors see it as plain text. In review it shows Mira's choice and can change before Approve.
+  const typePill = canManage
     ? ddPillHTML({ key:'kntype', label:'', value:e.type, itemsHTML:KN_TYPES.map(o => ddItem(o, o === e.type)).join('') }).replace('class="wl-ddpill"', 'class="wl-ddpill" style="font-size:13px"') : '<span>'+rtEsc(e.type)+'</span>';
   const src = knSourceHTML(e);
+  // CHANGE (2026-11-17): the Editors row. Names as the existing chips (.share-chip) with a remove x, and "Add" (home-link) for whoever manages the entry;
+  // everyone else reads plain names. No one: "None" in muted text.
+  const eds = e.editors || [];
+  const edsHTML = canManage
+    ? '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px">'+
+        (eds.length ? eds.map(n => '<span class="share-chip"><span class="share-ava">'+shareInitials(n)+'</span>'+rtEsc(n)+
+          '<button type="button" class="share-chip__x" data-kn-ed-rm="'+rtEsc(n)+'" aria-label="Remove '+rtEsc(n)+' as an editor">'+svg('close',2.4)+'</button></span>').join('')
+          : '<span style="color:var(--c-muted)">None</span>')+
+        '<button type="button" class="home-link" data-kn-ed-add>Add</button></div>'
+    : eds.length ? rtEsc(eds.join(', ')) : '<span style="color:var(--c-muted)">None</span>';
   const crumb = team
     ? '<button type="button" class="home-link" data-kn-back>Team knowledge</button><span>/</span><span data-kn-crumb>'+rtEsc(title)+'</span>'
-    : '<button type="button" class="home-link" data-kn-back>Company knowledge</button><span>/</span><span data-kn-crumb>'+rtEsc(title)+'</span>';
+    : '<button type="button" class="home-link" data-kn-back>'+(knFrom === 'mine' ? 'Knowledge' : 'Company knowledge')+'</button><span>/</span><span data-kn-crumb>'+rtEsc(title)+'</span>';
   // Opening eases in: the Routines view animation (.rt-view--enter, 8px rise and fade, off under prefers-reduced-motion), played once per opening.
   const enter = knEnter; knEnter = false;
   return '<div class="adm'+(enter ? ' rt-view--enter' : '')+'" style="max-width:760px;margin:0 auto">'+   // centred in the content area
@@ -5606,12 +5632,13 @@ function renderKnEntry(){
     '<h1 class="wl__title" contenteditable="'+canEdit+'" data-kn-title style="outline:none;margin-bottom:20px">'+rtEsc(e.title)+'</h1>'+
     '<div class="adm-drawer" style="margin-bottom:20px">'+
       knProp('Applies to', pill('knscope', knApplies(e.scope), knScopes().map(knApplies)))+
-      knProp('Type', typePill)+   // CHANGE (2026-11-17): under Applies to; a dropdown for anyone who can edit the entry (admins, heads of their own team), plain text otherwise
+      knProp('Type', typePill)+   // CHANGE (2026-11-17): under Applies to; a dropdown for whoever manages the entry (admins, heads of their own team), plain text for editors
       knProp('Managed by', rtEsc(knManagedBy(e)))+   // derived from Applies to, read-only text
+      knProp('Editors', edsHTML)+   // CHANGE (2026-11-17): under Managed by
       knProp('Source', src)+   // no Origin row (removed on request): Source says where the entry comes from
     '</div>'+
     '<div data-kn-bodywrap style="font-size:14px;line-height:1.55;color:var(--c-text)">'+knBodyHTML(e, canEdit)+'</div>'+
-    (canEdit && !(e.status === 'review' && s && s.kind === 'new') ? '<div style="margin-top:32px"><button type="button" class="home-link" style="color:var(--c-error)" data-kn-delete>Delete entry</button></div>' : '')+
+    (canManage && !(e.status === 'review' && s && s.kind === 'new') ? '<div style="margin-top:32px"><button type="button" class="home-link" style="color:var(--c-error)" data-kn-delete>Delete entry</button></div>' : '')+
   '</div>';
 }
 function wireKnEntry(c){
@@ -5647,16 +5674,88 @@ function wireKnEntry(c){
     if(e.suggestion.kind === 'new'){ knRemove(e); knOpen = null; renderContent(); syncBellDot(); shareToast('Suggestion rejected'); }   // a new entry that nobody wanted is deleted
     else { e.suggestion = null; e.status = 'live'; renderContent(); syncBellDot(); shareToast('Change rejected. The old text stays'); }   // a change is dropped, the old text stays
   });
-  on('[data-kn-resolve]', () => knCloseReports(e, 'resolved'));
-  on('[data-kn-dismiss]', () => knCloseReports(e, 'dismissed'));
+  // CHANGE (2026-11-17): Editors. Add opens the people picker; the x on a name removes it. Both autosave (the stamp follows, as for every other property).
+  on('[data-kn-ed-add]', () => knAddEditorsModal(e));
+  c.querySelectorAll('[data-kn-ed-rm]').forEach(b => b.addEventListener('click', () => {
+    e.editors = (e.editors || []).filter(n => n !== b.dataset.knEdRm);
+    e.editedBy = KN_USER; e.editedAt = 'just now'; e.stampVerb = '';
+    renderContent();
+  }));
   on('[data-kn-delete]', () => rtConfirm({ title:'Delete “'+(e.title || 'Untitled entry')+'”?', text:'Mira will stop using it. This can’t be undone.', confirm:'Delete', danger:true },
     () => { knRemove(e); knOpen = null; renderContent(); shareToast('Entry deleted'); }));
 }
 
+/* ---- Add editors modal (2026-11-17) ----
+   The Add people modal (admAddPeopleModal) with a different list: the same shell, chip field, rows and large primary button. Who is offered depends on
+   what the entry applies to (`knEditorPool`): a team entry -> only people in that team; an Everyone at Tonik entry -> anyone in the company. People who
+   are already editors are greyed out and marked "Editor" (and go last). Adding autosaves (the edit stamp follows) and each person gets a bell
+   notification (`kneditor`). SIMULATED: in memory; the added person is never the prototype user, so only the seeded notification is ever shown. */
+function knAddEditorsModal(e){
+  let picked = [];
+  const people = knEditorPool(e);
+  const isEd = x => (e.editors || []).indexOf(x.name) >= 0;
+  const m = document.createElement('div');
+  m.className = 'home-modal share-modal adm-addpeople';
+  m.innerHTML =
+    '<div class="home-modal__panel" role="dialog" aria-modal="true" aria-label="Add editors">'+
+      '<div class="home-modal__head"><h3 class="home-modal__title">Add editors</h3>'+
+        '<button type="button" class="home-ibtn home-modal__close" data-close aria-label="Close">'+svg('close',2)+'</button></div>'+
+      '<div class="share-combo">'+
+        '<div class="field" data-sf><span data-chips style="display:contents"></span>'+
+          '<input type="text" placeholder="Search people…" aria-label="Search people" autocomplete="off"></div>'+
+        '<button type="button" class="home-btn home-btn--primary home-btn--lg" data-go disabled>Add</button>'+
+      '</div>'+
+      '<div class="share-list" data-list></div>'+
+    '</div>';
+  const input = m.querySelector('input'), list = m.querySelector('[data-list]'), chips = m.querySelector('[data-chips]'), go = m.querySelector('[data-go]');
+  const drawChips = () => {
+    chips.innerHTML = picked.map(x =>
+      '<span class="share-chip"><span class="share-ava">'+shareInitials(x.name)+'</span>'+x.name+
+      '<button type="button" class="share-chip__x" data-rm="'+x.id+'" aria-label="Remove '+x.name+'">'+svg('close',2.4)+'</button></span>').join('');
+    go.disabled = !picked.length;
+  };
+  const drawList = () => {
+    const q = input.value.trim().toLowerCase();
+    const hits = people.filter(x => picked.indexOf(x) < 0 && (!q || (x.name+' '+x.mail).toLowerCase().includes(q)));
+    const rows = hits.filter(x => !isEd(x)).concat(hits.filter(isEd));
+    list.innerHTML = rows.map(x =>
+      '<button type="button" class="share-opt'+(isEd(x) ? ' is-disabled' : '')+'" data-add="'+x.id+'"'+(isEd(x) ? ' disabled' : '')+'>'+
+        '<span class="share-ava share-ava--lg">'+shareInitials(x.name)+'</span>'+
+        '<span class="share-perm__txt"><span>'+x.name+'</span><span class="share-perm__sub">'+x.mail+'</span></span>'+
+        (isEd(x) ? '<span class="home-badge home-badge--neutral adm-addpeople__tag">Editor</span>' : '')+'</button>').join('') ||
+      '<div class="share-empty">'+(input.value.trim() ? 'No one matches “'+rtEsc(input.value.trim())+'”.' : 'No one to add.')+'</div>';
+  };
+  const close = () => { m.remove(); document.removeEventListener('keydown', onKey); };
+  const onKey = ev => { if(ev.key === 'Escape') close(); };
+  m.addEventListener('click', ev => {
+    if(ev.target === m || ev.target.closest('[data-close]')) return close();
+    const add = ev.target.closest('[data-add]');
+    if(add){ picked.push(admMember(add.dataset.add)); input.value = ''; drawChips(); drawList(); input.focus(); return; }
+    const rm = ev.target.closest('[data-rm]');
+    if(rm){ picked = picked.filter(x => x.id !== rm.dataset.rm); drawChips(); drawList(); return; }
+    if(ev.target.closest('[data-sf]')) input.focus();
+  });
+  input.addEventListener('input', drawList);
+  input.addEventListener('keydown', ev => { if(ev.key === 'Backspace' && !input.value && picked.length){ picked.pop(); drawChips(); drawList(); } });
+  go.addEventListener('click', () => {
+    if(!picked.length) return;
+    const names = picked.map(x => admFirst(x.name));
+    e.editors = (e.editors || []).concat(picked.map(x => x.name));
+    e.editedBy = KN_USER; e.editedAt = 'just now'; e.stampVerb = '';   // autosave: the stamp reads "Last edited by Agata · just now"
+    picked.forEach(x => knNotifyEditor(e, x.name));
+    close();
+    shareToast((names.length < 2 ? names.join('') : names.slice(0, -1).join(', ')+' and '+names[names.length-1])+' added as '+(names.length < 2 ? 'an editor' : 'editors'));
+    renderContent(); syncBellDot();
+  });
+  document.addEventListener('keydown', onKey);
+  document.body.appendChild(m);
+  drawChips(); drawList();
+  input.focus();
+}
+
 /* ---- Member side: sources in Mira's answers (read-only panel) ----
    A source chip under Mira's answer opens this panel, so you stay in the chat. If the user can manage the entry there is an "Open entry" link to
-   its page. "Report as outdated" makes Mira ask "What's out of date?" in the panel's own composer; after the reply the entry gets a `report`
-   suggestion and a toast says who it went to. An entry that already waits for review cannot be reported (the single suggestion slot is taken). */
+   its page. (There is no "Report as outdated": the feature was removed from the app on request, 2026-11-17.) */
 function knSourcesHTML(msg){
   if(!msg.kn) return '';
   return '<div class="nr__chips">'+msg.kn.map(knEntry).filter(Boolean).map(e =>
@@ -7647,7 +7746,7 @@ const HOME_NEEDS = [
 // Items shown for a workspace: private cards (scope:'personal') only appear in Personal;
 // the team workspaces show just the shared ones.
 /* CHANGE (2026-11-17): the Company knowledge review items ("Review Mira's change to ...", "Review a new entry: ...") are no longer here: they moved to the
-   bell (kinds `knsugg` and `knreport` in NOTIFS). Every other Needs you item is unchanged. */
+   bell (kind `knsugg` in NOTIFS). Every other Needs you item is unchanged. */
 const homeNeedsFor = ws => HOME_NEEDS.filter(it => ws === 'personal' || it.scope !== 'personal');
 const homeSrcKey = it => HOME_NEEDS.indexOf(it);   // data-home-source: an index into HOME_NEEDS
 // "Keep an eye on": things Mira noticed. `links` are the underlined text actions.
@@ -11209,6 +11308,7 @@ function setWorkspace(id){
   activeWorkspace = id;
   insPin = null; insDraft = null; if(insChat === 'build') insChat = null;   // a pin chat / draft dashboard belongs to the workspace it was started in
   inOpenId = null;   // an open insight belongs to the workspace it was opened in
+  if(activeId === 'knowledge') knOpen = null;   // the Knowledge tab is the admin page in a team and the editor view in Personal: an open entry belongs to one of them
   insNav = insFirstDashboard();   // …and so does a dashboard opened from the nav: land on the new workspace's first one
   // Routines: a panel open on a routine that isn't in the new workspace, or a tool
   // filter the new workspace no longer offers, would leave a stale/empty view.
@@ -11702,23 +11802,24 @@ NOTIFS.push({ id:'n-dshare', kind:'dshare', from:'Aga', routine:'Pipeline overvi
 /* Maya (Sales) asks for more in Gmail. SIMULATED: really this reaches the admins when someone sends a request from Team settings. `perm` is the
    index of the permission (ADM_PERM_GROUPS order): 5 = "Sending emails inside the company". Clicking it opens a confirmation (see notifAskReview). */
 NOTIFS.push({ id:'n-ask-maya', kind:'permask', from:'Maya', team:'Sales', tool:'gmail', perm:5, ask:'send emails', when:'10 min ago', state:'pending' });
-/* CHANGE (2026-11-17): Company knowledge in the bell. SIMULATED, in memory. Two kinds, both sent to whoever manages the entry (`to`: 'Admins' or
+/* CHANGE (2026-11-17): Company knowledge in the bell. SIMULATED, in memory. One kind (plus `kneditor` below), sent to whoever manages the entry (`to`: 'Admins' or
    'Head of <Team>', the entry's `knManagedBy`):
    - `knsugg` (Mira's suggestions), GROUPED: `items` = [{ id, kind:'new'|'change', title }] of the entries. While the notification is unread, a new
      suggestion for the same recipient is added to it (count updates, time resets, it moves to the top); once read, the next one starts a new notification.
      The count never shrinks. It is done when every entry in it has been approved or rejected (derived, see knNotifDone). Avatar: Mira's orb. One button:
      Review (one suggestion: that entry's page; more than one: the list on its Needs review tab). There is no Accept / Decline: a change must be read first.
-   - `knreport` (a person reported an entry as outdated), one per report: `entry`, `by`. Open goes to the entry page, whose Reported banner has Resolve and
-     Dismiss; either closes every report on the entry and marks all their notifications done (`outcome`).
-   Neither has a description line. The prototype user is an Admin and cannot switch role, so only the 'Admins' ones are shown (notifMine); the head ones
+   (Reports from people, `knreport`, were removed on request, 2026-11-17.)
+   It has no description line. The prototype user is an Admin and cannot switch role, so only the 'Admins' ones are shown (notifMine); the head ones
    are seeded but never visible. Nothing in the prototype creates a suggestion while it runs; knNotifySuggestion is how one would arrive, and seeds the data. */
 let knNotifSeq = 0;
-const isKnNotif = n => n.kind === 'knsugg' || n.kind === 'knreport';
+const isKnNotif = n => n.kind === 'knsugg';
 const knNotifDone = n => n.kind === 'knsugg'
   ? n.items.every(i => { const e = knEntry(i.id); return !e || !e.suggestion; })   // gone (a rejected new entry) or no suggestion left
-  : Boolean(n.outcome);
+  : false;
 // Whether the bell of the prototype user shows it: the user is an Admin; a head's notifications belong to the head only.
-const notifMine = n => !isKnNotif(n) || (n.to === 'Admins' ? KN_IS_ADMIN : knHead(n.to.replace('Head of ', '')) === KN_USER_FULL);   // a head's own, not an admin's
+// CHANGE (2026-11-17): `kneditor` ("<person> added you as an editor of <entry>"): `to` = the person added (a full name), `by`, `entry`. Information with one button,
+// Open (the entry's page), no description line, no done state. Only the person added sees it (so, in the prototype, only the seeded one is shown).
+const notifMine = n => n.kind === 'kneditor' ? n.to === KN_USER_FULL : !isKnNotif(n) || (n.to === 'Admins' ? KN_IS_ADMIN : knHead(n.to.replace('Head of ', '')) === KN_USER_FULL);   // a head's own, not an admin's
 function knNotifySuggestion(e){
   const to = knManagedBy(e), item = { id:e.id, kind:e.suggestion.kind, title:e.title };
   const open = NOTIFS.find(n => n.kind === 'knsugg' && n.to === to && n.unread);
@@ -11727,11 +11828,15 @@ function knNotifySuggestion(e){
     open.when = 'Just now'; NOTIFS.splice(NOTIFS.indexOf(open), 1); NOTIFS.unshift(open);
   } else NOTIFS.unshift({ id:'n-knsugg-'+(++knNotifSeq), kind:'knsugg', to, items:[item], when:'Just now', unread:true });
 }
+function knNotifyEditor(e, person){
+  NOTIFS.unshift({ id:'n-kned-'+(++knNotifSeq), kind:'kneditor', to:person, by:KN_USER_FULL, entry:e.id, when:'Just now', unread:true });
+}
+// Seed for the demo: "Anna Novak added you as an editor of Leave and time off". SIMULATED: the entry page itself does not list the prototype user as an editor.
+NOTIFS.push({ id:'n-kned-seed', kind:'kneditor', to:KN_USER_FULL, by:'Anna Novak', entry:'kn1', when:'1 hour ago', unread:true });
 // Seeds: the admin gets ONE grouped notification (Expenses, Leave, Working hours), the head of Sales a single change, the head of Customer projects a new
 // entry. Members get nothing.
 ['kn6', 'kn12', 'kn2', 'kn1', 'kn3'].forEach(id => knNotifySuggestion(knEntry(id)));
 NOTIFS.forEach(n => { if(n.kind === 'knsugg') n.when = n.to === 'Admins' ? '5 min ago' : '1 hour ago'; });
-// (2026-11-17, on request: the seeded report notification for Jonas Okafor was removed; the `knreport` kind and the entry's own report still work.)
 const notifPending = () => NOTIFS.filter(notifMine).filter(n => (n.state === 'pending' || n.unread || (isKnNotif(n) && !knNotifDone(n)))).length;   // waiting for an answer, or not seen yet (information notifications)
 function syncBellDot(){
   const bell = document.querySelector('[data-notif-bell]');
@@ -11750,23 +11855,24 @@ function notifItemHTML(n){
       '<div class="notif__actions"><button type="button" class="home-btn" data-notif-act="review" data-id="'+n.id+'">Review</button></div></div></div>';
   }
   // Company knowledge (see the block above NOTIFS). The same item as the others: avatar, title with bold names, grey type badge, time, buttons. No description.
+  if(n.kind === 'kneditor'){
+    const e = knEntry(n.entry);
+    return '<div class="notif__item" data-nid="'+n.id+'">'+shareAva({name:n.by}, true)+'<div class="notif__body"><div class="notif__text"><b>'+rtEsc(n.by)+'</b> added you as an editor of <b>'+rtEsc(e ? e.title : 'an entry')+'</b></div>'+
+      '<div class="notif__meta"><span class="home-badge home-badge--neutral">Knowledge</span>'+n.when+'</div>'+
+      '<div class="notif__actions"><button type="button" class="home-btn home-btn--primary" data-notif-act="kn" data-id="'+n.id+'">Open</button></div></div></div>';
+  }
   if(isKnNotif(n)){
     const done = knNotifDone(n), kn = '<span class="home-badge home-badge--neutral">Knowledge</span>';
     let ava, text, btn, tail;
-    if(n.kind === 'knsugg'){
+    {
       const one = n.items.length === 1 ? n.items[0] : null;
       ava = '<span class="share-ava share-ava--lg"><img src="'+MIRA_AVATAR+'" alt=""></span>';   // Mira's orb, as on her messages
       text = !one ? '<b>Mira</b> made '+n.items.length+' suggestions for <b>Company knowledge</b>'
         : one.kind === 'new' ? '<b>Mira</b> drafted a new entry: <b>'+rtEsc(one.title)+'</b>' : '<b>Mira</b> suggested a change to <b>'+rtEsc(one.title)+'</b>';
       btn = 'Review'; tail = 'Reviewed';
-    } else {
-      const e = knEntry(n.entry);
-      ava = shareAva({name:n.by}, true);
-      text = '<b>'+rtEsc(n.by)+'</b> reported <b>'+rtEsc(e ? e.title : 'an entry')+'</b> as outdated';
-      btn = 'Open'; tail = n.outcome === 'dismissed' ? 'Dismissed' : 'Resolved';
     }
     return '<div class="notif__item" data-nid="'+n.id+'">'+ava+'<div class="notif__body"><div class="notif__text">'+text+'</div><div class="notif__meta">'+kn+n.when+'</div>'+
-      (done ? '<div class="notif__done'+(tail === 'Dismissed' ? '' : ' notif__done--ok')+'">'+(tail === 'Dismissed' ? '' : svg('check',2.25))+tail+'</div>'
+      (done ? '<div class="notif__done notif__done--ok">'+svg('check',2.25)+tail+'</div>'
             : '<div class="notif__actions"><button type="button" class="home-btn home-btn--primary" data-notif-act="kn" data-id="'+n.id+'">'+btn+'</button></div>')+'</div></div>';
   }
   // An admin changed a connection's level: information only (no Accept or Decline). SIMULATED: really it goes to the heads of the teams that use it.
@@ -11837,10 +11943,14 @@ function openNotifPanel(bell){
   document.addEventListener('keydown', onKey);
   document.body.appendChild(p);
 }
-// Review / Open of a knowledge notification. More than one suggestion always goes to the list (Needs review tab); one suggestion or a report goes to the
+// Review / Open of a knowledge notification. More than one suggestion always goes to the list (Needs review tab); one suggestion goes to the
 // entry's page. An admin goes to the Admin Panel, a head to Team settings, Team knowledge.
 function notifKnOpen(n){
-  const admin = n.to === 'Admins', id = n.kind === 'knreport' ? n.entry : n.items[0].id;
+  if(n.kind === 'kneditor'){   // the entry's page; an admin through the Admin Panel, anyone else through Team knowledge (a head's path, unreachable by role here)
+    if(!knEntry(n.entry)){ shareToast('That entry is gone'); return; }
+    KN_IS_ADMIN ? knOpenAdmin(n.entry) : knOpenTeam(n.entry); return;
+  }
+  const admin = n.to === 'Admins', id = n.items[0].id;
   if(n.kind === 'knsugg' && n.items.length > 1){ admin ? knOpenAdmin(null, 'review') : knOpenTeam(null, 'review'); return; }
   if(!knEntry(id)){ shareToast('That entry is gone'); return; }
   admin ? knOpenAdmin(id) : knOpenTeam(id);
