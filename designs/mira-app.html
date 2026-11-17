@@ -5286,7 +5286,7 @@ let KN_ENTRIES = [
           'Unused days carry over until 31 March. Sick leave does not count against your leave days; tell your manager on the first day.'],
     sources:[{ name:'Leave_policy_2026.pdf', where:'Google Drive' }],
     editedBy:'Anna Novak', editedAt:'28 Oct', status:'review',
-    suggestion:{ kind:'change', from:'a chat in Operations',   // CHANGE (2026-11-17): a seed suggestion for the grouped bell notification
+    suggestion:{ kind:'change', by:'Rafaela Elmazi',   // CHANGE (2026-11-17): a seed suggestion for the grouped bell notification; `by` = a conversation (see knOriginTitle)
       removed:'Unused days carry over until 31 March.',
       added:'Unused days carry over until 30 April.' } },
   // CHANGE (2026-11-16): this entry is live (no review suggestion), because Mira's answer in chat quotes it ($80), which an entry waiting for review must not be.
@@ -5300,14 +5300,14 @@ let KN_ENTRIES = [
     // CHANGE (2026-11-17): the entry now carries a change suggestion (about the approval limit, not the $80 Mira quotes, which is still the live text).
     // The suggestion is the third one of the admin's grouped notification. (Its seeded report, "Jonas Okafor reported this entry as outdated", was removed
     // on request together with the whole reporting feature.)
-    suggestion:{ kind:'change', from:'a chat in Finance',
+    suggestion:{ kind:'change', by:'Lena Berg',
       removed:'Anything above $500 needs approval from your head of team before you spend it.',
       added:'Anything above $1,000 needs approval from your head of team before you spend it.' } },
   { id:'kn3', title:'Working hours and remote work', type:'Policy', scope:'Company',
     body:['Core hours are 10:00 to 15:00 in your own time zone; the rest of the day is flexible. You can work remotely up to three days a week.',
           'Tell your team in advance when you will be away from your desk during core hours.'],
     sources:[], author:'Anna Novak', editedBy:'Anna Novak', editedAt:'14 Oct', status:'review',
-    suggestion:{ kind:'change', from:'a chat in Operations',   // CHANGE (2026-11-17): seed suggestion for the grouped bell notification
+    suggestion:{ kind:'change', by:'Tom Reyes',   // CHANGE (2026-11-17): seed suggestion for the grouped bell notification
       removed:'You can work remotely up to three days a week.',
       added:'You can work remotely up to four days a week.' } },
   { id:'kn4', title:'Security and passwords', type:'Policy', scope:'Company',
@@ -5322,8 +5322,9 @@ let KN_ENTRIES = [
   { id:'kn6', title:'Discount rules', type:'Policy', scope:'Sales',
     body:['Discounts up to 10% can be offered without approval. Anything above that needs a sign-off from the Head of Sales before the quote is sent.',
           'Never discount the onboarding fee. Multi-year deals can get an extra 3% on the licence price.'],
-    sources:[{ name:'Sales_pricing_sheet', where:'Google Drive' }], editedBy:'Maya Klein', editedAt:'30 Oct', status:'review',
-    suggestion:{ kind:'change', from:'a chat in Sales',
+    // CHANGE (2026-11-17): two sources, and the suggestion names the ONE that prompted it (`doc`, see knOriginTitle).
+    sources:[{ name:'Pricing_sheet_2026.xlsx', where:'Google Drive' }, { name:'Sales_playbook.docx', where:'Google Drive' }], editedBy:'Maya Klein', editedAt:'30 Oct', status:'review',
+    suggestion:{ kind:'change', doc:{ name:'Pricing_sheet_2026.xlsx', where:'Google Drive' },
       removed:'Discounts up to 10% can be offered without approval.',
       added:'Discounts up to 15% can be offered without approval on deals under $20,000.' } },
   { id:'kn7', title:'Handing a deal over to Customer projects', type:'Process', scope:'Sales',
@@ -5351,7 +5352,7 @@ let KN_ENTRIES = [
     body:['Hold the kick-off within a week of signing. Confirm the goal, the deliverables, the dates and who approves what.',
           'Send the client a one-page summary the same day and agree on a weekly check-in.'],
     sources:[{ name:'Project kick-off', where:'Notion' }], editedBy:'Mira', editedAt:'2 h ago', stampVerb:'Drafted', status:'review',
-    suggestion:{ kind:'new', from:'a project page in Notion' } },   // an entry Mira wrote entirely: "Drafted by Mira · 2 h ago", no highlight, no Delete
+    suggestion:{ kind:'new', doc:{ name:'Project kick-off', where:'Notion' } } },   // an entry Mira wrote entirely: "Drafted by Mira · 2 h ago", no highlight, no Delete
 ];
 // What Mira "reads" from an uploaded file. SIMULATED: the file is never read or sent anywhere, only its name is used. A file with "travel" in its name
 // (Travel_policy.pdf) gets a travel draft; any other file gets a short placeholder draft that names it.
@@ -5403,9 +5404,15 @@ const knMineView = () => activeId === 'knowledge' && activeWorkspace === 'person
 const knNeedsReview = e => e.status === 'review';
 // Where an entry comes from, never empty (2026-11-16, on request): a file shows its name and place (Home source badge), an entry written by hand says
 // "Written by <person>", and one Mira wrote from a conversation says "Chat in <team>": plain text with no link, because a chat may be private.
+// One file as the Home source badge (normal case), used by the Source row. Not clickable.
+const knFileChip = f => '<span class="home-badge home-badge--source" style="margin-top:0;cursor:default;max-width:100%;white-space:normal;height:auto;min-height:22px;overflow-wrap:anywhere;font-family:inherit;text-transform:none;letter-spacing:0;font-size:13px">'+svg('document',2)+rtEsc(f.name+' · '+f.where)+'</span>';
+// CHANGE (2026-11-17, on request): WHERE A SUGGESTION CAME FROM, in the review banner. The origin is the banner's WHOLE title (no "It isn't used until approved", no
+// second line), plain text, with a full stop:
+//  - from a conversation (`suggestion.by`): "Suggested by Rafaela Elmazi via Mira." (no link to the chat);
+//  - from a document (`suggestion.doc`, the ONE file that prompted it even when the entry has several sources): "Suggested based on Pricing_sheet_2026.xlsx · Google Drive."
+const knOriginTitle = s => s.by ? 'Suggested by '+rtEsc(s.by)+' via Mira.' : s.doc ? 'Suggested based on '+rtEsc(s.doc.name+' · '+s.doc.where)+'.' : '';
 function knSourceHTML(e){
-  if(e.sources.length) return '<div style="display:flex;gap:6px;flex-wrap:wrap">'+e.sources.map(f =>
-    '<span class="home-badge home-badge--source" style="margin-top:0;cursor:default;max-width:100%;white-space:normal;height:auto;min-height:22px;overflow-wrap:anywhere;font-family:inherit;text-transform:none;letter-spacing:0;font-size:13px">'+svg('document',2)+rtEsc(f.name+' · '+f.where)+'</span>').join('')+'</div>';
+  if(e.sources.length) return '<div style="display:flex;gap:6px;flex-wrap:wrap">'+e.sources.map(knFileChip).join('')+'</div>';
   return '<span>'+rtEsc(e.chat ? 'Chat in '+e.chat : 'Written by '+(e.author || e.editedBy))+'</span>';
 }
 // A property is one row of two columns: the label (drawer section look) on the left, its value beside it (2026-11-16, on request).
@@ -5539,7 +5546,7 @@ function wireKnList(c, team){
             const d = knUploadDraft(file.name);
             const scope = team ? team.name : knF.scope.size === 1 ? knScopeOf([...knF.scope][0]) : 'Company';
             const e = { id:'kn'+(++knSeq), title:d.title, type:d.type, scope, body:d.body, sources:[{ name:file.name, where:'Uploaded by '+KN_USER_FULL }],
-              editedBy:'Mira', editedAt:'just now', status:'review', stampVerb:'Drafted', suggestion:{ kind:'new', from:file.name, file:true } };   // Mira's choice of Type is in the draft   // a file becomes a suggestion to approve, like any other Mira entry
+              editedBy:'Mira', editedAt:'just now', status:'review', stampVerb:'Drafted', suggestion:{ kind:'new', file:true, doc:{ name:file.name, where:'Uploaded by '+KN_USER_FULL } } };   // Mira's choice of Type is in the draft   // a file becomes a suggestion to approve, like any other Mira entry
             KN_ENTRIES.push(e); knShow(e.id, team ? 'team' : 'admin');
           }, MIRA_TYPING_MS);
         });
@@ -5601,7 +5608,8 @@ function renderKnEntry(){
   const banner = (text, btns, sub) => '<div class="dc-banner" role="status" style="margin-bottom:20px"><div><div class="dc-banner__title">'+text+'</div>'+(sub ? '<div class="dc-banner__text">'+sub+'</div>' : '')+'</div><div class="dc-banner__btns">'+btns+'</div></div>';
   const bBtn = (attr, label, on) => '<button type="button" class="dc-banner__btn'+(on ? ' dc-banner__btn--on' : '')+'" '+attr+'>'+label+'</button>';
   let state = '';
-  if(e.status === 'review' && s) state = banner(s.kind === 'new' ? 'Mira drafted this from '+rtEsc(s.from)+'. It isn’t used until approved.' : 'Mira suggested this change from '+rtEsc(s.from)+'. It isn’t used until approved.', bBtn('data-kn-approve', 'Approve', true)+bBtn('data-kn-reject', 'Reject'));   // CHANGE (2026-11-17, on request): editors see the same banner, copy and buttons as admins
+  // CHANGE (2026-11-17): the title no longer says "from ..."; the origin (a person or a file, knOriginTitle) is the whole title when there is one.
+  if(e.status === 'review' && s) state = banner(knOriginTitle(s) || (s.kind === 'new' ? 'Mira drafted this. It isn’t used until approved.' : 'Mira suggested this change. It isn’t used until approved.'), bBtn('data-kn-approve', 'Approve', true)+bBtn('data-kn-reject', 'Reject'));   // editors see the same banner, copy and buttons as admins
   // (2026-11-17, on request: the Reported banner and the whole "report as outdated" feature were removed from the app.)
   const pill = (key, value, options) => canManage && KN_IS_ADMIN
     ? ddPillHTML({ key:key, label:'', value:value, itemsHTML:options.map(o => ddItem(o, o === value)).join('') }).replace('class="wl-ddpill"', 'class="wl-ddpill" style="font-size:13px"') : '<span>'+value+'</span>';   // 13px like the labels
