@@ -2790,8 +2790,8 @@ const NAV = [
   { id:'routines',    label:'Routines',    icon:'repeat' },
   { id:'insights',    label:'Insights',    icon:'insights' },
   // CHANGE (2026-11-17, on request): Knowledge, below Insights (and its dashboard list). `tag` draws a grey tag next to the label (the existing neutral home-badge).
-  // PROPOSAL: a temporary tab to show a client; delete this line (and the 'knowledge' branch of renderContent) to remove it.
-  { id:'knowledge',   label:'Knowledge',   icon:'book', tag:'Proposal' },
+  // CHANGE (2026-11-18): the Knowledge tab is accepted (no longer a proposal). Company and team knowledge live only here.
+  { id:'knowledge',   label:'Knowledge',   icon:'book' },
   { type:'group', id:'apps', label:'Apps', items:[
     { id:'pricing', label:'Pricing', icon:'pricing' },
     { id:'hr',      label:'HR',      icon:'hr' },
@@ -2839,9 +2839,7 @@ const MODES = {
       // CHANGE (2026-10-30): Rules, Monitoring and Run log are gone; Governance replaces them (it takes Monitoring's icon). Their old ids
       // are redirected to 'adv-governance' by ADM_OLD_ROUTES. Locking routines lives in Routines, not here.
       { id:'adv-governance', label:'Governance',     icon:'activity' },
-      // CHANGE (2026-11-16, on request): Company knowledge is enabled again and built (renderAdmKnowledge). It used to be disabled
-      // (mock:true + dim:true, 2026-10-30); both flags are gone, so the nav item is clickable and drawn at full strength.
-      { id:'adv-knowledge',  label:'Company knowledge', icon:'book' },
+      // CHANGE (2026-11-18, on request): Company knowledge is no longer an Admin Panel tab; it lives in the Knowledge tab of the main navigation.
     ],
   },
   // Team settings (2026-10-30, on request): opens like the Admin Panel, with its own sidebar (Back to app + two tabs). The title is the active
@@ -2851,7 +2849,7 @@ const MODES = {
     nav:[
       { id:'ts-connections', label:'Connections', icon:'plug' },
       { id:'ts-members',     label:'Members',     icon:'users' },
-      { id:'ts-knowledge',   label:'Team knowledge', icon:'book' },   // CHANGE (2026-11-16): the team's entries of Company knowledge (head's view)
+      // CHANGE (2026-11-18, on request): Team knowledge is no longer a Team settings tab; it lives in the Knowledge tab of the main navigation.
     ],
   },
   // Settings (2026-10-30): rebuilt from the "Settings (personal)" brief. Six tabs and, at the bottom of the sidebar, a "Contact Binome" link
@@ -3250,7 +3248,7 @@ function renderContent(){
   // CHANGE (2026-10-30): People is the one Admin Panel screen exempt from the flag, because it was rebuilt from the
   // new People wireframes. The other Admin Panel tabs and all of Settings stay blank until their turn.
   // CHANGE (2026-10-30): Connections & channels (the Tools tab) is exempt too, rebuilt from the Connections & Channels wireframes.
-  if(activeMode && HIDE_MODE_CONTENT && activeId !== 'adv-people' && activeId !== 'adv-tools' && activeId !== 'adv-mira' && activeId !== 'adv-governance' && activeId !== 'adv-knowledge' && activeMode !== 'team' && activeMode !== 'settings'){ c.className = 'content'; c.innerHTML = ''; return; }   // CHANGE (2026-10-30): Settings is built too
+  if(activeMode && HIDE_MODE_CONTENT && activeId !== 'adv-people' && activeId !== 'adv-tools' && activeId !== 'adv-mira' && activeId !== 'adv-governance' && activeMode !== 'team' && activeMode !== 'settings'){ c.className = 'content'; c.innerHTML = ''; return; }   // CHANGE (2026-10-30): Settings is built too
   if(activeId === 'home'){
     c.className = 'content';
     c.innerHTML = renderHome();
@@ -3567,13 +3565,6 @@ function renderContent(){
     const kp = knOpen ? renderKnEntry() : null;
     c.innerHTML = kp || (knMineView() ? renderKnMine() : renderAdmKnowledge());
     if(kp) wireKnEntry(c); else wireKnList(c, null);
-  } else if(activeId === 'adv-knowledge'){
-    // CHANGE (2026-11-16): built (table of entries grouped by scope); was a title only (renderAdmSoon, now orphaned).
-    // CHANGE (2026-11-16): rebuilt from the Company Brain spec: the list, or an entry's page while one is open (knOpen).
-    c.className = 'content';
-    const kp = knOpen ? renderKnEntry() : null;
-    c.innerHTML = kp || renderAdmKnowledge();
-    if(kp) wireKnEntry(c); else wireAdmKnowledge(c);
   } else if(activeId === 'adv-mira'){
     // CHANGE (2026-10-30): built from the Admin Panel -> Mira brief (was a title only). Also exempt from HIDE_MODE_CONTENT above.
     c.className = 'content';
@@ -4534,11 +4525,6 @@ function tsMemberRowsHTML(team){
 function renderTeamSettings(){
   const team = tsTeam();
   if(!team) return '';
-  // CHANGE (2026-11-16): third tab. The list of this team's knowledge entries, or an entry's page while one is open (breadcrumb "Team knowledge / Title").
-  if(activeId === 'ts-knowledge'){
-    const kp = knOpen ? renderKnEntry() : null;
-    return kp || '<div class="adm"><header class="wl__head"><h1 class="wl__title">Team knowledge</h1><p class="wl__subtitle">What Mira knows about '+team.name+'.</p></header>'+knListHTML(team)+'</div>';
-  }
   let body;
   if(activeId === 'ts-connections'){   // the sidebar tab decides what is shown
     body = '<div class="adm-split"><section class="adm-col adm-col--table adm-col--conn" aria-label="Connections">'+
@@ -4567,7 +4553,6 @@ function renderTeamSettings(){
 }
 function wireTeamSettings(c){
   const team = tsTeam(); if(!team) return;
-  if(activeId === 'ts-knowledge'){ if(knOpen && knEntry(knOpen)) wireKnEntry(c); else wireKnList(c, team); return; }
   const redraw = () => { c.innerHTML = renderTeamSettings(); wireTeamSettings(c); };
   // Turning ON: no modal. Turning OFF asks first, because Sales routines that use the connection stop working (accounts stay connected).
   c.querySelectorAll('[data-ts-toggle]').forEach(b => b.addEventListener('click', () => {
@@ -5259,8 +5244,8 @@ function wireAdmGovernance(c){
    personal level already exists (Settings -> Mira) and is left alone. Entries Mira writes or changes (suggestions) are NOT used until someone
    approves them; entries a person writes go live at once; an uploaded file becomes a suggestion for review.
    WHERE IT LIVES (one list renderer, `knListHTML`, used twice):
-   - Admin Panel -> Company knowledge (`adv-knowledge`): every entry in a flat list (Everyone at Tonik first, then teams, then title) with an Applies to column and filter.
-   - Team settings -> Knowledge (`ts-knowledge`): only the entries that apply to the active team, with no Applies to column.
+   - Knowledge tab of the main navigation (admin view; since 2026-11-18 the only home, no longer an Admin Panel tab): every entry in a flat list (Everyone at Tonik first, then teams, then title) with an Applies to column and filter.
+   - (Removed 2026-11-18: the Team settings tab. Kept as a note) only the entries that apply to the active team, with no Applies to column.
    Both open the same ENTRY PAGE (`renderKnEntry`): editable title, body and Applies to (Managed by is derived from it, read-only), autosaved (no Save, no Undo). The breadcrumb follows where
    the page was opened from (`knFrom`), not the role. Members (and heads reading other entries) read entries from the SOURCE CHIPS under Mira's
    answers in chat (a `cvAsk` branch for expense questions), which open a read-only side panel (`knPanelHTML`) with no actions.
@@ -5571,19 +5556,19 @@ function knShow(id, from, focusTitle){
 // CHANGE (2026-11-17): `tab` ('review') opens the list on that tab with the filters and search cleared (id = null); used by the bell's Review button.
 function knOpenAdmin(id, tab){
   knPanel = null;
-  if(activeMode !== 'advanced'){ prevAppId = activeId; activeMode = 'advanced'; }
+  if(activeMode){ activeMode = null; }   // CHANGE (2026-11-18): leave the Admin Panel / Team settings; the Knowledge tab of the main navigation is the only home
   if(tab){ knF.tab = tab; knF.scope.clear(); knF.type.clear(); knF.query = ''; }
-  activeId = 'adv-knowledge'; knOpen = id || null; knFrom = 'admin'; knEnter = true;
-  render(); animateSidebar('adv');
+  activeId = 'knowledge'; knOpen = id || null; knFrom = 'admin'; knEnter = true;
+  render(); animateSidebar('app');
 }
-// The head's way in: Team settings, Team knowledge, in the workspace the head is already in. UNREACHABLE in the prototype (the user is an Admin, so
+// The head's way in (now also the Knowledge tab, since Team settings has no knowledge tab), in the workspace the head is already in. UNREACHABLE in the prototype (the user is an Admin, so
 // head notifications are never shown), kept so the bell's Review / Open has a path for a head.
 function knOpenTeam(id, tab){
   knPanel = null;
-  if(activeMode !== 'team'){ prevAppId = activeId; activeMode = 'team'; }
+  if(activeMode){ activeMode = null; }
   if(tab){ knF.tab = tab; knF.query = ''; }
-  activeId = 'ts-knowledge'; knOpen = id || null; knFrom = 'team'; knEnter = true;
-  render(); animateSidebar('adv');
+  activeId = 'knowledge'; knOpen = id || null; knFrom = 'admin'; knEnter = true;
+  render(); animateSidebar('app');
 }
 function knBodyHTML(e, canEdit){
   const s = e.suggestion, review = e.status === 'review' && s;
@@ -5629,8 +5614,8 @@ function renderKnEntry(){
         '<button type="button" class="home-link" data-kn-ed-add style="font-size:13px">'+'+ Add'+'</button></div>'
     : eds.length ? rtEsc(eds.join(', ')) : '<span style="color:var(--c-muted)">None</span>';
   const crumb = team
-    ? '<button type="button" class="home-link" data-kn-back>Team knowledge</button><span>/</span><span data-kn-crumb>'+rtEsc(title)+'</span>'
-    : '<button type="button" class="home-link" data-kn-back>'+(knFrom === 'mine' ? 'Knowledge' : 'Company knowledge')+'</button><span>/</span><span data-kn-crumb>'+rtEsc(title)+'</span>';
+    ? '<button type="button" class="home-link" data-kn-back>Knowledge</button><span>/</span><span data-kn-crumb>'+rtEsc(title)+'</span>'
+    : '<button type="button" class="home-link" data-kn-back>'+'Knowledge'+'</button><span>/</span><span data-kn-crumb>'+rtEsc(title)+'</span>';
   // Opening eases in: the Routines view animation (.rt-view--enter, 8px rise and fade, off under prefers-reduced-motion), played once per opening.
   const enter = knEnter; knEnter = false;
   return '<div class="adm'+(enter ? ' rt-view--enter' : '')+'" style="max-width:760px;margin:0 auto">'+   // centred in the content area
@@ -11953,9 +11938,9 @@ function openNotifPanel(bell){
   document.body.appendChild(p);
 }
 // Review / Open of a knowledge notification. More than one suggestion always goes to the list (Needs review tab); one suggestion goes to the
-// entry's page. An admin goes to the Admin Panel, a head to Team settings, Team knowledge.
+// entry's page. Everyone goes to the Knowledge tab of the main navigation.
 function notifKnOpen(n){
-  if(n.kind === 'kneditor'){   // the entry's page; an admin through the Admin Panel, anyone else through Team knowledge (a head's path, unreachable by role here)
+  if(n.kind === 'kneditor'){   // the entry's page; the Knowledge tab either way
     if(!knEntry(n.entry)){ shareToast('That entry is gone'); return; }
     KN_IS_ADMIN ? knOpenAdmin(n.entry) : knOpenTeam(n.entry); return;
   }
